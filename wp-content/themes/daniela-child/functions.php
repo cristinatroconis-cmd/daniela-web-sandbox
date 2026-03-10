@@ -2,10 +2,8 @@
 /**
  * Daniela Child (Shoptimizer) - Functions
  *
- * Reglas:
- * - No romper lo existente.
- * - Mejoras progresivas y modulares.
- * - Evitar dependencia nueva de Elementor.
+ * Bootstrap loader: loads all theme modules from inc/.
+ * Keep this file minimal — add logic to the appropriate inc/ module instead.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -524,3 +522,8 @@ add_action( 'save_post_product', function () {
 add_action( 'woocommerce_update_product', function () {
     delete_transient( 'dm_recursos_temas_tags' );
 } );
+require_once __DIR__ . '/inc/assets.php';
+require_once __DIR__ . '/inc/helpers-products.php';
+require_once __DIR__ . '/inc/shortcodes-escuela.php';
+require_once __DIR__ . '/inc/shortcodes-recursos.php';
+require_once __DIR__ . '/inc/woocommerce-checkout.php';
