@@ -191,6 +191,27 @@ Convertir la web en una **plataforma de recursos psicológicos escalable**, dond
 
 ---
 
+## Cambios en el header (Header 4)
+
+### Eliminar búsqueda en escritorio
+
+**Problema:** Aunque en el Customizer se seleccionaba *"Display the search? → Disable"*, el bloque `.site-search` seguía renderizándose en escritorio con el layout Header 4.
+
+**Solución aplicada (`functions.php`):**
+Se añadió un hook `after_setup_theme` (prioridad 20) que elimina la acción `shoptimizer_product_search` del hook `shoptimizer_header` únicamente cuando la petición **no es de móvil** (`! wp_is_mobile()`). En móvil el comportamiento de Shoptimizer no se altera.
+
+```php
+add_action( 'after_setup_theme', function () {
+    if ( ! wp_is_mobile() ) {
+        remove_action( 'shoptimizer_header', 'shoptimizer_product_search', 40 );
+    }
+}, 20 );
+```
+
+**Cómo revertir:** eliminar o comentar el bloque `add_action( 'after_setup_theme', … )` del archivo `wp-content/themes/daniela-child/functions.php`.
+
+---
+
 ## Shortcodes del tema hijo
 
 Todos los shortcodes están registrados en `wp-content/themes/daniela-child/functions.php`.
