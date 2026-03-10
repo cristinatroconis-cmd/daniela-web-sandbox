@@ -264,8 +264,8 @@ add_shortcode( 'dm_recursos_temas', function () {
     if ( false === $recursos_tags ) {
         global $wpdb;
 
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery
-        $recursos_tags = $wpdb->get_results(
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+        $sql = $wpdb->prepare(
             "SELECT t.term_id, t.name, t.slug,
                     COUNT(DISTINCT p.ID) AS recursos_count
              FROM {$wpdb->posts} p
@@ -276,7 +276,7 @@ add_shortcode( 'dm_recursos_temas', function () {
                     AND tt_cat.taxonomy = 'product_cat'
              INNER JOIN {$wpdb->terms} t_cat
                      ON tt_cat.term_id = t_cat.term_id
-                    AND t_cat.slug IN ('recursos-gratis', 'recursos-pagos')
+                    AND t_cat.slug IN (%s, %s)
              INNER JOIN {$wpdb->term_relationships} tr_tag
                      ON p.ID = tr_tag.object_id
              INNER JOIN {$wpdb->term_taxonomy} tt_tag
@@ -287,9 +287,12 @@ add_shortcode( 'dm_recursos_temas', function () {
              WHERE p.post_type   = 'product'
                AND p.post_status = 'publish'
              GROUP BY t.term_id, t.name, t.slug
-             ORDER BY recursos_count DESC, t.name ASC"
+             ORDER BY recursos_count DESC, t.name ASC",
+            'recursos-gratis',
+            'recursos-pagos'
         );
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery
+        $recursos_tags = $wpdb->get_results( $sql );
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
 
         if ( ! is_array( $recursos_tags ) ) {
             $recursos_tags = [];
