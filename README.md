@@ -197,7 +197,7 @@ Convertir la web en una **plataforma de recursos psicológicos escalable**, dond
 
 **Problema:** Aunque en el Customizer se seleccionaba *"Display the search? → Disable"*, el bloque `.site-search` seguía renderizándose en escritorio con el layout Header 4.
 
-**Solución aplicada (`functions.php`):**
+**Solución aplicada (`inc/header.php`):**
 Se añadió un hook `after_setup_theme` (prioridad 20) que elimina la acción `shoptimizer_product_search` del hook `shoptimizer_header` únicamente cuando la petición **no es de móvil** (`! wp_is_mobile()`). En móvil el comportamiento de Shoptimizer no se altera.
 
 ```php
@@ -208,13 +208,17 @@ add_action( 'after_setup_theme', function () {
 }, 20 );
 ```
 
-**Cómo revertir:** eliminar o comentar el bloque `add_action( 'after_setup_theme', … )` del archivo `wp-content/themes/daniela-child/functions.php`.
+**Cómo revertir:** eliminar o comentar el bloque `add_action( 'after_setup_theme', … )` del archivo `wp-content/themes/daniela-child/inc/header.php`.
 
 ---
 
 ## Shortcodes del tema hijo
 
-Todos los shortcodes están registrados en `wp-content/themes/daniela-child/functions.php`.
+Todos los shortcodes están registrados en módulos bajo `wp-content/themes/daniela-child/inc/`:
+- `inc/shortcodes-escuela.php` — shortcodes de la sección Escuela
+- `inc/shortcodes-recursos.php` — shortcodes de la sección Recursos
+
+El archivo `functions.php` es un cargador mínimo que solo incluye estos módulos mediante `require_once`.
 
 ### Páginas hub (muestran dos bloques de productos)
 
