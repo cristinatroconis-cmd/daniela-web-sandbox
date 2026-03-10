@@ -251,67 +251,48 @@ add_shortcode( 'dm_recursos_temas', function () {
     // -------------------------------------------------------------------------
     // Build chips list: tags used by ≥1 product in our recursos categories.
     // Results are transient-cached (1 hour) and invalidated on product save.
+    //
+    // Implementation: single SQL query (replaces the previous N+1 approach of
+    // get_terms() + one WP_Query per tag). The query joins posts → category
+    // terms → tag terms in one round-trip, grouping by tag and counting
+    // distinct qualifying products. ORDER BY is handled in SQL so no usort()
+    // is required.
     // -------------------------------------------------------------------------
     $transient_key = 'dm_recursos_temas_tags';
     $recursos_tags = get_transient( $transient_key );
 
     if ( false === $recursos_tags ) {
-        $recursos_tags = [];
+        global $wpdb;
 
-        $all_tags = get_terms( [
-            'taxonomy'   => 'product_tag',
-            'hide_empty' => true,
-        ] );
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery
+        $recursos_tags = $wpdb->get_results(
+            "SELECT t.term_id, t.name, t.slug,
+                    COUNT(DISTINCT p.ID) AS recursos_count
+             FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->term_relationships} tr_cat
+                     ON p.ID = tr_cat.object_id
+             INNER JOIN {$wpdb->term_taxonomy} tt_cat
+                     ON tr_cat.term_taxonomy_id = tt_cat.term_taxonomy_id
+                    AND tt_cat.taxonomy = 'product_cat'
+             INNER JOIN {$wpdb->terms} t_cat
+                     ON tt_cat.term_id = t_cat.term_id
+                    AND t_cat.slug IN ('recursos-gratis', 'recursos-pagos')
+             INNER JOIN {$wpdb->term_relationships} tr_tag
+                     ON p.ID = tr_tag.object_id
+             INNER JOIN {$wpdb->term_taxonomy} tt_tag
+                     ON tr_tag.term_taxonomy_id = tt_tag.term_taxonomy_id
+                    AND tt_tag.taxonomy = 'product_tag'
+             INNER JOIN {$wpdb->terms} t
+                     ON tt_tag.term_id = t.term_id
+             WHERE p.post_type   = 'product'
+               AND p.post_status = 'publish'
+             GROUP BY t.term_id, t.name, t.slug
+             ORDER BY recursos_count DESC, t.name ASC"
+        );
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery
 
-        if ( ! is_wp_error( $all_tags ) ) {
-            // Resolve category term IDs once (avoid repeated taxonomy look-ups).
-            $cat_ids = get_terms( [
-                'taxonomy'   => 'product_cat',
-                'slug'       => [ 'recursos-gratis', 'recursos-pagos' ],
-                'fields'     => 'ids',
-                'hide_empty' => false,
-            ] );
-
-            if ( is_wp_error( $cat_ids ) ) {
-                $cat_ids = [];
-            }
-
-            foreach ( $all_tags as $tag ) {
-                $count_query = new WP_Query( [
-                    'post_type'      => 'product',
-                    'post_status'    => 'publish',
-                    'posts_per_page' => -1,
-                    'fields'         => 'ids',
-                    'no_found_rows'  => false,
-                    'tax_query'      => [
-                        'relation' => 'AND',
-                        [
-                            'taxonomy' => 'product_cat',
-                            'field'    => 'term_id',
-                            'terms'    => $cat_ids,
-                            'operator' => 'IN',
-                        ],
-                        [
-                            'taxonomy' => 'product_tag',
-                            'field'    => 'term_id',
-                            'terms'    => [ $tag->term_id ],
-                        ],
-                    ],
-                ] );
-
-                if ( $count_query->found_posts > 0 ) {
-                    $tag->recursos_count = (int) $count_query->found_posts;
-                    $recursos_tags[]     = $tag;
-                }
-            }
-
-            // Sort: recursos_count desc, then name asc (alphabetical tie-break).
-            usort( $recursos_tags, function ( $a, $b ) {
-                if ( $b->recursos_count !== $a->recursos_count ) {
-                    return $b->recursos_count - $a->recursos_count;
-                }
-                return strcmp( $a->name, $b->name );
-            } );
+        if ( ! is_array( $recursos_tags ) ) {
+            $recursos_tags = [];
         }
 
         set_transient( $transient_key, $recursos_tags, HOUR_IN_SECONDS );
