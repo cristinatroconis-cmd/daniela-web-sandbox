@@ -188,3 +188,28 @@ Convertir la web en una **plataforma de recursos psicológicos escalable**, dond
 2. comprar recursos
 3. profundizar con cursos
 4. avanzar a programas terapéuticos
+
+---
+
+## Shortcodes del tema hijo
+
+Todos los shortcodes están registrados en `wp-content/themes/daniela-child/functions.php`.
+
+### Páginas hub (muestran dos bloques de productos)
+
+| Shortcode | Página | Qué muestra |
+|---|---|---|
+| `[dm_escuela_home]` | `/escuela/` | **Cursos** (grid) + **Talleres** (grid) |
+| `[dm_recursos_home]` | `/recursos/` | **Gratis** (grid) + **Pagos** (grid) |
+
+Para activarlos, pega el shortcode correspondiente en el contenido de cada página desde el editor de WordPress (WP Admin → Páginas). Las páginas hijas mantienen sus propios shortcodes y no se ven afectadas.
+
+### Páginas hijas (un bloque de productos por página)
+
+| Shortcode | Página | Categoría WooCommerce |
+|---|---|---|
+| `[dm_escuela_cursos]` | `/escuela/cursos/` | `cursos` |
+| `[dm_escuela_talleres]` | `/escuela/talleres/` | `talleres` |
+| `[dm_recursos_gratis]` | `/recursos/gratis/` | `recursos-gratis` |
+| `[dm_recursos_pagos]` | `/recursos/pagos/` | `recursos-pagos` |
+| `[dm_recursos_temas]` | `/recursos/temas/` | `recursos-gratis` + `recursos-pagos` (filtrado por tema) |
