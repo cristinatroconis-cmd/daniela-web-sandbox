@@ -188,3 +188,55 @@ Convertir la web en una **plataforma de recursos psicológicos escalable**, dond
 2. comprar recursos
 3. profundizar con cursos
 4. avanzar a programas terapéuticos
+
+---
+
+## Recursos gratuitos descargables (PDFs)
+
+### Cómo crear un recurso gratuito (PDF)
+
+1. WP Admin → **Productos → Añadir nuevo**
+2. **Título**: nombre del recurso (ej. "Baja el Ruido Mental")
+3. En "Datos del producto":
+   - Tipo: **Producto simple**
+   - Marca: **Descargable** (y opcionalmente **Virtual**)
+   - En "Archivos descargables" → **Añadir archivo** → sube el PDF
+   - **Precio normal**: `0`
+4. En la columna derecha:
+   - **Categoría**: `Recursos (Gratis)` (`recursos-gratis`) para que aparezca en `/recursos/gratis/`
+   - **Etiquetas (Temas)**: ej. `ansiedad`, `estrés`, `autoestima`
+5. **Publicar**
+
+> WooCommerce enviará automáticamente un email con el enlace de descarga al completar el pedido.
+
+### Categorías de producto
+
+| Slug               | Descripción                                  | URL frontend          |
+|--------------------|----------------------------------------------|-----------------------|
+| `recursos-gratis`  | PDFs / recursos gratuitos (checkout $0)      | `/recursos/gratis/`   |
+| `recursos-pagos`   | PDFs / recursos de pago                      | `/recursos/pagos/`    |
+| `cursos`           | Cursos online                                | `/escuela/cursos/`    |
+| `talleres`         | Talleres                                     | `/escuela/talleres/`  |
+
+### Flujo de checkout para recursos gratuitos
+
+Cuando un carrito contiene únicamente productos **virtuales o descargables** con total **$0**, el checkout se simplifica automáticamente mostrando solo:
+
+- Nombre
+- Apellidos
+- Email
+
+Se eliminan los campos de dirección, teléfono, empresa, etc. para reducir la fricción.  
+Los carritos mixtos (productos físicos o de pago) mantienen el checkout completo.
+
+### Mensaje de "Gracias" en la página de confirmación
+
+Después de completar un pedido gratuito, se muestra un mensaje personalizado informando al usuario que recibirá el recurso por correo.
+
+**Para editar el mensaje** (sin tocar código):
+
+1. WP Admin → **WooCommerce → Ajustes → Avanzado → Mensaje Recursos Gratis**
+2. Edita el texto en el campo "Mensaje" (se acepta HTML básico)
+3. Guarda
+
+El mensaje solo se muestra en pedidos con total $0 que contengan al menos un producto descargable o virtual.
