@@ -1,0 +1,43 @@
+# 
+============================================================================
+# Repo Daniela Montes (LocalWP sandbox)
+# Estrategia: ignorar TODO excepto código propio (tema-hijo y opcional 
+mu-plugins)
+# 
+============================================================================
+
+# Ignorar TODO por defecto
+*
+
+# Permitir archivos esenciales del repo
+!.gitignore
+!README.md
+
+# Permitir wp-content y, dentro, solo themes (y nuestro child)
+!wp-content/
+wp-content/*
+!wp-content/themes/
+wp-content/themes/*
+!wp-content/themes/daniela-child/
+!wp-content/themes/daniela-child/**
+
+# (Opcional) Permitir mu-plugins si decidimos usar (snippets "de 
+infraestructura")
+!wp-content/mu-plugins/
+!wp-content/mu-plugins/**
+wp-content/mu-plugins/*.log
+
+# Bloquear uploads y caches siempre (aunque alguien intente permitirlos)
+wp-content/uploads/
+wp-content/cache/
+wp-content/wflogs/
+wp-content/ai1wm-backups/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
