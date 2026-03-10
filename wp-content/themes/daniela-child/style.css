@@ -5,10 +5,415 @@ Description: Tema hijo para mejoras progresivas (UX, conversión,
 performance) sin romper el tema padre.
 Author: Cristina Troconis
 Template: shoptimizer
-Version: 0.1.0
+Version: 1.0.0
 Text Domain: daniela-child
 */
 
-/* Nota: el CSS real se irá agregando de forma modular a medida que 
-optimicemos secciones. */
+/* ==========================================================================
+   Variables
+   ========================================================================== */
+
+:root {
+	--dm-color-primary:     #7c6b8e;  /* morado suave */
+	--dm-color-primary-dark:#5e4f6c;
+	--dm-color-accent:      #e8a598;  /* rosa calmado */
+	--dm-color-text:        #2d2d2d;
+	--dm-color-text-muted:  #6b6b6b;
+	--dm-color-bg:          #faf9f7;
+	--dm-color-bg-card:     #ffffff;
+	--dm-color-border:      #e5e0d8;
+	--dm-radius:            8px;
+	--dm-shadow:            0 2px 8px rgba(0,0,0,.07);
+	--dm-transition:        0.2s ease;
+}
+
+/* ==========================================================================
+   Recursos Hub — [dm_recursos]
+   ========================================================================== */
+
+.dm-recursos {
+	margin: 2rem 0;
+}
+
+/* ---- Filter bar ---- */
+
+.dm-recursos__filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.dm-recursos__filter-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.dm-recursos__filter-label {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--dm-color-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin-right: 0.25rem;
+}
+
+/* Filter pills */
+
+.dm-filter-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.35rem 0.9rem;
+	border: 1.5px solid var(--dm-color-border);
+	border-radius: 2rem;
+	font-size: 0.875rem;
+	color: var(--dm-color-text);
+	background: var(--dm-color-bg-card);
+	text-decoration: none;
+	transition: background var(--dm-transition), border-color var(--dm-transition), color var(--dm-transition);
+	white-space: nowrap;
+}
+
+.dm-filter-pill:hover,
+.dm-filter-pill:focus-visible {
+	border-color: var(--dm-color-primary);
+	color: var(--dm-color-primary);
+	outline: none;
+}
+
+.dm-filter-pill.is-active {
+	background: var(--dm-color-primary);
+	border-color: var(--dm-color-primary);
+	color: #fff;
+	font-weight: 600;
+}
+
+/* ---- Product grid ---- */
+
+.dm-recursos__grid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 1.5rem;
+}
+
+/* Column hint overrides (set via data-columns) */
+.dm-recursos[data-columns="1"] .dm-recursos__grid { grid-template-columns: 1fr; }
+.dm-recursos[data-columns="2"] .dm-recursos__grid { grid-template-columns: repeat(2, 1fr); }
+.dm-recursos[data-columns="4"] .dm-recursos__grid { grid-template-columns: repeat(4, 1fr); }
+
+.dm-recursos__item {
+	display: flex;
+}
+
+.dm-recursos__empty {
+	color: var(--dm-color-text-muted);
+	font-style: italic;
+	padding: 1.5rem 0;
+}
+
+/* ---- Recurso card ---- */
+
+.dm-recurso-card {
+	display: flex;
+	flex-direction: column;
+	background: var(--dm-color-bg-card);
+	border: 1px solid var(--dm-color-border);
+	border-radius: var(--dm-radius);
+	box-shadow: var(--dm-shadow);
+	overflow: hidden;
+	transition: box-shadow var(--dm-transition), transform var(--dm-transition);
+	width: 100%;
+}
+
+.dm-recurso-card:hover {
+	box-shadow: 0 6px 20px rgba(0,0,0,.12);
+	transform: translateY(-2px);
+}
+
+.dm-recurso-card__thumb-link {
+	display: block;
+	overflow: hidden;
+	aspect-ratio: 1;
+}
+
+.dm-recurso-card__thumb {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform var(--dm-transition);
+}
+
+.dm-recurso-card:hover .dm-recurso-card__thumb {
+	transform: scale(1.03);
+}
+
+.dm-recurso-card__body {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	padding: 1.1rem 1.25rem 1.25rem;
+	gap: 0.6rem;
+}
+
+.dm-recurso-card__title {
+	font-size: 1rem;
+	font-weight: 600;
+	margin: 0;
+	line-height: 1.35;
+}
+
+.dm-recurso-card__title a {
+	color: var(--dm-color-text);
+	text-decoration: none;
+}
+
+.dm-recurso-card__title a:hover {
+	color: var(--dm-color-primary);
+}
+
+.dm-recurso-card__excerpt {
+	font-size: 0.875rem;
+	color: var(--dm-color-text-muted);
+	margin: 0;
+	line-height: 1.5;
+}
+
+.dm-recurso-card__price {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--dm-color-primary-dark);
+	margin: 0;
+}
+
+.dm-recurso-card__cta {
+	margin-top: auto;
+	padding-top: 0.5rem;
+}
+
+/* Badge for type */
+.dm-recurso-card--gratis::before {
+	content: "Gratis";
+	display: inline-block;
+	background: #e5f5e0;
+	color: #2e7d32;
+	font-size: 0.7rem;
+	font-weight: 700;
+	padding: 0.2rem 0.6rem;
+	border-radius: 2rem;
+	margin: 0.75rem 1.25rem 0;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	align-self: flex-start;
+}
+
+/* ==========================================================================
+   Products Grid — [dm_products]
+   ========================================================================== */
+
+.dm-products-grid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 1.5rem;
+}
+
+.dm-products-grid--cols-1 { grid-template-columns: 1fr; }
+.dm-products-grid--cols-2 { grid-template-columns: repeat(2, 1fr); }
+.dm-products-grid--cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+.dm-products-grid__item {
+	display: flex;
+}
+
+.dm-products-grid__empty,
+.dm-products__empty,
+.dm-products__error {
+	color: var(--dm-color-text-muted);
+	font-style: italic;
+}
+
+.dm-product-card {
+	display: flex;
+	flex-direction: column;
+	background: var(--dm-color-bg-card);
+	border: 1px solid var(--dm-color-border);
+	border-radius: var(--dm-radius);
+	box-shadow: var(--dm-shadow);
+	overflow: hidden;
+	transition: box-shadow var(--dm-transition), transform var(--dm-transition);
+	width: 100%;
+}
+
+.dm-product-card:hover {
+	box-shadow: 0 6px 20px rgba(0,0,0,.12);
+	transform: translateY(-2px);
+}
+
+.dm-product-card__thumb-link {
+	display: block;
+	overflow: hidden;
+	aspect-ratio: 1;
+}
+
+.dm-product-card__thumb {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform var(--dm-transition);
+}
+
+.dm-product-card:hover .dm-product-card__thumb {
+	transform: scale(1.03);
+}
+
+.dm-product-card__body {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	padding: 1.1rem 1.25rem 1.25rem;
+	gap: 0.6rem;
+}
+
+.dm-product-card__title {
+	font-size: 1rem;
+	font-weight: 600;
+	margin: 0;
+	line-height: 1.35;
+}
+
+.dm-product-card__title a {
+	color: var(--dm-color-text);
+	text-decoration: none;
+}
+
+.dm-product-card__title a:hover {
+	color: var(--dm-color-primary);
+}
+
+.dm-product-card__excerpt {
+	font-size: 0.875rem;
+	color: var(--dm-color-text-muted);
+	margin: 0;
+	line-height: 1.5;
+}
+
+.dm-product-card__price {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--dm-color-primary-dark);
+	margin: 0;
+}
+
+/* ==========================================================================
+   Shared buttons
+   ========================================================================== */
+
+.dm-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.6rem 1.2rem;
+	border-radius: var(--dm-radius);
+	font-size: 0.875rem;
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background var(--dm-transition), color var(--dm-transition), transform var(--dm-transition);
+	white-space: nowrap;
+}
+
+.dm-btn--gratis {
+	background: var(--dm-color-accent);
+	color: #fff;
+}
+
+.dm-btn--gratis:hover,
+.dm-btn--gratis:focus-visible {
+	background: #c97f72;
+	color: #fff;
+	transform: translateY(-1px);
+	outline: none;
+}
+
+.dm-btn--comprar {
+	background: var(--dm-color-primary);
+	color: #fff;
+}
+
+.dm-btn--comprar:hover,
+.dm-btn--comprar:focus-visible {
+	background: var(--dm-color-primary-dark);
+	color: #fff;
+	transform: translateY(-1px);
+	outline: none;
+}
+
+.dm-btn--ver-mas {
+	background: transparent;
+	color: var(--dm-color-primary);
+	border: 1.5px solid var(--dm-color-primary);
+	margin-top: auto;
+}
+
+.dm-btn--ver-mas:hover,
+.dm-btn--ver-mas:focus-visible {
+	background: var(--dm-color-primary);
+	color: #fff;
+	outline: none;
+}
+
+/* ==========================================================================
+   Newsletter Opt-In checkbox (checkout)
+   ========================================================================== */
+
+.dm-newsletter-optin {
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+.dm-newsletter-optin label {
+	font-size: 0.875rem;
+	color: var(--dm-color-text-muted);
+	line-height: 1.5;
+}
+
+/* ==========================================================================
+   Responsive adjustments
+   ========================================================================== */
+
+@media (max-width: 600px) {
+	.dm-recursos__grid,
+	.dm-products-grid {
+		grid-template-columns: 1fr;
+	}
+
+	/* Always single column on very small screens regardless of data-columns */
+	.dm-recursos[data-columns="2"] .dm-recursos__grid,
+	.dm-recursos[data-columns="3"] .dm-recursos__grid,
+	.dm-recursos[data-columns="4"] .dm-recursos__grid,
+	.dm-products-grid--cols-2,
+	.dm-products-grid--cols-3,
+	.dm-products-grid--cols-4 {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+	.dm-recursos__grid,
+	.dm-products-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.dm-recursos[data-columns="4"] .dm-recursos__grid,
+	.dm-products-grid--cols-4 {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
 
