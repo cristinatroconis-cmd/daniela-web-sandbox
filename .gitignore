@@ -21,6 +21,10 @@ wp-content/themes/*
 !wp-content/themes/daniela-child/
 !wp-content/themes/daniela-child/**
 
+# Permitir theme padre (shoptimizer)
+!wp-content/themes/shoptimizer/
+!wp-content/themes/shoptimizer/**
+
 # (Opcional) Permitir mu-plugins si decidimos usar (snippets "de 
 infraestructura")
 !wp-content/mu-plugins/
