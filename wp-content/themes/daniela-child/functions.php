@@ -18,7 +18,12 @@ require_once __DIR__ . '/inc/assets.php';
 require_once __DIR__ . '/inc/helpers-products.php';
 require_once __DIR__ . '/inc/shortcodes-escuela.php';
 require_once __DIR__ . '/inc/shortcodes-recursos.php';
+require_once __DIR__ . '/inc/shortcodes-servicios.php';
 require_once __DIR__ . '/inc/woocommerce-checkout.php';
+
+// CPT — Custom Post Types, taxonomías y helpers de catálogo editorial.
+require_once __DIR__ . '/inc/cpt.php';
+require_once __DIR__ . '/inc/helpers-cpt.php';
 
 // Feature modules.
 require_once __DIR__ . '/inc/dm-products.php';

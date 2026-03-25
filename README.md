@@ -255,3 +255,103 @@ Renderiza un bloque de chips (pastillas) basados en las etiquetas de producto (`
 3. Publica la página.
 
 Los chips y el grid se generan dinámicamente. Los resultados se cachean durante 1 hora (transient) y el caché se invalida automáticamente cuando se crea o actualiza un producto.
+
+---
+
+## Custom Post Types (CPT) — Catálogo editorial
+
+Los CPTs permiten estructurar el contenido editorial (recursos, escuela, servicios) de forma independiente a WooCommerce. WooCommerce **sigue siendo el motor de compra**; los CPTs son la capa de navegación/SEO/UX.
+
+> **Nota:** Las páginas estáticas principales (home, sobre mí, contacto) siguen siendo Pages de WordPress. El catálogo navega por CPTs.
+
+### CPTs registrados
+
+| CPT slug | Nombre admin | URL archive | Descripción |
+|---|---|---|---|
+| `dm_recurso` | Recursos CPT | `/recursos/` | Materiales descargables, guías, ejercicios |
+| `dm_escuela` | Escuela CPT | `/escuela/` | Cursos, talleres y programas formativos |
+| `dm_servicio` | Servicios CPT | `/servicios/` | Sesiones individuales y membresías |
+
+Todos los CPTs soportan: `title`, `editor`, `thumbnail`, `excerpt`, `revisions`.  
+Todos aparecen en el editor de bloques (REST habilitado).
+
+### Taxonomías internas
+
+| Taxonomía | CPT | Términos predefinidos | Uso |
+|---|---|---|---|
+| `dm_tipo_recurso` | `dm_recurso` | `gratis`, `pagos` | Chips de filtro en `/recursos/` |
+| `dm_tipo_escuela` | `dm_escuela` | `cursos`, `talleres`, `programas` | Chips de filtro en `/escuela/` |
+| `dm_tipo_servicio` | `dm_servicio` | `sesiones`, `membresias` | Chips de filtro en `/servicios/` |
+| `dm_tema` | los 3 CPTs | _(el admin los crea libremente)_ | Temas transversales para chips y cross-navegación |
+
+Los términos de `dm_tipo_*` se crean automáticamente en el primer `init` si no existen. Los términos de `dm_tema` los añade el admin manualmente.
+
+### Cómo crear un ítem y vincularlo con un producto WooCommerce
+
+1. **Crear el post CPT:**  
+   WP Admin → (Recursos CPT / Escuela CPT / Servicios CPT) → Añadir nuevo.  
+   Rellena título, contenido, imagen destacada y excerpt.
+
+2. **Asignar tipo/taxonomía:**  
+   En la barra lateral del editor, elige el tipo correspondiente:  
+   - Recursos: selecciona `gratis` o `pagos` en **Tipos de recurso**.  
+   - Escuela: selecciona `cursos`, `talleres` o `programas` en **Tipos de Escuela**.  
+   - Servicios: selecciona `sesiones` o `membresias` en **Tipos de servicio**.  
+   - Opcionalmente, añade temas transversales en **Temas**.
+
+3. **Vincular producto WooCommerce:**  
+   En la barra lateral del editor verás el metabox **"Producto WooCommerce relacionado"**.  
+   - Introduce el **ID del producto** de WooCommerce (número entero).  
+   - Si el producto es gratis (precio = 0), el botón CTA dirá **"Recíbelo gratis"**.  
+   - Si el producto es de pago, el CTA dirá **"Comprar"** y mostrará el precio.  
+   - Si dejas el campo vacío, no se mostrará ningún CTA (útil para posts informativos).
+
+4. **Publicar.** La URL estará disponible en:
+   - Recurso: `/recursos/<slug>/`
+   - Escuela: `/escuela/<slug>/`
+   - Servicio: `/servicios/<slug>/`
+
+> **Importante:** después de registrar los CPTs por primera vez, ve a **WP Admin → Ajustes → Enlaces permanentes** y haz clic en **Guardar cambios** (aunque no cambies nada). Esto vacía el caché de rewrite rules y activa las nuevas URLs.
+
+### URLs esperadas
+
+| URL | Qué muestra |
+|---|---|
+| `/recursos/` | Archive CPT dm_recurso — grid con chips de tipo |
+| `/recursos/<slug>/` | Single dm_recurso — contenido + CTA |
+| `/escuela/` | Archive CPT dm_escuela — grid con chips de tipo |
+| `/escuela/<slug>/` | Single dm_escuela — contenido + CTA |
+| `/servicios/` | Archive CPT dm_servicio — grid con chips de tipo |
+| `/servicios/<slug>/` | Single dm_servicio — contenido + CTA |
+
+> **Nota:** las páginas estáticas existentes (`/recursos/`, `/escuela/`) no deben tener el mismo slug que el archive del CPT, o WordPress priorizará la página estática. Si ya existen como Pages, cámbiales el slug o conviértelas a borradores para que el archive del CPT tome el control de esa URL.
+
+### Templates
+
+Los templates viven en la raíz del tema hijo (como manda WordPress):
+
+| Archivo | Para |
+|---|---|
+| `archive-dm_recurso.php` | Archive de Recursos CPT |
+| `single-dm_recurso.php` | Single de Recurso |
+| `archive-dm_escuela.php` | Archive de Escuela CPT |
+| `single-dm_escuela.php` | Single de Escuela |
+| `archive-dm_servicio.php` | Archive de Servicios CPT |
+| `single-dm_servicio.php` | Single de Servicio |
+
+### Módulos del child theme (CPT)
+
+| Archivo | Responsabilidad |
+|---|---|
+| `inc/cpt.php` | Registra CPTs y taxonomías; crea términos por defecto |
+| `inc/helpers-cpt.php` | Metabox WC, CTA renderer, chips de taxonomía, grid CPT |
+
+### Relación con los shortcodes existentes (WooCommerce Pages)
+
+Los shortcodes de WooCommerce (Páginas clásicas) y los CPTs **coexisten sin conflicto**:
+
+| Capa | Motor | URL | Casos de uso |
+|---|---|---|---|
+| Pages + Shortcodes | WooCommerce | `/recursos/gratis/`, `/escuela/cursos/`… | Catálogo WC existente |
+| CPT Archives/Singles | WordPress nativo | `/recursos/`, `/escuela/`, `/servicios/` | Nueva capa editorial |
+| Checkout, Membresías, Suscripciones | WooCommerce | `/checkout/`, etc. | Motor de compra (no se toca) |
