@@ -1,0 +1,44 @@
+/* Shoptimizer WooCommerce Composite Products Styling: https://woocommerce.com/products/composite-products */
+
+.composite_summary,
+.composite_wrap {
+    margin-right: auto;
+    margin-left: auto;
+    padding-right: 2.617924em;
+    padding-left: 2.617924em;
+}
+
+.product .cart .single_add_to_cart_button.composite_add_to_cart_button {
+    width: auto;
+    margin-left: 10px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+}
+
+.product .cart .composite_price {
+    padding-bottom: 10px;
+}
+
+.product .composite_button {
+    padding-bottom: 30px;
+}
+
+.product .composite_form {
+    padding-left: 0px !important;
+}
+
+.product .composite_navigation.componentized .page_button {
+    font-size: 14px;
+}
+
+@media (max-width: 992px) {
+    .composite_summary,
+  .composite_wrap,
+    .composite_component {
+        padding-right: 1em;
+        padding-left: 1em;
+    }
+    .composite_component {
+        padding-bottom: 1em;
+    }
+}
