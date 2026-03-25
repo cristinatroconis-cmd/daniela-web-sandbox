@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Daniela Child (Shoptimizer) - Functions
  *
@@ -8,7 +9,7 @@
  * @package Daniela_Child
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit;
 }
 
@@ -25,10 +26,17 @@ require_once __DIR__ . '/inc/recursos-hub.php';
 require_once __DIR__ . '/inc/newsletter-optin.php';
 
 // Admin settings (loaded via WooCommerce filter so WC_Settings_Page is available).
-add_filter( 'woocommerce_get_settings_pages', function ( $settings ) {
-	if ( is_admin() ) {
+add_filter('woocommerce_get_settings_pages', function ($settings) {
+	if (is_admin()) {
 		require_once __DIR__ . '/inc/admin-settings.php';
 		$settings[] = new DM_Settings_Page();
 	}
 	return $settings;
-} );
+});
+
+// Home: sección "¿Qué necesitas?"
+add_shortcode('dm_home_necesitas', function () {
+	ob_start();
+	get_template_part('template-parts/home/section', 'necesitas');
+	return ob_get_clean();
+});
