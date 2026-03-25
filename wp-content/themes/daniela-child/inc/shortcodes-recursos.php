@@ -114,13 +114,16 @@ add_shortcode( 'dm_recursos_temas', function () {
     if ( ! empty( $recursos_tags ) ) : ?>
         <nav class="dm-chips" aria-label="<?php esc_attr_e( 'Filtrar por tema', 'daniela-child' ); ?>">
             <a href="<?php echo esc_url( $current_page ); ?>"
-               class="dm-chip<?php echo $active_slug === '' ? ' dm-chip--active' : ''; ?>">
+               class="dm-chip<?php echo $active_slug === '' ? ' dm-chip--active' : ''; ?>"
+               <?php echo $active_slug === '' ? 'aria-current="true"' : ''; ?>>
                 <?php esc_html_e( 'Todos', 'daniela-child' ); ?>
             </a>
             <?php foreach ( $recursos_tags as $tag ) : ?>
                 <a href="<?php echo esc_url( add_query_arg( 'tema', $tag->slug, $current_page ) ); ?>"
-                   class="dm-chip<?php echo $active_slug === $tag->slug ? ' dm-chip--active' : ''; ?>">
+                   class="dm-chip<?php echo $active_slug === $tag->slug ? ' dm-chip--active' : ''; ?>"
+                   <?php echo $active_slug === $tag->slug ? 'aria-current="true"' : ''; ?>>
                     <?php echo esc_html( $tag->name ); ?>
+                    <span class="dm-chip__count">(<?php echo (int) $tag->recursos_count; ?>)</span>
                 </a>
             <?php endforeach; ?>
         </nav>

@@ -234,3 +234,24 @@ Para activarlos, pega el shortcode correspondiente en el contenido de cada pági
 | `[dm_recursos_gratis]` | `/recursos/gratis/` | `recursos-gratis` |
 | `[dm_recursos_pagos]` | `/recursos/pagos/` | `recursos-pagos` |
 | `[dm_recursos_temas]` | `/recursos/temas/` | `recursos-gratis` + `recursos-pagos` (filtrado por tema) |
+
+### `[dm_recursos_temas]` — Explorar recursos por tema
+
+Renderiza un bloque de chips (pastillas) basados en las etiquetas de producto (`product_tag`) de WooCommerce, seguido de un grid de productos filtrado por el tema seleccionado.
+
+**Cómo funciona:**
+
+| Elemento | Descripción |
+|---|---|
+| Chips de temas | Se generan automáticamente a partir de las etiquetas (`product_tag`) que tengan al menos un producto publicado en `recursos-gratis` o `recursos-pagos`. Cada chip muestra el nombre del tema y el número de recursos disponibles. |
+| Chip "Todos" | Siempre visible; muestra todos los recursos (sin filtro de tema). |
+| Parámetro `?tema=<slug>` | Controla el tema activo. Por ejemplo: `/recursos/temas/?tema=ansiedad`. El chip correspondiente se marca como activo. Si se omite, se muestran todos los recursos. |
+| Fallback sin JS | Los chips son enlaces HTML estándar; el filtrado funciona con recarga de página aunque JavaScript no esté disponible. |
+| Mejora con JS | Cuando JS está disponible, el chip activo se desplaza automáticamente al campo visible en pantallas pequeñas. |
+
+**Ejemplo de uso en WordPress:**
+1. Crea una página con slug `recursos/temas/`.
+2. En el editor de contenido, pega el shortcode: `[dm_recursos_temas]`
+3. Publica la página.
+
+Los chips y el grid se generan dinámicamente. Los resultados se cachean durante 1 hora (transient) y el caché se invalida automáticamente cuando se crea o actualiza un producto.
