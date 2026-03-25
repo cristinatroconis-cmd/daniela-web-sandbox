@@ -62,4 +62,15 @@ add_action( 'wp_enqueue_scripts', function () {
 			true
 		);
 	}
+
+	// Lightweight scroll-into-view JS for [dm_recursos_temas] chips.
+	if ( has_shortcode( $post->post_content, 'dm_recursos_temas' ) ) {
+		wp_enqueue_script(
+			'dm-temas-chips',
+			get_stylesheet_directory_uri() . '/js/temas-chips.js',
+			array(),
+			'1.0.0',
+			true
+		);
+	}
 }, 25 );
