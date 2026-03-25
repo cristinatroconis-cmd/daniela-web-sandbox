@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Core modules — always loaded.
-require_once __DIR__ . '/inc/header.php';
 require_once __DIR__ . '/inc/assets.php';
 require_once __DIR__ . '/inc/helpers-products.php';
 require_once __DIR__ . '/inc/shortcodes-escuela.php';
