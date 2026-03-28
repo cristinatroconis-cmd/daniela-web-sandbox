@@ -445,6 +445,61 @@ grep -r "dm_escuela" "$DM_REPO/wp-content/themes/daniela-child/"
 
 ---
 
+# 18. UI System — Catálogo uniforme (cards + grids)
+
+## Decisión de producto
+
+El sitio usa **un solo sistema** de cards + grids para todos los catálogos.  
+**No se crean variantes por sección ni por CPT.** Razón: proyecto low budget — el costo/beneficio de mantener variantes específicas no justifica la complejidad adicional. Un sistema único mejora conversión (consistencia visual) y reduce mantenimiento.
+
+## Clases base
+
+| Clase CSS | Descripción |
+|---|---|
+| `.dm-grid` | Grid de tarjetas CPT (archives de `/escuela/`, `/recursos/`, `/servicios/`) |
+| `.dm-card` | Tarjeta individual dentro de `.dm-grid` |
+| `.dm-products-grid` | Grid de productos WooCommerce (shortcodes, páginas de producto) |
+
+## Responsabilidades
+
+| Capa | Responsabilidad |
+|---|---|
+| CSS (`style.css`) | Layout del grid y estilos visuales de las tarjetas. Define columnas, espaciado, breakpoints. |
+| PHP — renderers CPT (`inc/helpers-cpt.php`) | Genera el HTML de `.dm-grid` + `.dm-card` para archives CPT. Función principal: `dm_cpt_render_grid()`. |
+| PHP — productos (`inc/dm-products.php`) | Genera el HTML de `.dm-products-grid` para listados WooCommerce (shortcodes, grids). |
+
+## Regla de consistencia: layout
+
+- **Desktop (≥ 1024 px):** objetivo 3 columnas.
+- **Tablet / mobile:** responsivo (definido en `style.css`; no duplicar breakpoints en PHP).
+- **Regla de oro:** si cambias el número de columnas o el espaciado, cambia en `style.css` **en un solo lugar**. No hardcodear valores de layout en PHP ni en plantillas individuales.
+- **No crear variantes por CPT:** `/escuela/`, `/recursos/` y `/servicios/` usan exactamente las mismas clases `.dm-grid` y `.dm-card`.
+
+## Regla de consistencia: copy / CTAs
+
+- CTA secundario neutro: **"Ver detalles"** (no usar copy específico de sección como "Ver curso" en contextos genéricos).
+  - Excepción documentada: el grid de `/escuela/` muestra **"Ver curso"** como primer CTA cuando existe `_dm_tutor_course_url`, porque el contexto es explícitamente un curso en Tutor LMS. Fuera de ese contexto específico, usar "Ver detalles".
+- CTA primario de compra: **"Agregar al carrito"** (texto unificado; generado por `dm_cpt_render_cta()`).
+- No inventar textos nuevos por sección sin actualizar este documento.
+
+## Archivos relevantes
+
+| Archivo | Qué toca |
+|---|---|
+| `wp-content/themes/daniela-child/style.css` | Estilos de `.dm-grid`, `.dm-card`, `.dm-products-grid`, `.dm-btn`, `.dm-chips` |
+| `wp-content/themes/daniela-child/inc/helpers-cpt.php` | Renderer del grid CPT (`dm_cpt_render_grid()`), CTA (`dm_cpt_render_cta()`), chips |
+| `wp-content/themes/daniela-child/inc/dm-products.php` | Renderer del grid de productos WooCommerce (`.dm-products-grid`) |
+
+## Guías para cambios futuros
+
+1. **¿Necesitas un nuevo grid?** → Reutiliza `.dm-grid` / `.dm-cards` (CPT) o `.dm-products-grid` (Woo). **No crees una clase nueva de grid.**
+2. **¿Quieres cambiar el layout del grid?** → Edita `style.css`. El cambio aplica a todas las secciones automáticamente.
+3. **¿Necesitas un CTA diferente?** → Actualiza `dm_cpt_render_cta()` en `inc/helpers-cpt.php`. No dupliques lógica de CTA en los templates PHP.
+4. **¿Vas a agregar un nuevo CPT?** → Usa `dm_cpt_render_grid()` como renderer. No escribas un loop de tarjetas ad-hoc.
+5. **Evitar duplicar lógica:** toda la lógica de renderizado de tarjetas vive en `inc/helpers-cpt.php`. Los templates archive solo llaman a las funciones helpers; no contienen HTML de tarjetas directamente.
+
+---
+
 # 17. Consideraciones UX
 
 ## Evitar CTAs duplicados

@@ -82,6 +82,16 @@ Todos en `wp-content/themes/daniela-child/`:
 - ✅ Variables en `~/.zshrc`: `DM_REPO` y `DM_WP`
 - Flujo: `git pull` en `$DM_REPO` → refrescar navegador (sin rsync)
 
+### 3.7 Sistema UI — Catálogo uniforme (DECISIÓN CERRADA ✅)
+- ✅ Se usa **un solo sistema** de cards + grids para todos los catálogos (no hay variantes por CPT).
+- ✅ Archives CPT (escuela, recursos, servicios) → `.dm-grid` + `.dm-card` via `dm_cpt_render_grid()`.
+- ✅ Grids de producto WooCommerce → `.dm-products-grid` via `inc/dm-products.php`.
+- ✅ Estilos centralizados en `style.css`; PHP renderers no llevan layout inline.
+- ✅ CTA neutro: "Ver detalles" (excepción: "Ver curso" en `/escuela/` con `_dm_tutor_course_url`).
+- ✅ Regla: 3 columnas en desktop (≥1024px), responsivo en tablet/mobile.
+- **Motivo:** proyecto low budget — consistencia visual mejora conversión; sistema único reduce mantenimiento.
+- **Referencia:** `ARCHITECTURE.md` § 18 + `docs/ARCHITECTURE_NOTES.md` § 3c.
+
 ---
 
 ## 4) Backlog inmediato 🔲
