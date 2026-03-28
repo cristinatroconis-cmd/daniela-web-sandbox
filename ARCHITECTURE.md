@@ -260,3 +260,19 @@ Evitar:
 # 10. Objetivo final
 
 Convertir el sitio en una **escuela de recursos psicológicos online**, donde el usuario pueda avanzar progresivamente en su proceso personal.
+
+---
+
+# 11. Documentación operativa (sandbox)
+Para evitar perder contexto (por ejemplo, chats que fallan), este repo mantiene:
+- `docs/project_status.md` — estado del proyecto y plan (Semana 1/2)
+- `docs/ARCHITECTURE_NOTES.md` — decisiones y notas vivas de arquitectura
+
+# 12. Escuela: Tutor LMS + capa editorial con CPT
+- **Tutor LMS** se mantiene como motor de cursos (hay cursos activos).
+- La navegación/SEO/UX de la escuela se apoya en CPTs (catálogo editorial) para:
+  - mejor jerarquía de oferta
+  - CTAs consistentes
+  - escalabilidad sin depender de páginas sueltas o solo categorías Woo
+
+Regla: definir una fuente de verdad para el acceso (Tutor vs Memberships/Subs) para evitar doble gating.
