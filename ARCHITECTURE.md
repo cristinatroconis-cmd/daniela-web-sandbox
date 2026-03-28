@@ -299,7 +299,7 @@ Todos soportan: `title`, `editor`, `thumbnail`, `excerpt`, `revisions`. REST hab
 |---|---|---|
 | `dm_tipo_recurso` | `dm_recurso` | `gratis`, `pagos` |
 | `dm_tipo_escuela` | `dm_escuela` | `cursos`, `talleres`, `programas` |
-| `dm_tipo_servicio` | `dm_servicio` | `sesiones`, `membresias` |
+| `dm_tipo_servicio` | `dm_servicio` | `sesiones`, `membresias` — **LEGACY**: no se usa para chips/UX en `/servicios/`; la clasificación la manda WooCommerce `product_cat` |
 | `dm_tema` | los 3 CPTs | _(admin los crea libremente)_ |
 
 Los términos de `dm_tipo_*` se crean automáticamente en el primer `init`.
@@ -314,7 +314,7 @@ Viven en la raíz del tema hijo (convención WordPress):
 | `single-dm_recurso.php` | `/recursos/<slug>/` | Recurso individual + CTA |
 | `archive-dm_escuela.php` | `/escuela/` | Grid de cursos con chips Woo (Ruta A) |
 | `single-dm_escuela.php` | `/escuela/<slug>/` | Ítem de escuela individual + CTA |
-| `archive-dm_servicio.php` | `/servicios/` | Grid de servicios con chips de tipo |
+| `archive-dm_servicio.php` | `/servicios/` | Grid de servicios con chips Woo (`product_cat servicios/*`) — Ruta A (estricto) |
 | `single-dm_servicio.php` | `/servicios/<slug>/` | Servicio individual + CTA |
 
 ## 13.3 Helpers principales (`inc/helpers-cpt.php`)
@@ -328,6 +328,8 @@ Viven en la raíz del tema hijo (convención WordPress):
 | `dm_cpt_render_grid($query)` | Grid de tarjetas CPT (maneja lógica especial para `dm_escuela`) |
 | `dm_escuela_render_woo_chips($param, $base_url)` | Chips de filtro /escuela/ usando categorías WooCommerce (Ruta A) |
 | `dm_escuela_query_args_by_woo_cat($param)` | WP_Query args filtrando por categoría WC del producto vinculado |
+| `dm_servicios_render_woo_chips($param, $base_url)` | Chips de filtro /servicios/ usando categorías WooCommerce hijas de `servicios` (Ruta A, estricto) |
+| `dm_servicios_query_args_by_woo_cat_strict($param)` | WP_Query args para `/servicios/`: exige que el producto vinculado esté en `product_cat servicios/*` (modo estricto) |
 
 ## 13.4 Metaboxes
 
@@ -372,7 +374,9 @@ Si elige "Ver curso":
 
 ## WooCommerce
 - Motor de compra (checkout, pedidos, productos, categorías).
-- Categorías de producto (`product_cat`) usadas como fuente de verdad para chips de `/escuela/` (Ruta A).
+- Categorías de producto (`product_cat`) usadas como fuente de verdad para chips de:
+  - `/escuela/` (Ruta A): categorías `cursos`, `talleres`, `programas`.
+  - `/servicios/` (Ruta A, **estricto**): árbol `servicios/*` con hijas `sesiones`, `paquetes`, `membresias`, `supervisiones`. Solo aparecen ítems `dm_servicio` cuyo producto vinculado esté dentro de `servicios/*`.
 - El helper `dm_cpt_render_cta()` usa `add_to_cart_url()` y `get_price_html()` de WC_Product.
 - Si WooCommerce no está activo, los helpers fallan silenciosamente (devuelven cadena vacía).
 
@@ -466,5 +470,10 @@ grep -r "dm_escuela" "$DM_REPO/wp-content/themes/daniela-child/"
 - Pendiente: subitems hover para Escuela, Recursos, Servicios en el menú principal.
   - Subitem Escuela: Cursos / Talleres / Programas.
   - Subitem Recursos: Gratis / Pagos / Por tema.
-  - Subitem Servicios: Sesiones / Membresías.
+  - Subitem Servicios: Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`).
 - Implementar en WP Admin → Apariencia → Menús (no requiere código, solo configuración).
+- URLs a usar para Servicios:
+  - `/servicios/?tipo=sesiones`
+  - `/servicios/?tipo=paquetes`
+  - `/servicios/?tipo=membresias`
+  - `/servicios/?tipo=supervisiones`
