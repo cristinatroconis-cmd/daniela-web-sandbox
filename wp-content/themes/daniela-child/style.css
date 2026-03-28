@@ -369,6 +369,63 @@ Text Domain: daniela-child
 	outline: none;
 }
 
+/* Primary / Secondary / Ghost button variants */
+.dm-btn--primary {
+	background: var(--dm-color-primary);
+	color: #fff;
+}
+
+.dm-btn--primary:hover,
+.dm-btn--primary:focus-visible {
+	background: var(--dm-color-primary-dark);
+	color: #fff;
+	transform: translateY(-1px);
+	outline: none;
+}
+
+.dm-btn--secondary {
+	background: var(--dm-color-accent);
+	color: #fff;
+}
+
+.dm-btn--secondary:hover,
+.dm-btn--secondary:focus-visible {
+	background: #c97f72;
+	color: #fff;
+	transform: translateY(-1px);
+	outline: none;
+}
+
+.dm-btn--ghost {
+	background: transparent;
+	color: var(--dm-color-primary);
+	border: 1.5px solid var(--dm-color-primary);
+}
+
+.dm-btn--ghost:hover,
+.dm-btn--ghost:focus-visible {
+	background: var(--dm-color-primary);
+	color: #fff;
+	transform: translateY(-1px);
+	outline: none;
+}
+
+/* Card footer with dual action buttons (Ver curso + Agregar al carrito) */
+.dm-card__footer--actions {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+	padding: 0.75rem 1rem;
+}
+
+.dm-card__footer--actions .dm-cta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
 /* ==========================================================================
    Newsletter Opt-In checkbox (checkout)
    ========================================================================== */
