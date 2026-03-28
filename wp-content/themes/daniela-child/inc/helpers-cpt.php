@@ -139,9 +139,13 @@ function dm_cpt_get_linked_product($post_id = null)
  * Renderiza el CTA (botón de compra/descarga) para el producto relacionado.
  *
  * Comportamiento:
- * - Precio 0 → "Recíbelo gratis" (add_to_cart_url).
- * - Precio > 0 → "Comprar" (add_to_cart_url).
+ * - Precio 0 → "Agregar al carrito" (gratis) (add_to_cart_url).
+ * - Precio > 0 → "Agregar al carrito" (pago) (add_to_cart_url).
  * - Sin producto vinculado o WC inactivo → cadena vacía (falla silenciosamente).
+ *
+ * NOTA UX (Daniela Montes):
+ * - El precio NO se imprime aquí: se muestra al lado del título en el grid,
+ *   para evitar que quede “entre botones” cuando existe "Ver curso" + CTA Woo.
  *
  * @param int|null $post_id  ID del post CPT. Usa el global si es null.
  * @return string            HTML del botón o cadena vacía.
@@ -156,21 +160,13 @@ function dm_cpt_render_cta($post_id = null)
 	$price   = (float) $product->get_price();
 	$is_free = ((float) $price <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
 
-	// CTA unificado: siempre agregamos al carrito (incluye productos gratis).
-	$label = __('Agregar al carrito', 'daniela-child');
-
-	// Si quieres diferenciar gratis visualmente, mantenemos estilos distintos,
-	// pero el texto y el flujo son los mismos.
+	$label     = __('Agregar al carrito', 'daniela-child');
 	$btn_class = $is_free ? 'dm-btn dm-btn--secondary' : 'dm-btn dm-btn--primary';
-
-	$url = $product->add_to_cart_url();
+	$url       = $product->add_to_cart_url();
 
 	ob_start();
 ?>
 	<div class="dm-cta">
-		<?php if (! $is_free) : ?>
-			<span class="dm-cta__price"><?php echo wp_kses_post($product->get_price_html()); ?></span>
-		<?php endif; ?>
 		<a
 			href="<?php echo esc_url($url); ?>"
 			class="<?php echo esc_attr($btn_class); ?> add_to_cart_button ajax_add_to_cart"
@@ -345,6 +341,10 @@ function dm_cpt_archive_query_args($post_type, $taxonomy, $param = 'tipo')
  * muestra dos botones en el footer ("Ver curso" + CTA WooCommerce).
  * Para otros CPTs: comportamiento original.
  *
+ * UX Daniela Montes:
+ * - El precio se muestra junto al título (si hay producto vinculado).
+ * - El footer queda limpio solo para acciones.
+ *
  * @param WP_Query $query    Query de posts CPT.
  * @return string            HTML del grid o mensaje "sin resultados".
  */
@@ -373,6 +373,19 @@ function dm_cpt_render_grid($query)
 		}
 		$card_link = $tutor_url !== '' ? $tutor_url : $permalink;
 
+		// Producto vinculado (para precio junto al título y CTA Woo).
+		$product = dm_cpt_get_linked_product($post_id);
+		$price_html = '';
+		$is_free = false;
+
+		if ($product) {
+			$price = (float) $product->get_price();
+			$is_free = ($price <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
+			if (! $is_free) {
+				$price_html = (string) $product->get_price_html();
+			}
+		}
+
 		$html .= '<article class="dm-card">';
 
 		if ($thumb_id) {
@@ -384,11 +397,26 @@ function dm_cpt_render_grid($query)
 		}
 
 		$html .= '<div class="dm-card__body">';
+
+		// Title row (título + precio a la derecha).
+		$html .= '<div class="dm-card__title-row">';
 		$html .= '<h3 class="dm-card__title"><a href="' . esc_url($card_link) . '">' . esc_html($title) . '</a></h3>';
+
+		if ($product) {
+			if ($is_free) {
+				$html .= '<span class="dm-card__price dm-card__price--free">' . esc_html__('Gratis', 'daniela-child') . '</span>';
+			} elseif ($price_html !== '') {
+				$html .= '<span class="dm-card__price dm-card__price--paid">' . wp_kses_post($price_html) . '</span>';
+			}
+		}
+
+		$html .= '</div>'; // .dm-card__title-row
+
 		if ($excerpt) {
 			$html .= '<p class="dm-card__excerpt">' . wp_kses_post(wp_trim_words($excerpt, 20)) . '</p>';
 		}
-		$html .= '</div>';
+
+		$html .= '</div>'; // .dm-card__body
 
 		$cta_buy = dm_cpt_render_cta($post_id);
 
@@ -398,7 +426,7 @@ function dm_cpt_render_grid($query)
 			// 1) "Ver curso" primero — abre en nueva pestaña (solo dm_escuela con URL).
 			if ($tutor_url !== '') {
 				$html .= '<a class="dm-btn dm-btn--ghost" target="_blank" rel="noopener" href="' . esc_url($tutor_url) . '">'
-					. esc_html__('Ver curso', 'daniela-child')
+					. esc_html__('Ver detalles', 'daniela-child')
 					. '</a>';
 			}
 
