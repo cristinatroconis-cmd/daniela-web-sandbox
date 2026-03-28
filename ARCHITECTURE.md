@@ -265,8 +265,8 @@ Convertir el sitio en una **escuela de recursos psicológicos online**, donde el
 
 # 11. Documentación operativa (sandbox)
 Para evitar perder contexto (por ejemplo, chats que fallan), este repo mantiene:
-- `docs/project_status.md` — estado del proyecto y plan (Semana 1/2)
-- `docs/ARCHITECTURE_NOTES.md` — decisiones y notas vivas de arquitectura
+- `docs/project_status.md` — estado actual del proyecto y backlog inmediato
+- `docs/ARCHITECTURE_NOTES.md` — decisiones, estado implementado y checklist de pruebas
 
 # 12. Escuela: Tutor LMS + capa editorial con CPT
 - **Tutor LMS** se mantiene como motor de cursos (hay cursos activos).
@@ -276,3 +276,195 @@ Para evitar perder contexto (por ejemplo, chats que fallan), este repo mantiene:
   - escalabilidad sin depender de páginas sueltas o solo categorías Woo
 
 Regla: definir una fuente de verdad para el acceso (Tutor vs Memberships/Subs) para evitar doble gating.
+
+---
+
+# 13. Arquitectura técnica implementada
+
+## 13.1 Custom Post Types (CPTs)
+
+Registrados en `wp-content/themes/daniela-child/inc/cpt.php`.
+
+| CPT | Slug URL | Admin label |
+|---|---|---|
+| `dm_recurso` | `/recursos/` | Recursos CPT |
+| `dm_escuela` | `/escuela/` | Escuela CPT |
+| `dm_servicio` | `/servicios/` | Servicios CPT |
+
+Todos soportan: `title`, `editor`, `thumbnail`, `excerpt`, `revisions`. REST habilitado.
+
+### Taxonomías internas
+
+| Taxonomía | CPT | Términos predefinidos |
+|---|---|---|
+| `dm_tipo_recurso` | `dm_recurso` | `gratis`, `pagos` |
+| `dm_tipo_escuela` | `dm_escuela` | `cursos`, `talleres`, `programas` |
+| `dm_tipo_servicio` | `dm_servicio` | `sesiones`, `membresias` |
+| `dm_tema` | los 3 CPTs | _(admin los crea libremente)_ |
+
+Los términos de `dm_tipo_*` se crean automáticamente en el primer `init`.
+
+## 13.2 Templates
+
+Viven en la raíz del tema hijo (convención WordPress):
+
+| Archivo | URL | Función |
+|---|---|---|
+| `archive-dm_recurso.php` | `/recursos/` | Grid de recursos con chips de tipo |
+| `single-dm_recurso.php` | `/recursos/<slug>/` | Recurso individual + CTA |
+| `archive-dm_escuela.php` | `/escuela/` | Grid de cursos con chips Woo (Ruta A) |
+| `single-dm_escuela.php` | `/escuela/<slug>/` | Ítem de escuela individual + CTA |
+| `archive-dm_servicio.php` | `/servicios/` | Grid de servicios con chips de tipo |
+| `single-dm_servicio.php` | `/servicios/<slug>/` | Servicio individual + CTA |
+
+## 13.3 Helpers principales (`inc/helpers-cpt.php`)
+
+| Función | Responsabilidad |
+|---|---|
+| `dm_cpt_get_linked_product($post_id)` | Devuelve el WC_Product vinculado al CPT (meta `_dm_wc_product_id`) |
+| `dm_cpt_render_cta($post_id)` | Renderiza botón "Agregar al carrito" con precio (gratis → botón secundario) |
+| `dm_cpt_render_taxonomy_chips($taxonomy, $param, $base_url)` | Chips de filtro por taxonomía interna CPT |
+| `dm_cpt_archive_query_args($post_type, $taxonomy, $param)` | WP_Query args con filtro de taxonomía CPT |
+| `dm_cpt_render_grid($query)` | Grid de tarjetas CPT (maneja lógica especial para `dm_escuela`) |
+| `dm_escuela_render_woo_chips($param, $base_url)` | Chips de filtro /escuela/ usando categorías WooCommerce (Ruta A) |
+| `dm_escuela_query_args_by_woo_cat($param)` | WP_Query args filtrando por categoría WC del producto vinculado |
+
+## 13.4 Metaboxes
+
+Registrados en `inc/helpers-cpt.php`:
+
+| Meta key | CPT | Uso |
+|---|---|---|
+| `_dm_wc_product_id` | `dm_recurso`, `dm_escuela`, `dm_servicio` | ID del producto WooCommerce relacionado |
+| `_dm_tutor_course_url` | `dm_escuela` | Path del curso Tutor (ej. `/courses/tumenteencalma/`) |
+
+---
+
+# 14. Flujo de negocio (funnel)
+
+```
+Visitante
+    ↓
+/escuela/ (archive CPT dm_escuela)
+    — chips: Cursos | Talleres | Programas (categorías WooCommerce)
+    — grid de tarjetas con imagen + título + excerpt
+    ↓
+Tarjeta de curso:
+    [Ver curso →]  (abre Tutor LMS en nueva pestaña)
+    [Agregar al carrito]  (WooCommerce checkout)
+    ↓
+Si elige "Agregar al carrito":
+    → WooCommerce checkout estándar
+    → post-compra: usuario obtiene acceso al curso Tutor
+Si elige "Ver curso":
+    → Va directo a Tutor LMS (linkout, sin gating adicional en ese botón)
+```
+
+**Por qué este diseño:**
+- Tutor LMS controla el contenido académico (lecciones, progreso, certificados).
+- WooCommerce controla el pago y el acceso comercial.
+- Los CPTs son la capa editorial/UX: mejor SEO, CTAs claros, chips de navegación.
+- Evita duplicar clasificación: los chips de `/escuela/` usan categorías WC (cursos/talleres/programas) para que la fuente de verdad de clasificación sea una sola.
+
+---
+
+# 15. Integraciones
+
+## WooCommerce
+- Motor de compra (checkout, pedidos, productos, categorías).
+- Categorías de producto (`product_cat`) usadas como fuente de verdad para chips de `/escuela/` (Ruta A).
+- El helper `dm_cpt_render_cta()` usa `add_to_cart_url()` y `get_price_html()` de WC_Product.
+- Si WooCommerce no está activo, los helpers fallan silenciosamente (devuelven cadena vacía).
+
+## Tutor LMS
+- Integración de **solo linkout**: el CPT `dm_escuela` almacena el path del curso en el meta `_dm_tutor_course_url`.
+- No hay llamadas a la API de Tutor desde el child theme; el tema solo enlaza.
+- El botón "Ver curso" abre la URL de Tutor en nueva pestaña (`target="_blank"`).
+- Gating de acceso: lo controla Tutor LMS (o Woo Memberships/Subscriptions); el child theme no replica esa lógica.
+
+## Metabox `_dm_tutor_course_url`
+- Aparece en el editor de WP Admin al editar un ítem `dm_escuela`.
+- Campo: pega el path del curso (ej. `/courses/tumenteencalma/`).
+- Si está vacío, el enlace de imagen/título apunta al single CPT en vez del curso Tutor.
+- Si está presente, imagen y título de la tarjeta enlazan al curso Tutor.
+
+---
+
+# 16. Entorno local (LocalWP + symlink)
+
+## Variables de entorno (`~/.zshrc`)
+
+```bash
+export DM_REPO="/Users/cristinatroconis/Desktop/daniela-web-sandbox"
+export DM_WP="/Users/cristinatroconis/Local Sites/dani-backup/app/public"
+```
+
+## Setup del symlink
+
+El theme `daniela-child` en LocalWP es un **symlink** al directorio del repo:
+
+```
+$DM_WP/wp-content/themes/daniela-child
+    → $DM_REPO/wp-content/themes/daniela-child
+```
+
+Esto elimina la necesidad de sincronizar (`rsync`) después de cada pull.
+El repo es la única fuente de verdad del código del theme.
+
+Verificar que el symlink existe:
+```bash
+ls -la "$DM_WP/wp-content/themes" | grep daniela-child
+```
+
+## Flujo de actualización
+
+### A) Actualizar código desde GitHub
+```bash
+cd "$DM_REPO"
+git checkout main
+git pull --no-rebase origin main
+```
+
+### B) Ver cambios en LocalWP
+No hay paso extra. Gracias al symlink, LocalWP ya usa el código actualizado.
+Solo refrescar el navegador (hard reload si hay caché: `Cmd+Shift+R`).
+
+### C) Verificar el symlink sigue activo (si algo no carga)
+```bash
+ls -la "$DM_WP/wp-content/themes" | grep daniela-child
+```
+
+### D) Buscar en el código del theme
+```bash
+grep -r "dm_escuela" "$DM_REPO/wp-content/themes/daniela-child/"
+```
+
+---
+
+# 17. Consideraciones UX
+
+## Evitar CTAs duplicados
+- En las tarjetas de `/escuela/`: se muestran máximo dos botones en el footer:
+  1. "Ver curso" (solo si `_dm_tutor_course_url` tiene valor) — abre Tutor en nueva pestaña.
+  2. "Agregar al carrito" (solo si hay `_dm_wc_product_id` vinculado) — WooCommerce.
+- Si ninguno de los dos existe, el footer de la tarjeta no se renderiza (no aparece vacío).
+- En singles (`/escuela/<slug>/`): solo se muestra el CTA de WooCommerce.
+
+## Excerpt limpio
+- **Problema detectado:** algunos excerpts de posts CPT traen HTML/CTAs de versiones antiguas.
+- **Pendiente:** sanitizar el excerpt antes de renderizarlo en el grid.
+- Solución planificada: en `dm_cpt_render_grid()`, aplicar `wp_strip_all_tags()` o `wp_trim_words()` con strip_tags al excerpt antes de mostrarlo.
+- Afecta al archivo: `wp-content/themes/daniela-child/inc/helpers-cpt.php` → función `dm_cpt_render_grid()`.
+
+## Botones consistentes
+- Clase `dm-btn dm-btn--ghost` → "Ver curso" (acción secundaria / linkout).
+- Clase `dm-btn dm-btn--primary` → "Agregar al carrito" (producto de pago).
+- Clase `dm-btn dm-btn--secondary` → "Agregar al carrito" (producto gratis).
+- No mezclar estilos entre secciones (Recursos, Escuela, Servicios usan el mismo sistema).
+
+## Menú / navegación (backlog)
+- Pendiente: subitems hover para Escuela, Recursos, Servicios en el menú principal.
+  - Subitem Escuela: Cursos / Talleres / Programas.
+  - Subitem Recursos: Gratis / Pagos / Por tema.
+  - Subitem Servicios: Sesiones / Membresías.
+- Implementar en WP Admin → Apariencia → Menús (no requiere código, solo configuración).
