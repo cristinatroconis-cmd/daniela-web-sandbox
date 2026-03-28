@@ -312,7 +312,7 @@ Text Domain: daniela-child
 	gap: 1.5rem;
 
 	/* Mantener cards a tamaño catálogo */
-	justify-content: center;
+	justify-content: start;
 	grid-template-columns: repeat(auto-fit, minmax(260px, 360px));
 }
 
@@ -365,6 +365,31 @@ Text Domain: daniela-child
 
 .dm-card__title a:hover {
 	color: var(--dm-color-primary);
+}
+
+/* Título + precio en la misma línea (CPT cards) */
+.dm-card__title-row{
+	display:flex;
+	align-items:baseline;
+	justify-content:space-between;
+	gap:12px;
+}
+
+.dm-card__price{
+	white-space:nowrap;
+	font-weight:700;
+	color: var(--dm-color-primary-dark);
+}
+
+.dm-card__price--free{
+	font-size: 0.75rem;
+	font-weight: 800;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	padding: 0.15rem 0.55rem;
+	border-radius: 999px;
+	background: #e5f5e0;
+	color: #2e7d32;
 }
 
 .dm-card__excerpt {
