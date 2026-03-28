@@ -3,7 +3,7 @@
  * Archive template — dm_escuela (Escuela CPT).
  *
  * URL: /escuela/
- * Chips: dm_tipo_escuela (cursos | talleres | programas) y dm_tema.
+ * Chips: categorías WooCommerce (cursos | talleres | programas) — Ruta A.
  *
  * @package Daniela_Child
  */
@@ -24,14 +24,14 @@ get_header();
 
 			<?php
 			$archive_url = get_post_type_archive_link( 'dm_escuela' );
-			echo dm_cpt_render_taxonomy_chips( 'dm_tipo_escuela', 'tipo', $archive_url ); // phpcs:ignore WordPress.Security.EscapeOutput
+			echo dm_escuela_render_woo_chips( 'tipo', $archive_url ); // phpcs:ignore WordPress.Security.EscapeOutput
 			?>
 		</div>
 	</header>
 
 	<div class="dm-archive__content">
 		<?php
-		$args  = dm_cpt_archive_query_args( 'dm_escuela', 'dm_tipo_escuela', 'tipo' );
+		$args  = dm_escuela_query_args_by_woo_cat( 'tipo' );
 		$query = new WP_Query( $args );
 		echo dm_cpt_render_grid( $query ); // phpcs:ignore WordPress.Security.EscapeOutput
 		?>
