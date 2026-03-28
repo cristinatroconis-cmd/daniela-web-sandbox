@@ -1,102 +1,162 @@
 # Daniela Montes Psicóloga — Project Status (Sandbox)
 
-**Fecha:** 2026-03-28  
+**Última actualización:** 2026-03-28  
 **Repo:** `cristinatroconis-cmd/daniela-web-sandbox`  
 **Producción (referencia):** https://danielamontespsic.com/ (rocket.net)  
 **Modo de trabajo:** sandbox / aislado — NO tocar producción directo.
 
 ---
 
-## 1) Contexto / objetivo negocio
+## 1) Contexto / objetivo de negocio
 Negocio terapéutico con foco en:
-1) **Recursos** (entrada económica)
-2) **Cursos / Escuela** (ticket medio)
-3) **Sesiones** (último nivel / premium)
+1. **Recursos** (entrada económica — PDFs, guías)
+2. **Escuela** (cursos / talleres / programas — ticket medio)
+3. **Servicios** (sesiones / membresías — último nivel / premium)
 
-Objetivo: compradores recurrentes + CTAs + checkout UX + acceso a cursos “tipo escuela”.
-
----
-
-## 2) Estado actual (confirmado)
-- Web existente en WordPress (no se rompe).
-- **Tutor LMS tiene cursos activos** (bloqueante: no se puede retirar sin migración).
-- WooCommerce está presente con Memberships + Subscriptions.
-- Se busca maximizar WooCommerce y mejorar conversión/UX.
-- Hosting actual rocket.net; **no migrar aún**.
+Objetivo: plataforma de formación psicológica escalable con conversión optimizada (CTAs claros → checkout WooCommerce → acceso Tutor LMS).
 
 ---
 
-## 3) Decisión de arquitectura (dirección)
-### Escuela: Tutor LMS + Capa CPT (editorial)
-- **Tutor LMS** = experiencia de curso (contenido, lecciones, progreso, etc.)
-- **CPT `dm_escuela`** = capa editorial / UX / SEO:
-  - navegación por “cursos/talleres/programas”
-  - páginas de aterrizaje más claras
-  - CTAs consistentes hacia compra/acceso
-  - estructura más escalable que solo categorías Woo o páginas sueltas
-
-**Regla clave:** evitar “dos fuentes de verdad” para el acceso.
-- Definir si el gating final lo controla:
-  - Tutor (y su sistema),
-  - o Woo Memberships/Subscriptions,
-  - o una integración controlada (pero con reglas claras documentadas).
+## 2) Stack técnico activo
+- **CMS:** WordPress con tema hijo `daniela-child` (parent: Shoptimizer)
+- **Ecommerce:** WooCommerce + Memberships + Subscriptions
+- **LMS:** Tutor LMS (cursos activos — no retirar sin migración)
+- **Hosting producción:** Rocket.net (no migrar aún)
+- **Entorno local:** LocalWP (`dani-backup`) con symlink del theme al repo
 
 ---
 
-## 4) PLAN REALISTA (no fantasía)
+## 3) Estado actual — Implementado ✅
 
-### Semana 1 — Base sólida (auditar + decidir)
-**Día 3–4: Auditoría técnica (entregables claros)**
-Checklist mínimo:
-- Inventario de cursos activos en Tutor:
-  - cantidad, tipos, si están pagados/gratis, qué roles/accesos usan
-- Inventario Woo:
-  - productos asociados a cursos (si aplica)
-  - categorías: recursos/cursos/talleres/programas/sesiones
-- Auditoría de acceso:
-  - Memberships: planes activos, reglas de restricción
-  - Subscriptions: productos de suscripción activos (si existen)
-  - ¿hay doble gating? (Tutor + Memberships a la vez)
-- Recorridos reales (con 1 usuario prueba):
-  - compra recurso (gratis y pago)
-  - compra curso / acceso curso
-  - login / acceso “escuela”
+### 3.1 CPTs (Custom Post Types)
+Registrados en `wp-content/themes/daniela-child/inc/cpt.php`:
 
-**Resultado (fin día 4):**
-- Mapa claro de arquitectura actual (quién controla qué)
-- Lista de fricciones en checkout + acceso escuela
-- Lista de scripts/plugins que más cargan checkout/home
+| CPT | URL | Estado |
+|---|---|---|
+| `dm_escuela` | `/escuela/` | ✅ Implementado |
+| `dm_recurso` | `/recursos/` | ✅ Implementado |
+| `dm_servicio` | `/servicios/` | ✅ Implementado |
 
-**Día 5: Decisión estratégica**
-Con evidencia:
-- Tutor se queda (sí) → definir cómo convive con Woo/Memberships.
-- ¿Unificamos checkout? ¿Qué campos sobran?
-- ¿Cómo se vende “escuela”: curso individual vs membresía vs híbrido?
-- Priorización Semana 2 (impacto negocio vs riesgo).
+Con taxonomías internas: `dm_tipo_escuela`, `dm_tipo_recurso`, `dm_tipo_servicio`, `dm_tema`.
 
-### Semana 2 — Optimización visible y rentable
-1) Home reestructurada por escalera de valor:
-   - Recursos → Cursos → Membresía (si aplica) → Sesiones
-2) Checkout UX:
-   - reducir fricción
-   - CTAs claros
-   - flujo de “escuela” más limpio post-compra
-3) Rendimiento:
-   - eliminar scripts innecesarios (especialmente en checkout)
-   - reducir JS duplicado
-   - limpieza de dependencias
+### 3.2 Templates
+Todos en `wp-content/themes/daniela-child/`:
 
----
+| Archivo | Estado |
+|---|---|
+| `archive-dm_escuela.php` | ✅ Chips WooCommerce (Ruta A) + grid |
+| `archive-dm_recurso.php` | ✅ Chips taxonomía + grid |
+| `archive-dm_servicio.php` | ✅ Chips taxonomía + grid |
+| `single-dm_escuela.php` | ✅ Imagen + tipo + contenido + CTA Woo |
+| `single-dm_recurso.php` | ✅ Implementado |
+| `single-dm_servicio.php` | ✅ Implementado |
 
-## 5) Riesgos (no romper)
-- Tutor activo: cambios deben ser reversibles.
-- Memberships/Subscriptions: tocar reglas sin auditoría puede romper accesos.
-- WP File Manager: revisar necesidad/riesgo.
-- Rocket.net: no migrar aún.
+### 3.3 Helpers (`wp-content/themes/daniela-child/inc/helpers-cpt.php`)
+- ✅ `dm_cpt_render_cta()` — botón "Agregar al carrito" con precio
+- ✅ `dm_cpt_render_grid()` — tarjetas con lógica dual de enlaces y footer de CTAs
+- ✅ `dm_cpt_render_taxonomy_chips()` — chips genéricos para CPTs
+- ✅ `dm_escuela_render_woo_chips()` — chips de `/escuela/` basados en categorías WC
+- ✅ `dm_escuela_query_args_by_woo_cat()` — filtrado por categoría WC del producto vinculado
+
+### 3.4 Metaboxes
+- ✅ `_dm_wc_product_id` — vincula CPT a producto WooCommerce (en los 3 CPTs)
+- ✅ `_dm_tutor_course_url` — URL del curso Tutor (solo `dm_escuela`)
+
+### 3.5 Comportamiento `/escuela/`
+- Chips: Todos / Cursos / Talleres / Programas (categorías WooCommerce)
+- Tarjeta: imagen + título enlazan a Tutor si existe URL; si no, al single CPT
+- Footer de tarjeta: "Ver curso" (Tutor, nueva pestaña) + "Agregar al carrito" (WooCommerce)
+- Sin CTAs → footer no se renderiza
+
+### 3.6 Entorno local
+- ✅ Symlink: `$DM_WP/wp-content/themes/daniela-child` → `$DM_REPO/wp-content/themes/daniela-child`
+- ✅ Variables en `~/.zshrc`: `DM_REPO` y `DM_WP`
+- Flujo: `git pull` en `$DM_REPO` → refrescar navegador (sin rsync)
 
 ---
 
-## 6) Próximos pasos inmediatos (acción)
-1) Completar auditoría (Semana 1 Día 3–4).
-2) Documentar decisión de gating (Tutor vs Memberships) y el “camino oficial” del usuario.
-3) Implementar mejoras Semana 2 sin duplicar lógica.
+## 4) Backlog inmediato 🔲
+
+### Prioridad alta
+- [ ] **Sanitizar excerpt en el grid** (`dm_cpt_render_grid` en `inc/helpers-cpt.php`)  
+  Algunos excerpts traen HTML/CTAs antiguos. Usar `wp_strip_all_tags()` antes de `wp_trim_words()`.
+
+### Prioridad media
+- [ ] **Subitems hover en menú principal**  
+  Agregar subitems en WP Admin → Apariencia → Menús:
+  - Escuela → Cursos (`/escuela/?tipo=cursos`) / Talleres / Programas
+  - Recursos → Gratis (`/recursos/?tipo=gratis`) / Pagos
+  - Servicios → Sesiones / Membresías
+  
+- [ ] **Auditar gating de acceso** (Tutor vs Memberships/Subscriptions)  
+  Confirmar quién controla el acceso post-compra y documentarlo.  
+  Decidir si se agrega "Ir al curso" en la thank-you page de WooCommerce.
+
+### Prioridad baja / futuro
+- [ ] **Optimización checkout** — deshabilitar scripts innecesarios en `/checkout/` vía hooks en `functions.php`
+- [ ] **Sección "¿Qué necesitas?" en HOME** — grid de 4 tarjetas de orientación al usuario
+- [ ] **Email automation** — integración MailerLite post-compra
+- [ ] **Flush de rewrite rules** tras activar CPTs en entorno nuevo  
+  `WP Admin → Ajustes → Enlaces permanentes → Guardar cambios` (o `wp rewrite flush` con WP-CLI)
+
+---
+
+## 5) Riesgos activos
+
+| Riesgo | Estado |
+|---|---|
+| Página estática con slug `/escuela/` o `/recursos/` | ⚠️ Verificar que no existe como Page (bloquea el archive CPT) |
+| Doble gating Tutor + Memberships | ⚠️ Pendiente auditoría |
+| Excerpts con HTML antiguo | ⚠️ Pendiente sanitización (ver backlog 4.1) |
+| WP File Manager instalado | ⚠️ Revisar necesidad/riesgo de seguridad |
+| Symlink `daniela-child` en LocalWP | ✅ Activo — si se pierde, recrear con `ln -s` |
+
+---
+
+## 6) Flujo de trabajo estándar
+
+### Actualizar código desde GitHub
+```bash
+# A) En el repo
+cd "$DM_REPO"
+git checkout main
+git pull --no-rebase origin main
+
+# B) Ver en LocalWP
+# Solo refrescar navegador (Cmd+Shift+R)
+# El symlink hace que LocalWP ya use el código actualizado.
+```
+
+### Si el archive CPT da 404 después de cambiar slugs
+```bash
+# Opción 1: WP Admin → Ajustes → Enlaces permanentes → Guardar cambios
+# Opción 2: WP-CLI
+cd "$DM_WP" && wp rewrite flush
+```
+
+### Verificar que el symlink existe
+```bash
+ls -la "$DM_WP/wp-content/themes" | grep daniela-child
+```
+
+---
+
+## 7) Archivos del child theme (mapa rápido)
+
+```
+wp-content/themes/daniela-child/
+├── functions.php                   # Bootstrap: carga inc/cpt.php, inc/helpers-cpt.php, etc.
+├── style.css                       # Declaración del child theme + estilos dm-card/dm-btn/dm-chips
+├── inc/
+│   ├── cpt.php                     # Registra CPTs y taxonomías
+│   ├── helpers-cpt.php             # Metaboxes, CTA, chips, grid
+│   ├── shortcodes-escuela.php      # Shortcodes WooCommerce para páginas de Escuela
+│   ├── shortcodes-servicios.php    # Shortcodes para páginas de Servicios
+│   └── ...                         # Otros módulos (assets, header, checkout, etc.)
+├── archive-dm_escuela.php          # Template archive /escuela/
+├── archive-dm_recurso.php          # Template archive /recursos/
+├── archive-dm_servicio.php         # Template archive /servicios/
+├── single-dm_escuela.php           # Template single /escuela/<slug>/
+├── single-dm_recurso.php           # Template single /recursos/<slug>/
+└── single-dm_servicio.php          # Template single /servicios/<slug>/
+```
