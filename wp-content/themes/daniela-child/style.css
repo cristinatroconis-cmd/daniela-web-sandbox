@@ -301,7 +301,26 @@ Text Domain: daniela-child
 /* ==========================================================================
    CPT Grid Cards — .dm-card (escuela / recursos / servicios archives)
    ========================================================================== */
+/* ==========================================================================
+   dm-grid — evitar cards gigantes cuando hay pocos ítems
+   Motivo: con 1 solo item, grid con 1fr estira demasiado la card.
+   Solución: columnas auto-fit con ancho máximo por card + centrado.
+   ========================================================================== */
 
+.dm-grid {
+	display: grid;
+	gap: 1.5rem;
+
+	/* Mantener cards a tamaño catálogo */
+	justify-content: center;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 360px));
+}
+
+@media (min-width: 1200px) {
+	.dm-grid {
+		grid-template-columns: repeat(auto-fit, minmax(260px, 380px));
+	}
+}
 .dm-card {
 	display: flex;
 	flex-direction: column;
