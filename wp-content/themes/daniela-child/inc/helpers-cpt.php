@@ -184,6 +184,66 @@ function dm_cpt_render_cta($post_id = null)
 }
 
 // =============================================================================
+// METABOX — URL del curso Tutor (solo dm_escuela)
+// =============================================================================
+
+add_action('add_meta_boxes', function () {
+	add_meta_box(
+		'dm_tutor_course_url',
+		__('Curso Tutor (URL)', 'daniela-child'),
+		function ($post) {
+			$value = (string) get_post_meta($post->ID, '_dm_tutor_course_url', true);
+			wp_nonce_field('dm_tutor_course_url_save', 'dm_tutor_course_url_nonce');
+			?>
+			<p>
+				<label for="dm_tutor_course_url_field">
+					<?php esc_html_e('Pega el path del curso (ej: /courses/tumenteencalma/):', 'daniela-child'); ?>
+				</label>
+				<input
+					type="text"
+					id="dm_tutor_course_url_field"
+					name="dm_tutor_course_url_field"
+					value="<?php echo esc_attr($value); ?>"
+					style="width:100%;margin-top:4px;"
+					placeholder="/courses/tumenteencalma/" />
+			</p>
+			<?php
+		},
+		'dm_escuela',
+		'side',
+		'default'
+	);
+});
+
+add_action('save_post', function ($post_id) {
+	if (
+		! isset($_POST['dm_tutor_course_url_nonce']) ||
+		! wp_verify_nonce(sanitize_key($_POST['dm_tutor_course_url_nonce']), 'dm_tutor_course_url_save')
+	) {
+		return;
+	}
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+	if (! current_user_can('edit_post', $post_id)) {
+		return;
+	}
+	if ('dm_escuela' !== get_post_type($post_id)) {
+		return;
+	}
+
+	$url = isset($_POST['dm_tutor_course_url_field'])
+		? sanitize_text_field(trim((string) wp_unslash($_POST['dm_tutor_course_url_field'])))
+		: '';
+
+	if ($url !== '') {
+		update_post_meta($post_id, '_dm_tutor_course_url', $url);
+	} else {
+		delete_post_meta($post_id, '_dm_tutor_course_url');
+	}
+});
+
+// =============================================================================
 // HELPERS — Chips de taxonomía para archives
 // =============================================================================
 
@@ -281,7 +341,9 @@ function dm_cpt_archive_query_args($post_type, $taxonomy, $param = 'tipo')
 /**
  * Renderiza un grid de posts CPT como tarjetas.
  *
- * Cada tarjeta muestra: imagen destacada, título, excerpt y CTA WooCommerce.
+ * Para dm_escuela: usa _dm_tutor_course_url como enlace de imagen/título y
+ * muestra dos botones en el footer ("Ver curso" + CTA WooCommerce).
+ * Para otros CPTs: comportamiento original.
  *
  * @param WP_Query $query    Query de posts CPT.
  * @return string            HTML del grid o mensaje "sin resultados".
@@ -304,10 +366,17 @@ function dm_cpt_render_grid($query)
 		$excerpt   = get_the_excerpt();
 		$thumb_id  = get_post_thumbnail_id();
 
+		// Para dm_escuela: enlazar imagen/título al curso Tutor si existe.
+		$tutor_url = '';
+		if ('dm_escuela' === get_post_type($post_id)) {
+			$tutor_url = trim((string) get_post_meta($post_id, '_dm_tutor_course_url', true));
+		}
+		$card_link = $tutor_url !== '' ? $tutor_url : $permalink;
+
 		$html .= '<article class="dm-card">';
 
 		if ($thumb_id) {
-			$html .= '<a href="' . esc_url($permalink) . '" class="dm-card__image-link" tabindex="-1" aria-hidden="true">';
+			$html .= '<a href="' . esc_url($card_link) . '" class="dm-card__image-link" tabindex="-1" aria-hidden="true">';
 			$html .= '<div class="dm-card__thumb">';
 			$html .= get_the_post_thumbnail($post_id, 'woocommerce_thumbnail');
 			$html .= '</div>';
@@ -315,15 +384,30 @@ function dm_cpt_render_grid($query)
 		}
 
 		$html .= '<div class="dm-card__body">';
-		$html .= '<h3 class="dm-card__title"><a href="' . esc_url($permalink) . '">' . esc_html($title) . '</a></h3>';
+		$html .= '<h3 class="dm-card__title"><a href="' . esc_url($card_link) . '">' . esc_html($title) . '</a></h3>';
 		if ($excerpt) {
 			$html .= '<p class="dm-card__excerpt">' . wp_kses_post(wp_trim_words($excerpt, 20)) . '</p>';
 		}
 		$html .= '</div>';
 
-		$cta = dm_cpt_render_cta($post_id);
-		if ($cta) {
-			$html .= '<div class="dm-card__footer">' . $cta . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput
+		$cta_buy = dm_cpt_render_cta($post_id);
+
+		if ($tutor_url !== '' || ! empty($cta_buy)) {
+			$html .= '<div class="dm-card__footer dm-card__footer--actions">';
+
+			// 1) "Ver curso" primero — abre en nueva pestaña (solo dm_escuela con URL).
+			if ($tutor_url !== '') {
+				$html .= '<a class="dm-btn dm-btn--ghost" target="_blank" rel="noopener" href="' . esc_url($tutor_url) . '">'
+					. esc_html__('Ver curso', 'daniela-child')
+					. '</a>';
+			}
+
+			// 2) CTA WooCommerce (Agregar al carrito).
+			if (! empty($cta_buy)) {
+				$html .= $cta_buy; // phpcs:ignore WordPress.Security.EscapeOutput
+			}
+
+			$html .= '</div>';
 		}
 
 		$html .= '</article>';
@@ -334,4 +418,109 @@ function dm_cpt_render_grid($query)
 	$html .= '</div>';
 
 	return $html;
+}
+
+// =============================================================================
+// HELPERS — Chips de categorías WooCommerce para archive dm_escuela (Ruta A)
+// =============================================================================
+
+/**
+ * Renderiza los chips de filtro del archive /escuela/ basados en las categorías
+ * de producto WooCommerce (cursos / talleres / programas) en lugar de la
+ * taxonomía dm_tipo_escuela, siguiendo la Ruta A para no duplicar clasificación.
+ *
+ * @param string $param     Parámetro de URL (ej. 'tipo'). Default 'tipo'.
+ * @param string $base_url  URL base del archive (sin querystring).
+ * @return string           HTML de los chips.
+ */
+function dm_escuela_render_woo_chips($param = 'tipo', $base_url = '')
+{
+	// Categorías Woo relevantes para Escuela (slug => etiqueta visible).
+	$cats = [
+		'cursos'    => __('Cursos', 'daniela-child'),
+		'talleres'  => __('Talleres', 'daniela-child'),
+		'programas' => __('Programas', 'daniela-child'),
+	];
+
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$active_slug = isset($_GET[$param])
+		? sanitize_title(wp_unslash($_GET[$param])) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		: '';
+
+	if (! $base_url) {
+		$base_url = get_post_type_archive_link('dm_escuela');
+	}
+
+	ob_start();
+	?>
+	<nav class="dm-chips" aria-label="<?php esc_attr_e('Filtrar', 'daniela-child'); ?>">
+		<a
+			href="<?php echo esc_url($base_url); ?>"
+			class="dm-chip<?php echo '' === $active_slug ? ' dm-chip--active' : ''; ?>"
+			<?php echo '' === $active_slug ? 'aria-current="true"' : ''; ?>>
+			<?php esc_html_e('Todos', 'daniela-child'); ?>
+		</a>
+		<?php foreach ($cats as $slug => $label) : ?>
+			<a
+				href="<?php echo esc_url(add_query_arg($param, $slug, $base_url)); ?>"
+				class="dm-chip<?php echo $active_slug === $slug ? ' dm-chip--active' : ''; ?>"
+				<?php echo $active_slug === $slug ? 'aria-current="true"' : ''; ?>>
+				<?php echo esc_html($label); ?>
+			</a>
+		<?php endforeach; ?>
+	</nav>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * Construye los argumentos de WP_Query para el archive de dm_escuela filtrando
+ * por categoría WooCommerce del producto relacionado (Ruta A).
+ *
+ * Cuando ?tipo=<slug> está presente, obtiene en PHP los IDs de posts dm_escuela
+ * cuyo _dm_wc_product_id pertenece a esa categoría Woo y limita el query a ellos.
+ *
+ * @param string $param  Querystring param (ej. 'tipo').
+ * @return array         Args para WP_Query.
+ */
+function dm_escuela_query_args_by_woo_cat($param = 'tipo')
+{
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$active_slug = isset($_GET[$param])
+		? sanitize_title(wp_unslash($_GET[$param])) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		: '';
+
+	$base_args = [
+		'post_type'      => 'dm_escuela',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'orderby'        => 'title',
+		'order'          => 'ASC',
+	];
+
+	if (! $active_slug) {
+		return $base_args;
+	}
+
+	// Filtra en PHP: obtener IDs de dm_escuela cuyos productos estén en esa categoría Woo.
+	$all_ids = get_posts([
+		'post_type'      => 'dm_escuela',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'meta_key'       => '_dm_wc_product_id', // phpcs:ignore WordPress.DB.SlowDBQuery
+	]);
+
+	$filtered_ids = [];
+	foreach ($all_ids as $post_id) {
+		$wc_id = (int) get_post_meta($post_id, '_dm_wc_product_id', true);
+		if ($wc_id > 0 && has_term($active_slug, 'product_cat', $wc_id)) {
+			$filtered_ids[] = $post_id;
+		}
+	}
+
+	// post__in con array vacío devuelve todos los posts; usamos [0] para resultado vacío.
+	$base_args['post__in'] = ! empty($filtered_ids) ? $filtered_ids : [0];
+
+	return $base_args;
 }
