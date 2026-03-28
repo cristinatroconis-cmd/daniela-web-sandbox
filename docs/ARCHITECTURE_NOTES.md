@@ -115,6 +115,37 @@ Todos | Sesiones | Paquetes | Membresías | Supervisiones
 
 ---
 
+## 3c) Patrón recurrente: catálogo uniforme (cards + grids) ✅ DECISIÓN CERRADA
+
+> **Contexto:** decisión de producto tomada explícitamente para mantener bajo el costo de mantenimiento en un proyecto low budget.
+
+### El patrón
+
+El sitio usa **un solo sistema visual** de cards + grids para todos los catálogos, sin variantes por sección ni por CPT:
+
+- **Archives CPT** (`/escuela/`, `/recursos/`, `/servicios/`) → clases `.dm-grid` + `.dm-card`, renderizadas por `dm_cpt_render_grid()` en `inc/helpers-cpt.php`.
+- **Grids de producto WooCommerce** (shortcodes, páginas) → clase `.dm-products-grid`, gestionada en `inc/dm-products.php`.
+- **Estilos** → todo en `style.css` (layout y visuales). Los renderers PHP solo emiten HTML semántico; no llevan CSS inline ni valores de layout.
+
+### Por qué este diseño
+
+- **Consistencia visual → mejor conversión:** el usuario no tiene que reaprender la interfaz entre secciones.
+- **Mantenimiento reducido:** un cambio en el grid o en la tarjeta aplica a todas las secciones simultáneamente.
+- **Bajo presupuesto:** no hay ROI en mantener grids diferenciados por sección.
+
+### Checklist para cambios futuros
+
+Antes de tocar cualquier grid o tarjeta, responde estas preguntas:
+
+- [ ] **¿Estás por crear otro grid?** → Para. Reutiliza `.dm-grid` (CPT) o `.dm-products-grid` (Woo). Si realmente necesitas algo distinto, documenta el motivo aquí antes de escribir código.
+- [ ] **¿Estás por cambiar el layout (columnas, espaciado)?** → Edita solo `style.css`. Verifica que el cambio no rompe las 3 secciones de archive (escuela, recursos, servicios).
+- [ ] **¿Estás por agregar un CTA nuevo?** → Actualiza `dm_cpt_render_cta()` en `inc/helpers-cpt.php`. No pongas HTML de botón directamente en un template.
+- [ ] **¿Estás por agregar un nuevo CPT?** → Llama a `dm_cpt_render_grid()` en el template archive. No copies el loop de tarjetas.
+- [ ] **¿El texto del CTA secundario es neutro?** → Usa "Ver detalles" por defecto. Excepción documentada: "Ver curso" en `/escuela/` cuando existe `_dm_tutor_course_url`.
+- [ ] **¿Actualizaste `ARCHITECTURE.md` sección 18?** → Si tomaste una nueva decisión sobre el sistema de UI, documéntala ahí.
+
+---
+
 ## 4) Backlog inmediato 🔲
 
 ### 4.1 Sanitizar excerpt en el grid (prioritario)
