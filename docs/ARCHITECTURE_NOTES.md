@@ -42,7 +42,7 @@ Una sola "fuente de verdad" para gating:
 | `wp-content/themes/daniela-child/inc/helpers-cpt.php` | Metaboxes, CTA renderer, chips de taxonomía, grid CPT, chips Woo (Ruta A) |
 | `wp-content/themes/daniela-child/archive-dm_escuela.php` | Template archive `/escuela/` con chips WooCommerce |
 | `wp-content/themes/daniela-child/archive-dm_recurso.php` | Template archive `/recursos/` con chips taxonomía |
-| `wp-content/themes/daniela-child/archive-dm_servicio.php` | Template archive `/servicios/` con chips taxonomía |
+| `wp-content/themes/daniela-child/archive-dm_servicio.php` | Template archive `/servicios/` con chips WooCommerce (Ruta A, estricto) |
 | `wp-content/themes/daniela-child/single-dm_escuela.php` | Template single `/escuela/<slug>/` |
 | `wp-content/themes/daniela-child/single-dm_recurso.php` | Template single `/recursos/<slug>/` |
 | `wp-content/themes/daniela-child/single-dm_servicio.php` | Template single `/servicios/<slug>/` |
@@ -54,7 +54,7 @@ Una sola "fuente de verdad" para gating:
 |---|---|---|
 | `dm_escuela` | `/escuela/` | Categorías WooCommerce: cursos / talleres / programas (Ruta A) |
 | `dm_recurso` | `/recursos/` | Taxonomía `dm_tipo_recurso`: gratis / pagos |
-| `dm_servicio` | `/servicios/` | Taxonomía `dm_tipo_servicio`: sesiones / membresias |
+| `dm_servicio` | `/servicios/` | Categorías WooCommerce: sesiones / paquetes / membresias / supervisiones (Ruta A, **estricto**) |
 
 ### Metaboxes implementados
 
@@ -78,6 +78,43 @@ Una sola "fuente de verdad" para gating:
 
 ---
 
+## 3b) Servicios (`/servicios/`) — Filtro por Woo Categories (Ruta A, estricto)
+
+### Estructura de categorías WooCommerce
+```
+servicios              ← padre (product_cat slug: "servicios")
+├── sesiones           ← hija
+├── paquetes           ← hija
+├── membresias         ← hija
+└── supervisiones      ← hija
+```
+
+### Modo estricto (Ruta A)
+- El archive `/servicios/` muestra **únicamente** ítems `dm_servicio` cuyo producto vinculado (`_dm_wc_product_id`) esté categorizado dentro del árbol `servicios/*` en WooCommerce.
+- Si el producto vinculado no pertenece a `product_cat servicios` (ni ninguna hija), el ítem **no aparece**, aunque esté publicado.
+- Cuando el usuario selecciona un chip hijo (ej. `?tipo=sesiones`), además exige que el producto esté en esa subcategoría exacta.
+
+### Archivos relacionados
+| Archivo | Función |
+|---|---|
+| `wp-content/themes/daniela-child/archive-dm_servicio.php` | Template archive `/servicios/`; llama a `dm_servicios_render_woo_chips()` y `dm_servicios_query_args_by_woo_cat_strict()` |
+| `wp-content/themes/daniela-child/inc/helpers-cpt.php` | `dm_servicios_render_woo_chips()` + `dm_servicios_query_args_by_woo_cat_strict()` |
+| `wp-content/themes/daniela-child/inc/cpt.php` | Registra el CPT `dm_servicio` y la taxonomía `dm_tipo_servicio` (legacy, ver nota abajo) |
+
+### Nota: `dm_tipo_servicio` es **LEGACY**
+- La taxonomía interna `dm_tipo_servicio` (términos: `sesiones`, `membresias`) sigue registrada en `inc/cpt.php` para no romper datos históricos.
+- **No se usa para chips ni UX en `/servicios/`**: la clasificación la manda WooCommerce `product_cat`.
+- No asignar términos de `dm_tipo_servicio` a nuevos posts; usar categorías WooCommerce bajo `servicios/*`.
+
+### Chips renderizados en `/servicios/`
+```
+Todos | Sesiones | Paquetes | Membresías | Supervisiones
+```
+- Querystring: `?tipo=<slug>` (ej. `/servicios/?tipo=sesiones`)
+- Chip "Todos": muestra todo lo que esté en `servicios/*` (sin filtro de subcategoría).
+
+---
+
 ## 4) Backlog inmediato 🔲
 
 ### 4.1 Sanitizar excerpt en el grid (prioritario)
@@ -97,12 +134,12 @@ Una sola "fuente de verdad" para gating:
 - **Pendiente:** agregar subitems al menú para Escuela, Recursos y Servicios.
   - Escuela → Cursos / Talleres / Programas
   - Recursos → Gratis / Pagos / Por tema
-  - Servicios → Sesiones / Membresías
+  - Servicios → Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`)
 - **Cómo:** WP Admin → Apariencia → Menús (no requiere código nuevo; solo configurar los items de menú con URLs correctas).
 - **URLs a usar:**
   - `/escuela/?tipo=cursos`, `/escuela/?tipo=talleres`, `/escuela/?tipo=programas`
   - `/recursos/?tipo=gratis`, `/recursos/?tipo=pagos`
-  - `/servicios/?tipo=sesiones`, `/servicios/?tipo=membresias`
+  - `/servicios/?tipo=sesiones`, `/servicios/?tipo=paquetes`, `/servicios/?tipo=membresias`, `/servicios/?tipo=supervisiones`
 
 ### 4.3 Optimización checkout
 - Revisar scripts que cargan en `/checkout/` (Elementor, Slider Revolution, etc.).
@@ -201,8 +238,13 @@ git pull --no-rebase origin main
 - [ ] Las tarjetas muestran CTA correcto según precio del producto.
 
 ### Archive `/servicios/`
-- [ ] La página carga con chips "Todos / Sesiones / Membresías".
-- [ ] Grid muestra los servicios publicados.
+- [ ] La página carga sin errores PHP.
+- [ ] Los chips "Todos / Sesiones / Paquetes / Membresías / Supervisiones" se muestran.
+- [ ] Chip "Todos" activo por defecto; muestra solo ítems cuyo producto esté en `servicios/*`.
+- [ ] Al hacer click en "Sesiones", la URL cambia a `/servicios/?tipo=sesiones` y el grid filtra.
+- [ ] Chip activo tiene clase `dm-chip--active` y `aria-current="true"`.
+- [ ] Si un ítem `dm_servicio` no tiene producto vinculado en `servicios/*`, no aparece en el archive.
+- [ ] Probar: `/servicios/?tipo=sesiones`, `/servicios/?tipo=paquetes`, `/servicios/?tipo=membresias`, `/servicios/?tipo=supervisiones`.
 
 ### Metabox en WP Admin
 - [ ] Al editar un `dm_escuela`, aparece el metabox "Producto WooCommerce relacionado".

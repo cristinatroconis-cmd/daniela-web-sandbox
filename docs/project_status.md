@@ -37,7 +37,7 @@ Registrados en `wp-content/themes/daniela-child/inc/cpt.php`:
 | `dm_recurso` | `/recursos/` | ✅ Implementado |
 | `dm_servicio` | `/servicios/` | ✅ Implementado |
 
-Con taxonomías internas: `dm_tipo_escuela`, `dm_tipo_recurso`, `dm_tipo_servicio`, `dm_tema`.
+Con taxonomías internas: `dm_tipo_escuela`, `dm_tipo_recurso`, `dm_tipo_servicio` (**legacy** en `/servicios/`), `dm_tema`.
 
 ### 3.2 Templates
 Todos en `wp-content/themes/daniela-child/`:
@@ -46,7 +46,7 @@ Todos en `wp-content/themes/daniela-child/`:
 |---|---|
 | `archive-dm_escuela.php` | ✅ Chips WooCommerce (Ruta A) + grid |
 | `archive-dm_recurso.php` | ✅ Chips taxonomía + grid |
-| `archive-dm_servicio.php` | ✅ Chips taxonomía + grid |
+| `archive-dm_servicio.php` | ✅ Chips WooCommerce (Ruta A, estricto) + grid |
 | `single-dm_escuela.php` | ✅ Imagen + tipo + contenido + CTA Woo |
 | `single-dm_recurso.php` | ✅ Implementado |
 | `single-dm_servicio.php` | ✅ Implementado |
@@ -57,6 +57,8 @@ Todos en `wp-content/themes/daniela-child/`:
 - ✅ `dm_cpt_render_taxonomy_chips()` — chips genéricos para CPTs
 - ✅ `dm_escuela_render_woo_chips()` — chips de `/escuela/` basados en categorías WC
 - ✅ `dm_escuela_query_args_by_woo_cat()` — filtrado por categoría WC del producto vinculado
+- ✅ `dm_servicios_render_woo_chips()` — chips de `/servicios/` basados en categorías WC (`servicios/*`)
+- ✅ `dm_servicios_query_args_by_woo_cat_strict()` — filtrado estricto: solo muestra ítems con producto en `servicios/*`
 
 ### 3.4 Metaboxes
 - ✅ `_dm_wc_product_id` — vincula CPT a producto WooCommerce (en los 3 CPTs)
@@ -67,6 +69,13 @@ Todos en `wp-content/themes/daniela-child/`:
 - Tarjeta: imagen + título enlazan a Tutor si existe URL; si no, al single CPT
 - Footer de tarjeta: "Ver curso" (Tutor, nueva pestaña) + "Agregar al carrito" (WooCommerce)
 - Sin CTAs → footer no se renderiza
+
+### 3.5b Comportamiento `/servicios/` — Ruta A (estricto)
+- Chips: Todos / Sesiones / Paquetes / Membresías / Supervisiones (categorías WooCommerce hijas de `servicios`)
+- Modo **estricto**: solo aparecen ítems `dm_servicio` cuyo producto vinculado esté en `product_cat servicios/*`
+- Sin producto en `servicios/*` → el ítem no aparece en el archive (aunque esté publicado)
+- Querystring: `?tipo=<slug>` (ej. `/servicios/?tipo=sesiones`)
+- Nota: taxonomía interna `dm_tipo_servicio` es **legacy** (existe en cpt.php, no se usa en UX/chips)
 
 ### 3.6 Entorno local
 - ✅ Symlink: `$DM_WP/wp-content/themes/daniela-child` → `$DM_REPO/wp-content/themes/daniela-child`
@@ -86,14 +95,18 @@ Todos en `wp-content/themes/daniela-child/`:
   Agregar subitems en WP Admin → Apariencia → Menús:
   - Escuela → Cursos (`/escuela/?tipo=cursos`) / Talleres / Programas
   - Recursos → Gratis (`/recursos/?tipo=gratis`) / Pagos
-  - Servicios → Sesiones / Membresías
+  - Servicios → Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`)
+  
+- [ ] **Replicar Ruta A en Recursos (transversal)** — próximo paso sugerido  
+  Estructurar categorías Woo padres `recursos` y `temas` para que `/recursos/` filtre igual que `/servicios/` (Ruta A o variante flexible).  
+  Decidir slugs de padres y hijas antes de tocar código.
   
 - [ ] **Auditar gating de acceso** (Tutor vs Memberships/Subscriptions)  
   Confirmar quién controla el acceso post-compra y documentarlo.  
   Decidir si se agrega "Ir al curso" en la thank-you page de WooCommerce.
 
 ### Prioridad baja / futuro
-- [ ] **Optimización checkout** — deshabilitar scripts innecesarios en `/checkout/` vía hooks en `functions.php`
+- [ ] **UX checkout** — reducir fricción en `/checkout/`: deshabilitar scripts innecesarios (Elementor, Slider Revolution, etc.) vía hooks en `functions.php`
 - [ ] **Sección "¿Qué necesitas?" en HOME** — grid de 4 tarjetas de orientación al usuario
 - [ ] **Email automation** — integración MailerLite post-compra
 - [ ] **Flush de rewrite rules** tras activar CPTs en entorno nuevo  
