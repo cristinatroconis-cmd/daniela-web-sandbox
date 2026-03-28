@@ -313,12 +313,12 @@ Text Domain: daniela-child
 
 	/* Mantener cards a tamaño catálogo */
 	justify-content: start;
-	grid-template-columns: repeat(auto-fit, minmax(260px, 360px));
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 @media (min-width: 1200px) {
 	.dm-grid {
-		grid-template-columns: repeat(auto-fit, minmax(260px, 380px));
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
 .dm-card {
