@@ -227,8 +227,154 @@ function dm_register_taxonomies() {
 }
 
 // =============================================================================
-// DEFAULT TERMS — se crean en la activación del tema o en init si no existen.
+// AUTO-CLASSIFICATION — dm_escuela: infiere dm_tipo_escuela del título si no está asignado.
 // =============================================================================
+
+add_action( 'save_post_dm_escuela', 'dm_escuela_auto_classify_tipo', 20, 2 );
+
+/**
+ * Asigna automáticamente el término dm_tipo_escuela cuando no hay ninguno asignado.
+ *
+ * Reglas (sin distinción de mayúsculas/minúsculas):
+ *  - título contiene "taller"   → talleres
+ *  - título contiene "programa" → programas
+ *  - en otro caso               → cursos
+ *
+ * No sobreescribe si ya hay términos asignados.
+ *
+ * @param int     $post_id
+ * @param WP_Post $post
+ */
+function dm_escuela_auto_classify_tipo( $post_id, $post ) {
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( wp_is_post_revision( $post_id ) ) {
+		return;
+	}
+
+	// No sobreescribir si ya hay términos asignados.
+	$existing = wp_get_object_terms( $post_id, 'dm_tipo_escuela', [ 'fields' => 'ids' ] );
+	if ( ! is_wp_error( $existing ) && ! empty( $existing ) ) {
+		return;
+	}
+
+	$title = mb_strtolower( $post->post_title );
+
+	if ( false !== mb_strpos( $title, 'taller' ) ) {
+		$slug = 'talleres';
+	} elseif ( false !== mb_strpos( $title, 'programa' ) ) {
+		$slug = 'programas';
+	} else {
+		$slug = 'cursos';
+	}
+
+	// Asegura que el término exista antes de asignarlo.
+	$term = get_term_by( 'slug', $slug, 'dm_tipo_escuela' );
+	if ( ! $term ) {
+		$names    = [ 'talleres' => 'Talleres', 'programas' => 'Programas', 'cursos' => 'Cursos' ];
+		$inserted = wp_insert_term( $names[ $slug ], 'dm_tipo_escuela', [ 'slug' => $slug ] );
+		if ( is_wp_error( $inserted ) ) {
+			return;
+		}
+		$term_id = $inserted['term_id'];
+	} else {
+		$term_id = $term->term_id;
+	}
+
+	wp_set_object_terms( $post_id, [ $term_id ], 'dm_tipo_escuela' );
+}
+
+// =============================================================================
+// ADMIN BULK ACTION — Backfill dm_tipo_escuela en posts existentes de dm_escuela.
+// =============================================================================
+
+add_filter( 'bulk_actions-edit-dm_escuela', 'dm_escuela_register_bulk_classify' );
+
+/**
+ * Registra la acción masiva "Auto-clasificar tipo (backfill)" en la lista de dm_escuela.
+ *
+ * @param array $actions
+ * @return array
+ */
+function dm_escuela_register_bulk_classify( $actions ) {
+	$actions['dm_backfill_tipo'] = __( 'Auto-clasificar tipo (backfill)', 'daniela-child' );
+	return $actions;
+}
+
+add_filter( 'handle_bulk_actions-edit-dm_escuela', 'dm_escuela_handle_bulk_classify', 10, 3 );
+
+/**
+ * Procesa la acción masiva de clasificación automática.
+ *
+ * Solo clasifica posts sin dm_tipo_escuela asignado.
+ *
+ * @param string $redirect_url
+ * @param string $action
+ * @param int[]  $post_ids
+ * @return string
+ */
+function dm_escuela_handle_bulk_classify( $redirect_url, $action, $post_ids ) {
+	if ( 'dm_backfill_tipo' !== $action ) {
+		return $redirect_url;
+	}
+
+	$count = 0;
+
+	foreach ( $post_ids as $post_id ) {
+		$post = get_post( $post_id );
+		if ( ! $post || 'dm_escuela' !== $post->post_type ) {
+			continue;
+		}
+
+		// Omite posts que ya tienen término asignado.
+		$existing = wp_get_object_terms( $post_id, 'dm_tipo_escuela', [ 'fields' => 'ids' ] );
+		if ( ! is_wp_error( $existing ) && ! empty( $existing ) ) {
+			continue;
+		}
+
+		$title = mb_strtolower( $post->post_title );
+
+		if ( false !== mb_strpos( $title, 'taller' ) ) {
+			$slug = 'talleres';
+		} elseif ( false !== mb_strpos( $title, 'programa' ) ) {
+			$slug = 'programas';
+		} else {
+			$slug = 'cursos';
+		}
+
+		$term = get_term_by( 'slug', $slug, 'dm_tipo_escuela' );
+		if ( $term ) {
+			wp_set_object_terms( $post_id, [ $term->term_id ], 'dm_tipo_escuela' );
+			$count++;
+		}
+	}
+
+	return add_query_arg( 'dm_backfill_count', $count, $redirect_url );
+}
+
+add_action( 'admin_notices', 'dm_escuela_bulk_classify_notice' );
+
+/**
+ * Muestra aviso de administración tras la acción masiva de clasificación.
+ */
+function dm_escuela_bulk_classify_notice() {
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( ! isset( $_GET['dm_backfill_count'] ) ) {
+		return;
+	}
+
+	$count = (int) $_GET['dm_backfill_count']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	printf(
+		'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+		sprintf(
+			/* translators: %d: número de posts actualizados */
+			esc_html( _n( '%d ítem de Escuela clasificado.', '%d ítems de Escuela clasificados.', $count, 'daniela-child' ) ),
+			$count
+		)
+	);
+}
 
 add_action( 'init', 'dm_create_default_terms' );
 

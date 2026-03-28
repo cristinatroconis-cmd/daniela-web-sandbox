@@ -299,6 +299,12 @@ Los términos de `dm_tipo_*` se crean automáticamente en el primer `init` si no
    - Servicios: selecciona `sesiones` o `membresias` en **Tipos de servicio**.  
    - Opcionalmente, añade temas transversales en **Temas**.
 
+   > **Auto-clasificación (dm_escuela):** si no seleccionas ningún tipo al guardar, el sistema infiere el término automáticamente a partir del título:  
+   > - título contiene `taller` → `talleres`  
+   > - título contiene `programa` → `programas`  
+   > - en otro caso → `cursos`  
+   > Una vez asignado manualmente, el sistema no sobreescribe tu selección.
+
 3. **Vincular producto WooCommerce:**  
    En la barra lateral del editor verás el metabox **"Producto WooCommerce relacionado"**.  
    - Introduce el **ID del producto** de WooCommerce (número entero).  
@@ -306,12 +312,43 @@ Los términos de `dm_tipo_*` se crean automáticamente en el primer `init` si no
    - Si el producto es de pago, el CTA dirá **"Comprar"** y mostrará el precio.  
    - Si dejas el campo vacío, no se mostrará ningún CTA (útil para posts informativos).
 
-4. **Publicar.** La URL estará disponible en:
+4. **(Solo Escuela) Vincular curso Tutor LMS:**  
+   En la barra lateral verás también el metabox **"Curso Tutor LMS relacionado"**.  
+   - **ID del curso en Tutor LMS:** introduce el ID numérico del curso de Tutor LMS.  
+     El sistema usará este ID para verificar si el usuario está inscrito y para construir la URL del curso.  
+   - **URL directa al curso (opcional):** si prefieres forzar una URL concreta en lugar de usar el permalink del curso, introdúcela aquí.  
+   - Cuando el usuario **está inscrito**, el CTA mostrará **"Ir al curso"** en lugar del botón de compra.  
+   - Cuando **no está inscrito** (o no está logueado), se muestra el CTA de WooCommerce habitual.
+
+5. **Publicar.** La URL estará disponible en:
    - Recurso: `/recursos/<slug>/`
    - Escuela: `/escuela/<slug>/`
    - Servicio: `/servicios/<slug>/`
 
 > **Importante:** después de registrar los CPTs por primera vez, ve a **WP Admin → Ajustes → Enlaces permanentes** y haz clic en **Guardar cambios** (aunque no cambies nada). Esto vacía el caché de rewrite rules y activa las nuevas URLs.
+
+### Lógica del CTA en single-dm_escuela (Tutor + WooCommerce)
+
+| Condición | CTA mostrado |
+|---|---|
+| Usuario inscrito en el curso Tutor vinculado | **"Ir al curso"** (enlaza al curso de Tutor) |
+| Usuario NO inscrito (o no logueado) + producto WC vinculado | CTA de compra WooCommerce (**"Agregar al carrito"**) |
+| Sin producto WC ni curso Tutor vinculado | Sin CTA (post informativo) |
+
+La verificación de inscripción usa `tutor_utils()->is_enrolled()` si Tutor LMS está activo; en caso contrario recurre a consultar los registros internos `tutor_enrolled` de la base de datos.
+
+Los administradores (`manage_options`) siempre ven el CTA "Ir al curso" cuando hay un curso vinculado.
+
+### Backfill de clasificación (admin)
+
+Para clasificar automáticamente ítems de Escuela ya existentes que no tienen tipo asignado:
+
+1. Ve a **WP Admin → Escuela CPT**.
+2. Selecciona los posts que quieres clasificar (o todos).
+3. En el desplegable **"Acciones en lote"**, elige **"Auto-clasificar tipo (backfill)"**.
+4. Haz clic en **Aplicar**.
+
+Solo se modifican posts sin término `dm_tipo_escuela` asignado. Los que ya tienen tipo no se tocan.
 
 ### URLs esperadas
 
@@ -320,7 +357,7 @@ Los términos de `dm_tipo_*` se crean automáticamente en el primer `init` si no
 | `/recursos/` | Archive CPT dm_recurso — grid con chips de tipo |
 | `/recursos/<slug>/` | Single dm_recurso — contenido + CTA |
 | `/escuela/` | Archive CPT dm_escuela — grid con chips de tipo |
-| `/escuela/<slug>/` | Single dm_escuela — contenido + CTA |
+| `/escuela/<slug>/` | Single dm_escuela — contenido + CTA (Tutor o WC según acceso) |
 | `/servicios/` | Archive CPT dm_servicio — grid con chips de tipo |
 | `/servicios/<slug>/` | Single dm_servicio — contenido + CTA |
 
@@ -335,7 +372,7 @@ Los templates viven en la raíz del tema hijo (como manda WordPress):
 | `archive-dm_recurso.php` | Archive de Recursos CPT |
 | `single-dm_recurso.php` | Single de Recurso |
 | `archive-dm_escuela.php` | Archive de Escuela CPT |
-| `single-dm_escuela.php` | Single de Escuela |
+| `single-dm_escuela.php` | Single de Escuela (CTA condicional Tutor / WC) |
 | `archive-dm_servicio.php` | Archive de Servicios CPT |
 | `single-dm_servicio.php` | Single de Servicio |
 
@@ -343,8 +380,8 @@ Los templates viven en la raíz del tema hijo (como manda WordPress):
 
 | Archivo | Responsabilidad |
 |---|---|
-| `inc/cpt.php` | Registra CPTs y taxonomías; crea términos por defecto |
-| `inc/helpers-cpt.php` | Metabox WC, CTA renderer, chips de taxonomía, grid CPT |
+| `inc/cpt.php` | Registra CPTs y taxonomías; crea términos por defecto; auto-clasificación y bulk action |
+| `inc/helpers-cpt.php` | Metabox WC, metabox Tutor LMS, CTA renderer (WC + Tutor), chips de taxonomía, grid CPT |
 
 ### Relación con los shortcodes existentes (WooCommerce Pages)
 
@@ -355,3 +392,4 @@ Los shortcodes de WooCommerce (Páginas clásicas) y los CPTs **coexisten sin co
 | Pages + Shortcodes | WooCommerce | `/recursos/gratis/`, `/escuela/cursos/`… | Catálogo WC existente |
 | CPT Archives/Singles | WordPress nativo | `/recursos/`, `/escuela/`, `/servicios/` | Nueva capa editorial |
 | Checkout, Membresías, Suscripciones | WooCommerce | `/checkout/`, etc. | Motor de compra (no se toca) |
+| Cursos / lecciones / progreso | Tutor LMS | `/courses/<slug>/` | Experiencia académica (source of truth) |

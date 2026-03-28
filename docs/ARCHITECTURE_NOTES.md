@@ -75,3 +75,39 @@ Objetivo: que el usuario sienta “escuela clara” sin páginas confusas.
   - Tutor-only vs Memberships-only vs híbrido controlado
 - Definir “producto escuela”:
   - cursos individuales vs membresía vs híbrido (y cómo se presenta en Home)
+
+---
+
+## 8) Implementación Enfoque 1 — dm_escuela + Tutor LMS (2026-03-28)
+
+### Qué se implementó
+1. **Metabox Tutor LMS en dm_escuela** (`inc/helpers-cpt.php`):
+   - `_dm_tutor_course_id` — ID numérico del curso Tutor LMS vinculado.
+   - `_dm_tutor_course_url` — URL manual del curso (anula el permalink automático).
+   - Guardado con nonce, sanitización y verificación de permisos.
+
+2. **Helpers de acceso y CTA Tutor** (`inc/helpers-cpt.php`):
+   - `dm_tutor_user_has_access($post_id)`: verifica inscripción. Prioriza `tutor_utils()->is_enrolled()`; fallback a consulta de posts `tutor_enrolled`.
+   - `dm_tutor_get_course_url($post_id)`: URL del curso (manual > permalink del post Tutor).
+   - `dm_cpt_render_tutor_cta($post_id)`: renderiza botón "Ir al curso".
+
+3. **CTA condicional en single-dm_escuela.php**:
+   - Si usuario inscrito → `dm_cpt_render_tutor_cta()`.
+   - Si no inscrito / no logueado → `dm_cpt_render_cta()` (WooCommerce).
+
+4. **Auto-clasificación en save** (`inc/cpt.php`):
+   - Hook `save_post_dm_escuela` (prioridad 20).
+   - Solo actúa si `dm_tipo_escuela` no tiene términos asignados.
+   - Reglas: "taller" → talleres, "programa" → programas, else → cursos.
+
+5. **Bulk action de backfill** (`inc/cpt.php`):
+   - Acción masiva "Auto-clasificar tipo (backfill)" en WP Admin > Escuela CPT.
+   - Solo clasifica posts sin término asignado.
+   - Muestra aviso con el número de posts actualizados.
+
+### Por qué estas decisiones
+- Tutor LMS se mantiene como "source of truth" para cursos activos.
+- CPT `dm_escuela` sirve de landing editorial/SEO, no reemplaza el LMS.
+- El gating de acceso usa `tutor_utils()->is_enrolled()` como primera opción para no depender de Memberships/Subscriptions (evitar doble gating).
+- El fallback via posts `tutor_enrolled` asegura que el check funciona aunque Tutor LMS no esté cargado en ese contexto.
+- La auto-clasificación reduce trabajo manual al crear/editar posts.

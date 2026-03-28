@@ -56,7 +56,12 @@ while ( have_posts() ) :
 			</div>
 
 			<?php
-			$cta = dm_cpt_render_cta();
+			// CTA: "Ir al curso" para usuarios con acceso Tutor; compra para el resto.
+			if ( function_exists( 'dm_tutor_user_has_access' ) && dm_tutor_user_has_access() ) {
+				$cta = dm_cpt_render_tutor_cta();
+			} else {
+				$cta = dm_cpt_render_cta();
+			}
 			if ( $cta ) :
 				?>
 				<aside class="dm-single__cta">

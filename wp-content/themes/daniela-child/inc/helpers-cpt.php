@@ -184,6 +184,221 @@ function dm_cpt_render_cta($post_id = null)
 }
 
 // =============================================================================
+// METABOX — Integración con Tutor LMS (solo dm_escuela)
+// =============================================================================
+
+/**
+ * Registra el metabox "Curso Tutor LMS relacionado" en dm_escuela.
+ */
+add_action( 'add_meta_boxes', 'dm_tutor_register_metabox' );
+
+function dm_tutor_register_metabox() {
+	add_meta_box(
+		'dm_tutor_course',
+		__( 'Curso Tutor LMS relacionado', 'daniela-child' ),
+		'dm_tutor_metabox_html',
+		'dm_escuela',
+		'side',
+		'default'
+	);
+}
+
+/**
+ * HTML del metabox Tutor LMS.
+ *
+ * @param WP_Post $post
+ */
+function dm_tutor_metabox_html( $post ) {
+	$course_id  = (int) get_post_meta( $post->ID, '_dm_tutor_course_id', true );
+	$course_url = get_post_meta( $post->ID, '_dm_tutor_course_url', true );
+	wp_nonce_field( 'dm_tutor_course_save', 'dm_tutor_course_nonce' );
+?>
+	<p>
+		<label for="dm_tutor_course_id">
+			<?php esc_html_e( 'ID del curso en Tutor LMS:', 'daniela-child' ); ?>
+		</label>
+		<input
+			type="number"
+			id="dm_tutor_course_id"
+			name="dm_tutor_course_id"
+			value="<?php echo esc_attr( $course_id ?: '' ); ?>"
+			min="0"
+			step="1"
+			style="width:100%;margin-top:4px;"
+			placeholder="Ej: 456" />
+	</p>
+	<p>
+		<label for="dm_tutor_course_url">
+			<?php esc_html_e( 'URL directa al curso (opcional):', 'daniela-child' ); ?>
+		</label>
+		<input
+			type="url"
+			id="dm_tutor_course_url"
+			name="dm_tutor_course_url"
+			value="<?php echo esc_attr( $course_url ); ?>"
+			style="width:100%;margin-top:4px;"
+			placeholder="https://..." />
+	</p>
+	<p class="description">
+		<?php esc_html_e( 'Vincula este ítem a un curso de Tutor LMS. Si el usuario está inscrito verá "Ir al curso" en lugar del botón de compra.', 'daniela-child' ); ?>
+	</p>
+<?php
+}
+
+/**
+ * Guarda los metas _dm_tutor_course_id y _dm_tutor_course_url al guardar el post.
+ *
+ * @param int $post_id
+ */
+add_action( 'save_post', 'dm_tutor_metabox_save' );
+
+function dm_tutor_metabox_save( $post_id ) {
+	if (
+		! isset( $_POST['dm_tutor_course_nonce'] ) ||
+		! wp_verify_nonce( sanitize_key( $_POST['dm_tutor_course_nonce'] ), 'dm_tutor_course_save' )
+	) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	if ( 'dm_escuela' !== get_post_type( $post_id ) ) {
+		return;
+	}
+
+	// Save course ID.
+	if ( isset( $_POST['dm_tutor_course_id'] ) ) {
+		$course_id = absint( $_POST['dm_tutor_course_id'] );
+		if ( $course_id > 0 ) {
+			update_post_meta( $post_id, '_dm_tutor_course_id', $course_id );
+		} else {
+			delete_post_meta( $post_id, '_dm_tutor_course_id' );
+		}
+	}
+
+	// Save course URL.
+	if ( isset( $_POST['dm_tutor_course_url'] ) ) {
+		$course_url = esc_url_raw( wp_unslash( $_POST['dm_tutor_course_url'] ) );
+		if ( $course_url ) {
+			update_post_meta( $post_id, '_dm_tutor_course_url', $course_url );
+		} else {
+			delete_post_meta( $post_id, '_dm_tutor_course_url' );
+		}
+	}
+}
+
+// =============================================================================
+// HELPERS — Acceso y CTA Tutor LMS
+// =============================================================================
+
+/**
+ * Determina si el usuario actual tiene acceso al curso Tutor LMS vinculado.
+ *
+ * Estrategia:
+ * 1. Usa tutor_utils()->is_enrolled() si Tutor LMS está disponible.
+ * 2. Fallback: consulta posts de tipo tutor_enrolled (estructura interna de Tutor).
+ *
+ * @param int|null $post_id  ID del post dm_escuela. Usa el global si es null.
+ * @return bool
+ */
+function dm_tutor_user_has_access( $post_id = null ) {
+	if ( ! is_user_logged_in() ) {
+		return false;
+	}
+
+	if ( null === $post_id ) {
+		$post_id = get_the_ID();
+	}
+
+	$course_id = (int) get_post_meta( $post_id, '_dm_tutor_course_id', true );
+	if ( ! $course_id ) {
+		return false;
+	}
+
+	$user_id = get_current_user_id();
+
+	// Admins siempre tienen acceso.
+	if ( current_user_can( 'manage_options' ) ) {
+		return true;
+	}
+
+	// Tutor LMS: verificación nativa de inscripción.
+	if ( function_exists( 'tutor_utils' ) ) {
+		return (bool) tutor_utils()->is_enrolled( $course_id, $user_id );
+	}
+
+	// Fallback: busca registros de inscripción en posts de tipo tutor_enrolled.
+	$enrolled = get_posts( [
+		'post_type'      => 'tutor_enrolled',
+		'post_status'    => 'completed',
+		'author'         => $user_id,
+		'post_parent'    => $course_id,
+		'posts_per_page' => 1,
+		'fields'         => 'ids',
+	] );
+
+	return ! empty( $enrolled );
+}
+
+/**
+ * Devuelve la URL del curso Tutor LMS vinculado al post dm_escuela.
+ *
+ * Prioridad: URL manual guardada en meta > permalink del post Tutor course.
+ *
+ * @param int|null $post_id  ID del post dm_escuela. Usa el global si es null.
+ * @return string            URL del curso o cadena vacía.
+ */
+function dm_tutor_get_course_url( $post_id = null ) {
+	if ( null === $post_id ) {
+		$post_id = get_the_ID();
+	}
+
+	$manual_url = get_post_meta( $post_id, '_dm_tutor_course_url', true );
+	if ( $manual_url ) {
+		return esc_url( $manual_url );
+	}
+
+	$course_id = (int) get_post_meta( $post_id, '_dm_tutor_course_id', true );
+	if ( $course_id ) {
+		$url = get_permalink( $course_id );
+		if ( $url ) {
+			return esc_url( $url );
+		}
+	}
+
+	return '';
+}
+
+/**
+ * Renderiza el CTA "Ir al curso" para usuarios con acceso al curso Tutor LMS.
+ *
+ * @param int|null $post_id  ID del post dm_escuela. Usa el global si es null.
+ * @return string            HTML del botón o cadena vacía.
+ */
+function dm_cpt_render_tutor_cta( $post_id = null ) {
+	$course_url = dm_tutor_get_course_url( $post_id );
+	if ( ! $course_url ) {
+		return '';
+	}
+
+	ob_start();
+?>
+	<div class="dm-cta dm-cta--tutor">
+		<a href="<?php echo esc_url( $course_url ); ?>" class="dm-btn dm-btn--primary">
+			<?php esc_html_e( 'Ir al curso', 'daniela-child' ); ?>
+		</a>
+	</div>
+<?php
+	return ob_get_clean();
+}
+
+// =============================================================================
 // HELPERS — Chips de taxonomía para archives
 // =============================================================================
 
