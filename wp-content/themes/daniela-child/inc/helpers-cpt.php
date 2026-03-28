@@ -179,7 +179,7 @@ function dm_cpt_render_cta($post_id = null)
 			<?php echo esc_html($label); ?>
 		</a>
 	</div>
-<?php
+	<?php
 	return ob_get_clean();
 }
 
@@ -194,20 +194,20 @@ add_action('add_meta_boxes', function () {
 		function ($post) {
 			$value = (string) get_post_meta($post->ID, '_dm_tutor_course_url', true);
 			wp_nonce_field('dm_tutor_course_url_save', 'dm_tutor_course_url_nonce');
-			?>
-			<p>
-				<label for="dm_tutor_course_url_field">
-					<?php esc_html_e('Pega el path del curso (ej: /courses/tumenteencalma/):', 'daniela-child'); ?>
-				</label>
-				<input
-					type="text"
-					id="dm_tutor_course_url_field"
-					name="dm_tutor_course_url_field"
-					value="<?php echo esc_attr($value); ?>"
-					style="width:100%;margin-top:4px;"
-					placeholder="/courses/tumenteencalma/" />
-			</p>
-			<?php
+	?>
+		<p>
+			<label for="dm_tutor_course_url_field">
+				<?php esc_html_e('Pega el path del curso (ej: /courses/tumenteencalma/):', 'daniela-child'); ?>
+			</label>
+			<input
+				type="text"
+				id="dm_tutor_course_url_field"
+				name="dm_tutor_course_url_field"
+				value="<?php echo esc_attr($value); ?>"
+				style="width:100%;margin-top:4px;"
+				placeholder="/courses/tumenteencalma/" />
+		</p>
+	<?php
 		},
 		'dm_escuela',
 		'side',
@@ -281,7 +281,7 @@ function dm_cpt_render_taxonomy_chips($taxonomy, $param = 'tipo', $base_url = ''
 	}
 
 	ob_start();
-?>
+	?>
 	<nav class="dm-chips" aria-label="<?php esc_attr_e('Filtrar', 'daniela-child'); ?>">
 		<a
 			href="<?php echo esc_url($base_url); ?>"
@@ -452,7 +452,7 @@ function dm_escuela_render_woo_chips($param = 'tipo', $base_url = '')
 	}
 
 	ob_start();
-	?>
+?>
 	<nav class="dm-chips" aria-label="<?php esc_attr_e('Filtrar', 'daniela-child'); ?>">
 		<a
 			href="<?php echo esc_url($base_url); ?>"
@@ -469,7 +469,7 @@ function dm_escuela_render_woo_chips($param = 'tipo', $base_url = '')
 			</a>
 		<?php endforeach; ?>
 	</nav>
-	<?php
+<?php
 	return ob_get_clean();
 }
 
@@ -520,6 +520,106 @@ function dm_escuela_query_args_by_woo_cat($param = 'tipo')
 	}
 
 	// post__in con array vacío devuelve todos los posts; usamos [0] para resultado vacío.
+	$base_args['post__in'] = ! empty($filtered_ids) ? $filtered_ids : [0];
+
+	return $base_args;
+}
+
+// =============================================================================
+// HELPERS — Chips WooCommerce para archive dm_servicio (Servicios) — Ruta A (estricto)
+// =============================================================================
+
+function dm_servicios_render_woo_chips($param = 'tipo', $base_url = '')
+{
+	$cats = [
+		'sesiones'      => __('Sesiones', 'daniela-child'),
+		'paquetes'      => __('Paquetes', 'daniela-child'),
+		'membresias'    => __('Membresías', 'daniela-child'),
+		'supervisiones' => __('Supervisiones', 'daniela-child'),
+	];
+
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$active_slug = isset($_GET[$param])
+		? sanitize_title(wp_unslash($_GET[$param])) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		: '';
+
+	if (! $base_url) {
+		$base_url = get_post_type_archive_link('dm_servicio');
+	}
+
+	ob_start();
+?>
+	<nav class="dm-chips" aria-label="<?php esc_attr_e('Filtrar', 'daniela-child'); ?>">
+		<a
+			href="<?php echo esc_url($base_url); ?>"
+			class="dm-chip<?php echo '' === $active_slug ? ' dm-chip--active' : ''; ?>"
+			<?php echo '' === $active_slug ? 'aria-current="true"' : ''; ?>>
+			<?php esc_html_e('Todos', 'daniela-child'); ?>
+		</a>
+
+		<?php foreach ($cats as $slug => $label) : ?>
+			<a
+				href="<?php echo esc_url(add_query_arg($param, $slug, $base_url)); ?>"
+				class="dm-chip<?php echo $active_slug === $slug ? ' dm-chip--active' : ''; ?>"
+				<?php echo $active_slug === $slug ? 'aria-current="true"' : ''; ?>>
+				<?php echo esc_html($label); ?>
+			</a>
+		<?php endforeach; ?>
+	</nav>
+<?php
+	return ob_get_clean();
+}
+
+function dm_servicios_query_args_by_woo_cat_strict($param = 'tipo')
+{
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	$active_slug = isset($_GET[$param])
+		? sanitize_title(wp_unslash($_GET[$param])) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		: '';
+
+	$base_args = [
+		'post_type'      => 'dm_servicio',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'orderby'        => 'title',
+		'order'          => 'ASC',
+	];
+
+	$allowed = ['sesiones', 'paquetes', 'membresias', 'supervisiones'];
+	if ($active_slug && ! in_array($active_slug, $allowed, true)) {
+		$base_args['post__in'] = [0];
+		return $base_args;
+	}
+
+	$all_ids = get_posts([
+		'post_type'      => 'dm_servicio',
+		'post_status'    => 'publish',
+		'posts_per_page' => -1,
+		'fields'         => 'ids',
+		'meta_key'       => '_dm_wc_product_id', // phpcs:ignore WordPress.DB.SlowDBQuery
+	]);
+
+	$filtered_ids = [];
+
+	foreach ($all_ids as $post_id) {
+		$wc_id = (int) get_post_meta($post_id, '_dm_wc_product_id', true);
+		if ($wc_id <= 0) {
+			continue;
+		}
+
+		// Estricto: debe estar dentro del árbol de "servicios".
+		if (! has_term('servicios', 'product_cat', $wc_id)) {
+			continue;
+		}
+
+		// Si hay filtro activo, debe estar en esa subcat exacta.
+		if ($active_slug && ! has_term($active_slug, 'product_cat', $wc_id)) {
+			continue;
+		}
+
+		$filtered_ids[] = $post_id;
+	}
+
 	$base_args['post__in'] = ! empty($filtered_ids) ? $filtered_ids : [0];
 
 	return $base_args;
