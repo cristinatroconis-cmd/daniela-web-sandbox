@@ -524,7 +524,7 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
 ## Menú / navegación (backlog)
 - Pendiente: subitems hover para Escuela, Recursos, Servicios en el menú principal.
   - Subitem Escuela: Cursos / Talleres / Programas.
-  - Subitem Recursos: Gratis / Pagos / Por tema.
+  - Subitem Recursos: Por tema (dm_tema slugs).
   - Subitem Servicios: Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`).
 - Implementar en WP Admin → Apariencia → Menús (no requiere código, solo configuración).
 - URLs a usar para Servicios:
@@ -532,3 +532,92 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
   - `/servicios/?tipo=paquetes`
   - `/servicios/?tipo=membresias`
   - `/servicios/?tipo=supervisiones`
+
+---
+
+# 19. Importador idempotente de recursos (WP-CLI)
+
+## Comando
+
+```bash
+wp dm import-recursos          # Importa nuevos attachments
+wp dm import-recursos --dry-run  # Solo simula (no escribe)
+wp dm import-recursos --force    # Fuerza actualización de existentes
+```
+
+## Archivo
+
+`wp-content/themes/daniela-child/inc/cli-import.php`
+
+Solo se carga cuando `WP_CLI` está definido (sin overhead en peticiones web).
+
+## Lógica
+
+| Condición | Precio |
+|---|---|
+| Título contiene gratis / gratuito / free | $0 |
+| Familia "Afirmaciones" (bundle) | $9 |
+| Cualquier otro | $5 |
+
+- Archivos aceptados: PDF, MP3, M4A.
+- Idempotente: detecta importaciones previas por meta `_dm_source_attachment_id`.
+- Por cada attachment crea/actualiza:
+  - Producto WooCommerce (simple, descargable) en categoría `recursos`.
+  - CPT `dm_recurso` con excerpt y contenido.
+- Asigna `product_tag` y `dm_tema` con los mismos slugs derivados de keywords del título.
+- Bundles (familia "Afirmaciones"): tag `bundle`, precio $9.
+
+## Metas de trazabilidad
+
+| Meta key | Post type | Valor |
+|---|---|---|
+| `_dm_source_attachment_id` | `product`, `dm_recurso` | ID del attachment origen |
+| `_dm_wc_product_id` | `dm_recurso` | ID del producto WC vinculado |
+
+---
+
+# 20. Freebies por email con link tokenizado
+
+## Archivo
+
+`wp-content/themes/daniela-child/inc/freebie-download.php`
+
+## Tabla de base de datos
+
+`{prefix}dm_freebie_tokens` (creada automáticamente en `init` si no existe):
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `token` | VARCHAR(64) PK | Token hex de 64 chars |
+| `email` | VARCHAR(200) | Email del solicitante |
+| `product_id` | BIGINT | Producto WC |
+| `created_at` | DATETIME | Fecha de creación |
+| `expires_at` | DATETIME | Expiración (NULL = sin límite) |
+| `download_count` | INT | Descargas realizadas |
+| `max_downloads` | INT DEFAULT 10 | Límite de descargas |
+| `newsletter_optin` | TINYINT | Consentimiento newsletter |
+
+## Shortcode
+
+```
+[dm_freebie_form product_id="123"]
+[dm_freebie_form product_id="123" title="Recíbelo gratis" button_text="Enviarme el PDF"]
+```
+
+Muestra: campo email + checkbox opt-in newsletter (no pre-marcado, GDPR-compliant).
+
+## Endpoint de descarga
+
+`?dm_freebie_token=<hex64>` en cualquier URL del sitio.
+
+Valida: token existe, no expirado, no superó `max_downloads`. Entrega el archivo y actualiza el contador.
+
+## Integración con single-dm_recurso.php
+
+Para recursos con precio $0 (vinculados por `_dm_wc_product_id`), `single-dm_recurso.php` muestra automáticamente el `[dm_freebie_form]` en lugar del botón "Agregar al carrito".
+
+## Integración newsletter
+
+Mismo flujo que `newsletter-optin.php`:
+1. Si el hook `mailerlite_woocommerce_subscribe` existe → delega al plugin oficial.
+2. Si no, y el fallback API está habilitado en DM Settings → llama a la API de MailerLite directamente.
