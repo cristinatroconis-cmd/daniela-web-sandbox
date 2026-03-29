@@ -9,10 +9,13 @@
  *   columns   – grid columns hint (default 3)
  *
  * Filters:
- *   - type: gratis | pagos  (maps to product_cat slugs or _price meta)
- *   - topic: product_cat slug(s)
+ *   - topic: product_tag slug(s)   (?dm_topic=ansiedad)
  *
- * Progressive enhancement: filters work via querystring (?dm_type=pagos&dm_topic=ansiedad)
+ * No gratis/pagos type filter — navigation is by topic only (per UX requirement).
+ * Gratis CTA: "Recíbelo por email" via _dm_email_landing_url meta or freebie delivery endpoint.
+ * Pagos CTA: "Comprar y descargar" → WooCommerce add-to-cart.
+ *
+ * Progressive enhancement: filters work via querystring (?dm_topic=ansiedad)
  * AND via JS (no full page reload) when JS is available.
  *
  * @package daniela-child
@@ -50,51 +53,17 @@ function dm_recursos_shortcode( $atts ) {
 		$columns = 3;
 	}
 
-	// --- Read active filters from querystring (sanitized) ---
-	// phpcs:disable WordPress.Security.NonceVerification.Recommended
-	$active_type  = isset( $_GET['dm_type'] ) ? sanitize_key( $_GET['dm_type'] ) : '';
+	// --- Read active topic filter from querystring (sanitized) ---
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 	$active_topic = isset( $_GET['dm_topic'] ) ? sanitize_key( $_GET['dm_topic'] ) : '';
-	// phpcs:enable
-
-	// Validate allowed values
-	if ( ! in_array( $active_type, array( '', 'gratis', 'pagos' ), true ) ) {
-		$active_type = '';
-	}
 
 	// --- Build WP_Query args ---
 	$tax_query = array( 'relation' => 'AND' );
 
-	// Base: only products in recursos-gratis or recursos-pagos categories,
-	// OR any product if no category filter is applied.
-	$base_cats = array( 'recursos-gratis', 'recursos-pagos' );
-
-	// Type filter
-	if ( 'gratis' === $active_type ) {
-		$tax_query[] = array(
-			'taxonomy' => 'product_cat',
-			'field'    => 'slug',
-			'terms'    => array( 'recursos-gratis' ),
-		);
-	} elseif ( 'pagos' === $active_type ) {
-		$tax_query[] = array(
-			'taxonomy' => 'product_cat',
-			'field'    => 'slug',
-			'terms'    => array( 'recursos-pagos' ),
-		);
-	} else {
-		// Show all productos in recursos-gratis OR recursos-pagos
-		$tax_query[] = array(
-			'taxonomy' => 'product_cat',
-			'field'    => 'slug',
-			'terms'    => $base_cats,
-			'operator' => 'IN',
-		);
-	}
-
-	// Topic filter (additional product_cat)
+	// Topic filter: uses product_tag taxonomy.
 	if ( $active_topic !== '' ) {
 		$tax_query[] = array(
-			'taxonomy' => 'product_cat',
+			'taxonomy' => 'product_tag',
 			'field'    => 'slug',
 			'terms'    => array( $active_topic ),
 		);
@@ -104,17 +73,19 @@ function dm_recursos_shortcode( $atts ) {
 		'post_type'      => 'product',
 		'post_status'    => 'publish',
 		'posts_per_page' => $per_page,
-		'tax_query'      => $tax_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 	);
+
+	if ( count( $tax_query ) > 1 ) {
+		$query_args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+	}
 
 	$products = new WP_Query( $query_args );
 
-	// --- Fetch available topic categories for filter pills ---
+	// --- Fetch available topic tags for filter pills ---
 	$topic_terms = get_terms(
 		array(
-			'taxonomy'   => 'product_cat',
+			'taxonomy'   => 'product_tag',
 			'hide_empty' => true,
-			'exclude'    => dm_recursos_get_excluded_term_ids( array( 'recursos-gratis', 'recursos-pagos', 'uncategorized' ) ),
 		)
 	);
 	if ( is_wp_error( $topic_terms ) ) {
@@ -130,51 +101,16 @@ function dm_recursos_shortcode( $atts ) {
 	<div class="dm-recursos" data-columns="<?php echo esc_attr( $columns ); ?>">
 
 		<?php // ---- Filter bar ---- ?>
+		<?php if ( ! empty( $topic_terms ) ) : ?>
 		<div class="dm-recursos__filters" role="navigation" aria-label="<?php esc_attr_e( 'Filtros de recursos', 'daniela-child' ); ?>">
 
-			<?php // Type filters ?>
-			<div class="dm-recursos__filter-group dm-recursos__filter-group--type">
-				<span class="dm-recursos__filter-label"><?php esc_html_e( 'Tipo:', 'daniela-child' ); ?></span>
-				<?php
-				$type_options = array(
-					''       => __( 'Todos', 'daniela-child' ),
-					'gratis' => __( 'Gratis', 'daniela-child' ),
-					'pagos'  => __( 'Pagos', 'daniela-child' ),
-				);
-				foreach ( $type_options as $slug => $label ) :
-					$url     = add_query_arg(
-						array(
-							'dm_type'  => $slug !== '' ? $slug : false,
-							'dm_topic' => $active_topic !== '' ? $active_topic : false,
-						),
-						$current_url
-					);
-					$is_active = ( $slug === $active_type );
-					?>
-					<a href="<?php echo esc_url( $url ); ?>"
-					   class="dm-filter-pill dm-filter-pill--type<?php echo $is_active ? ' is-active' : ''; ?>"
-					   data-filter-type="type"
-					   data-filter-value="<?php echo esc_attr( $slug ); ?>"
-					   <?php echo $is_active ? 'aria-current="true"' : ''; ?>>
-						<?php echo esc_html( $label ); ?>
-					</a>
-				<?php endforeach; ?>
-			</div>
-
 			<?php // Topic filters ?>
-			<?php if ( ! empty( $topic_terms ) ) : ?>
 			<div class="dm-recursos__filter-group dm-recursos__filter-group--topic">
 				<span class="dm-recursos__filter-label"><?php esc_html_e( 'Tema:', 'daniela-child' ); ?></span>
 
 				<?php
 				// "Todos los temas"
-				$all_topics_url = add_query_arg(
-					array(
-						'dm_type'  => $active_type !== '' ? $active_type : false,
-						'dm_topic' => false,
-					),
-					$current_url
-				);
+				$all_topics_url = remove_query_arg( 'dm_topic', $current_url );
 				?>
 				<a href="<?php echo esc_url( $all_topics_url ); ?>"
 				   class="dm-filter-pill dm-filter-pill--topic<?php echo $active_topic === '' ? ' is-active' : ''; ?>"
@@ -186,13 +122,7 @@ function dm_recursos_shortcode( $atts ) {
 
 				<?php foreach ( $topic_terms as $term ) : ?>
 					<?php
-					$term_url = add_query_arg(
-						array(
-							'dm_type'  => $active_type !== '' ? $active_type : false,
-							'dm_topic' => $term->slug,
-						),
-						$current_url
-					);
+					$term_url = add_query_arg( 'dm_topic', $term->slug, $current_url );
 					$is_active_topic = ( $term->slug === $active_topic );
 					?>
 					<a href="<?php echo esc_url( $term_url ); ?>"
@@ -204,9 +134,9 @@ function dm_recursos_shortcode( $atts ) {
 					</a>
 				<?php endforeach; ?>
 			</div>
-			<?php endif; ?>
 
 		</div><!-- /.dm-recursos__filters -->
+		<?php endif; ?>
 
 		<?php // ---- Product grid ---- ?>
 		<?php if ( $products->have_posts() ) : ?>
@@ -221,7 +151,7 @@ function dm_recursos_shortcode( $atts ) {
 				if ( ! $product ) {
 					continue;
 				}
-				dm_recursos_render_card( $product, $active_type );
+				dm_recursos_render_card( $product );
 			endwhile;
 			wp_reset_postdata();
 			?>
@@ -248,20 +178,24 @@ function dm_recursos_shortcode( $atts ) {
 /**
  * Render a single product card.
  *
- * @param WC_Product $product     WooCommerce product object.
- * @param string     $active_type Current active type filter ('gratis'|'pagos'|'').
+ * CTA logic:
+ *  - Price 0 (gratis): "Recíbelo por email" → _dm_email_landing_url meta or freebie endpoint.
+ *  - Price > 0 (pago): "Comprar y descargar" → WooCommerce add-to-cart URL.
+ *
+ * @param WC_Product $product WooCommerce product object.
  */
-function dm_recursos_render_card( WC_Product $product, $active_type ) {
+function dm_recursos_render_card( WC_Product $product ) {
 	$product_id = $product->get_id();
 
-	// Determine if the product is gratis or pagos based on its categories.
-	$is_gratis = dm_recursos_is_product_gratis( $product_id );
+	// Determine gratis/pago by price.
+	$price     = (float) $product->get_price();
+	$is_gratis = ( $price <= 0.0 ); // phpcs:ignore WordPress.PHP.StrictComparisons
 
 	// Per-product custom email landing page URL (optional meta).
+	// Fallback: freebie delivery endpoint (handles email capture + download limit).
 	$email_url = get_post_meta( $product_id, '_dm_email_landing_url', true );
 	if ( empty( $email_url ) ) {
-		// Fallback: product permalink.
-		$email_url = get_permalink( $product_id );
+		$email_url = add_query_arg( 'product_id', $product_id, home_url( '/recursos/recibir/' ) );
 	}
 
 	$product_url = get_permalink( $product_id );
@@ -341,45 +275,18 @@ function dm_recursos_render_card( WC_Product $product, $active_type ) {
 // ---------------------------------------------------------------------------
 
 /**
- * Determine if a product belongs to the "recursos-gratis" category.
- *
- * @param int $product_id Product post ID.
- * @return bool
- */
-function dm_recursos_is_product_gratis( $product_id ) {
-	return has_term( 'recursos-gratis', 'product_cat', $product_id );
-}
-
-/**
  * Return the current page URL without DM filter querystring params.
  *
- * @return string URL without dm_type / dm_topic params.
+ * @return string URL without dm_topic param.
  */
 function dm_recursos_current_url_without_filters() {
 	global $wp;
 	$url = home_url( add_query_arg( array(), $wp->request ) );
 
 	// Remove our own filter params to build clean base URL.
-	$url = remove_query_arg( array( 'dm_type', 'dm_topic' ), $url );
+	$url = remove_query_arg( array( 'dm_topic' ), $url );
 
 	return $url;
-}
-
-/**
- * Given an array of term slugs, return their IDs (for exclusion in get_terms).
- *
- * @param string[] $slugs Array of taxonomy term slugs.
- * @return int[]          Array of term IDs.
- */
-function dm_recursos_get_excluded_term_ids( array $slugs ) {
-	$ids = array();
-	foreach ( $slugs as $slug ) {
-		$term = get_term_by( 'slug', $slug, 'product_cat' );
-		if ( $term && ! is_wp_error( $term ) ) {
-			$ids[] = $term->term_id;
-		}
-	}
-	return $ids;
 }
 
 // ---------------------------------------------------------------------------
