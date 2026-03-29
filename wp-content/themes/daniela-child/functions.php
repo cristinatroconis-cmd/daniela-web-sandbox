@@ -29,6 +29,12 @@ require_once __DIR__ . '/inc/helpers-cpt.php';
 require_once __DIR__ . '/inc/dm-products.php';
 require_once __DIR__ . '/inc/recursos-hub.php';
 require_once __DIR__ . '/inc/newsletter-optin.php';
+require_once __DIR__ . '/inc/freebie-download.php';
+
+// WP-CLI commands (only loaded in CLI context to avoid overhead on web requests).
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+	require_once __DIR__ . '/inc/cli-import.php';
+}
 
 // Admin settings (loaded via WooCommerce filter so WC_Settings_Page is available).
 add_filter('woocommerce_get_settings_pages', function ($settings) {

@@ -44,14 +44,29 @@ while ( have_posts() ) :
 			</div>
 
 			<?php
-			// CTA WooCommerce (falla silenciosamente si WC no está activo).
-			$cta = dm_cpt_render_cta();
-			if ( $cta ) :
-				?>
-				<aside class="dm-single__cta">
-					<?php echo $cta; // phpcs:ignore WordPress.Security.EscapeOutput ?>
-				</aside>
-			<?php endif; ?>
+			// CTA: para recursos gratuitos se prefiere el formulario de entrega
+			// por email con link tokenizado. Para recursos de pago, CTA WooCommerce.
+			$linked_product = dm_cpt_get_linked_product();
+			if ( $linked_product ) {
+				$is_free_product = ( (float) $linked_product->get_price() <= 0.0 ); // phpcs:ignore WordPress.PHP.StrictComparisons
+				if ( $is_free_product ) {
+					// Entrega por email con token (preferida).
+					$freebie_html = do_shortcode(
+						'[dm_freebie_form product_id="' . esc_attr( $linked_product->get_id() ) . '"]'
+					);
+					echo '<aside class="dm-single__cta dm-single__cta--freebie">' . $freebie_html . '</aside>'; // phpcs:ignore WordPress.Security.EscapeOutput
+				} else {
+					$cta = dm_cpt_render_cta();
+					if ( $cta ) :
+						?>
+						<aside class="dm-single__cta">
+							<?php echo $cta; // phpcs:ignore WordPress.Security.EscapeOutput ?>
+						</aside>
+					<?php
+					endif;
+				}
+			}
+			?>
 
 			<footer class="dm-single__footer">
 				<a href="<?php echo esc_url( get_post_type_archive_link( 'dm_recurso' ) ); ?>" class="dm-btn dm-btn--ghost">
