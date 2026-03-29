@@ -30,6 +30,7 @@ require_once __DIR__ . '/inc/dm-products.php';
 require_once __DIR__ . '/inc/recursos-hub.php';
 require_once __DIR__ . '/inc/newsletter-optin.php';
 require_once __DIR__ . '/inc/freebie-delivery.php';
+require_once __DIR__ . '/inc/freebie-download.php';
 
 // WP-CLI + admin importer (loaded after WooCommerce is ready).
 add_action( 'plugins_loaded', function () {

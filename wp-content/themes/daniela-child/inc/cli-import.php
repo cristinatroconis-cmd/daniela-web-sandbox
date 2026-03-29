@@ -10,7 +10,7 @@
  *   1. Busca attachments (PDF / MP3 / M4A) en wp_posts tipo 'attachment'.
  *   2. Por cada attachment:
  *      a. Crea o actualiza un producto WooCommerce descargable (simple).
- *         – precio 0 si el título contiene gratis/gratuito/free; si no, $5.
+ *         – precio 0 si el título contiene "gratuito" (case-insensitive); si no, $5.
  *         – asigna product_tag según keywords del título/descripción.
  *         – Detecta familia "Afirmaciones" → bundle ($9, tag=bundle).
  *      b. Crea o actualiza el CPT dm_recurso con excerpt y contenido.
@@ -248,7 +248,7 @@ class DM_CLI_Commands {
 			return 'error';
 		}
 
-		$is_free      = $this->is_free( $title . ' ' . $attachment->post_excerpt . ' ' . $attachment->post_content );
+		$is_free      = $this->is_free( $title );
 		$is_bundle    = $this->is_bundle( $title );
 		$tags         = $this->derive_tags( $title . ' ' . $attachment->post_excerpt );
 		$excerpt      = $this->generate_excerpt( $title, $attachment->post_excerpt );
@@ -540,17 +540,14 @@ class DM_CLI_Commands {
 	/**
 	 * Determina si el texto indica que el recurso es gratuito.
 	 *
+	 * Regla de negocio: SOLO el título que contenga la palabra "gratuito"
+	 * (sin distinción de mayúsculas) establece el precio en $0.
+	 *
 	 * @param string $text
 	 * @return bool
 	 */
 	private function is_free( string $text ): bool {
-		$text_lower = mb_strtolower( $text, 'UTF-8' );
-		return (
-			str_contains( $text_lower, 'gratis' )    ||
-			str_contains( $text_lower, 'gratuito' )  ||
-			str_contains( $text_lower, 'gratuita' )  ||
-			str_contains( $text_lower, 'free' )
-		);
+		return str_contains( mb_strtolower( $text, 'UTF-8' ), 'gratuito' );
 	}
 
 	/**

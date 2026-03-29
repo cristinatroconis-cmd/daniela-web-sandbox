@@ -147,9 +147,11 @@ class DM_Recursos_Importer {
 	);
 
 	/**
-	 * Keywords that signal a free resource (checked against filename + title).
+	 * Keyword that signals a free resource.
+	 * Per business rule: ONLY the word "gratuito" (case-insensitive) in the
+	 * resource title sets the price to $0.
 	 */
-	const FREE_KEYWORDS = array( 'gratis', 'gratuito', 'gratuita', 'free' );
+	const FREE_KEYWORDS = array( 'gratuito' );
 
 	/**
 	 * Default price for paid resources (USD).
@@ -352,8 +354,8 @@ class DM_Recursos_Importer {
 			$title    = $this->prettify_filename( $filename );
 		}
 
-		// is_free detection: check filename + title for free keywords.
-		$haystack = strtolower( $title . ' ' . basename( (string) get_attached_file( $attachment->ID ) ) );
+		// is_free detection: check title only for the "gratuito" keyword (per business rule).
+		$haystack = strtolower( $title );
 		$is_free  = false;
 		foreach ( self::FREE_KEYWORDS as $kw ) {
 			if ( false !== strpos( $haystack, $kw ) ) {
