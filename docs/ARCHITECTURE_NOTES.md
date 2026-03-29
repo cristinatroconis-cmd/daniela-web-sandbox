@@ -53,7 +53,7 @@ Una sola "fuente de verdad" para gating:
 | CPT | URL archive | Filtro chips |
 |---|---|---|
 | `dm_escuela` | `/escuela/` | Categorías WooCommerce: cursos / talleres / programas (Ruta A) |
-| `dm_recurso` | `/recursos/` | Taxonomía `dm_tipo_recurso`: gratis / pagos |
+| `dm_recurso` | `/recursos/` | Taxonomía `dm_tema` (temas transversales) — sin categorizar por precio |
 | `dm_servicio` | `/servicios/` | Categorías WooCommerce: sesiones / paquetes / membresias / supervisiones (Ruta A, **estricto**) |
 
 ### Metaboxes implementados
@@ -164,12 +164,12 @@ Antes de tocar cualquier grid o tarjeta, responde estas preguntas:
 ### 4.2 Menú principal — subitems hover
 - **Pendiente:** agregar subitems al menú para Escuela, Recursos y Servicios.
   - Escuela → Cursos / Talleres / Programas
-  - Recursos → Gratis / Pagos / Por tema
+  - Recursos → Por tema (usar slugs de `dm_tema` que existan)
   - Servicios → Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`)
 - **Cómo:** WP Admin → Apariencia → Menús (no requiere código nuevo; solo configurar los items de menú con URLs correctas).
 - **URLs a usar:**
   - `/escuela/?tipo=cursos`, `/escuela/?tipo=talleres`, `/escuela/?tipo=programas`
-  - `/recursos/?tipo=gratis`, `/recursos/?tipo=pagos`
+  - `/recursos/?tema=<slug>` (slugs de `dm_tema`, ej. `/recursos/?tema=ansiedad`)
   - `/servicios/?tipo=sesiones`, `/servicios/?tipo=paquetes`, `/servicios/?tipo=membresias`, `/servicios/?tipo=supervisiones`
 
 ### 4.3 Optimización checkout
@@ -264,9 +264,10 @@ git pull --no-rebase origin main
 - [ ] Si no hay `_dm_wc_product_id`: no aparece el CTA (sin sección vacía).
 
 ### Archive `/recursos/`
-- [ ] La página carga con chips "Todos / Gratis / Pagos".
-- [ ] Filtro por tipo funciona con querystring `?tipo=gratis`.
-- [ ] Las tarjetas muestran CTA correcto según precio del producto.
+- [ ] La página carga con chips "Todos" + los temas `dm_tema` que existan asignados a recursos.
+- [ ] Filtro por tema funciona con querystring `?tema=<slug>` (ej. `/recursos/?tema=ansiedad`).
+- [ ] Las tarjetas muestran CTA correcto según precio del producto vinculado.
+- [ ] Excerpt de tarjeta no contiene HTML (limpio, sin botones ni markup).
 
 ### Archive `/servicios/`
 - [ ] La página carga sin errores PHP.

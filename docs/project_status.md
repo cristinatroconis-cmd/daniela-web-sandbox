@@ -45,7 +45,7 @@ Todos en `wp-content/themes/daniela-child/`:
 | Archivo | Estado |
 |---|---|
 | `archive-dm_escuela.php` | ✅ Chips WooCommerce (Ruta A) + grid |
-| `archive-dm_recurso.php` | ✅ Chips taxonomía + grid |
+| `archive-dm_recurso.php` | ✅ Chips `dm_tema` (temas transversales) + grid |
 | `archive-dm_servicio.php` | ✅ Chips WooCommerce (Ruta A, estricto) + grid |
 | `single-dm_escuela.php` | ✅ Imagen + tipo + contenido + CTA Woo |
 | `single-dm_recurso.php` | ✅ Implementado |
@@ -70,7 +70,15 @@ Todos en `wp-content/themes/daniela-child/`:
 - Footer de tarjeta: "Ver curso" (Tutor, nueva pestaña) + "Agregar al carrito" (WooCommerce)
 - Sin CTAs → footer no se renderiza
 
-### 3.5b Comportamiento `/servicios/` — Ruta A (estricto)
+### 3.5b Comportamiento `/recursos/`
+- Chips: Todos + temas por `dm_tema` (temas transversales como ansiedad, autoestima, etc.)
+- Querystring: `?tema=<slug>` (ej. `/recursos/?tema=ansiedad`)
+- Tarjeta: excerpt limpio (sin HTML) + precio si es pago, o "Gratis" si precio=0
+- CTA: "Recíbelo por email" para freebies (endpoint `/recursos/recibir/`) | "Agregar al carrito" para pagos
+- Importer: asigna `product_cat` `recursos` (padre) + `recursos-gratis`/`recursos-pagos` (hija según precio) — compatible con el hub `[dm_recursos]`
+- Nota: taxonomía interna `dm_tipo_recurso` es **legacy** (sigue registrada en cpt.php, no se usa en chips ni UX)
+
+### 3.5c Comportamiento `/servicios/` — Ruta A (estricto)
 - Chips: Todos / Sesiones / Paquetes / Membresías / Supervisiones (categorías WooCommerce hijas de `servicios`)
 - Modo **estricto**: solo aparecen ítems `dm_servicio` cuyo producto vinculado esté en `product_cat servicios/*`
 - Sin producto en `servicios/*` → el ítem no aparece en el archive (aunque esté publicado)
@@ -104,12 +112,8 @@ Todos en `wp-content/themes/daniela-child/`:
 - [ ] **Subitems hover en menú principal**  
   Agregar subitems en WP Admin → Apariencia → Menús:
   - Escuela → Cursos (`/escuela/?tipo=cursos`) / Talleres / Programas
-  - Recursos → Gratis (`/recursos/?tipo=gratis`) / Pagos
+  - Recursos → Por tema (`/recursos/?tema=<slug>` con slugs de `dm_tema`)
   - Servicios → Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`)
-  
-- [ ] **Replicar Ruta A en Recursos (transversal)** — próximo paso sugerido  
-  Estructurar categorías Woo padres `recursos` y `temas` para que `/recursos/` filtre igual que `/servicios/` (Ruta A o variante flexible).  
-  Decidir slugs de padres y hijas antes de tocar código.
   
 - [ ] **Auditar gating de acceso** (Tutor vs Memberships/Subscriptions)  
   Confirmar quién controla el acceso post-compra y documentarlo.  
