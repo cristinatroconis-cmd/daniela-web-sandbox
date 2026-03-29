@@ -491,6 +491,9 @@ class DM_Recursos_Importer {
 		// Assign product_tag terms for topic navigation.
 		$this->assign_product_tags( $product_id, $data['tags'] );
 
+		// Assign product_cat: 'recursos' (parent) + 'recursos-gratis' or 'recursos-pagos'.
+		$this->assign_product_categories( $product_id, $data['is_free'] );
+
 		return $product_id;
 	}
 
@@ -564,6 +567,9 @@ class DM_Recursos_Importer {
 		update_post_meta( $product_id, '_dm_source_attachment_id', $canonical_id );
 
 		$this->assign_product_tags( $product_id, $data['tags'] );
+
+		// Bundles are always paid ($9); assign 'recursos' + 'recursos-pagos'.
+		$this->assign_product_categories( $product_id, false );
 
 		return $product_id;
 	}
@@ -691,6 +697,58 @@ class DM_Recursos_Importer {
 		}
 
 		wp_set_object_terms( $cpt_id, $term_ids, 'dm_tema', true );
+	}
+
+	/**
+	 * Assign product_cat categories to a product.
+	 *
+	 * Always assigns the parent category 'recursos' (WooCommerce catalog visibility).
+	 * Also assigns a sub-category for hub compatibility:
+	 *   - 'recursos-gratis'  if $is_free === true
+	 *   - 'recursos-pagos'   otherwise
+	 *
+	 * @param int  $product_id Product post ID.
+	 * @param bool $is_free    Whether the product is free (price $0).
+	 */
+	private function assign_product_categories( $product_id, $is_free ) {
+		$parent_id = $this->ensure_product_cat( 'recursos', 'Recursos', 0 );
+
+		$child_slug  = $is_free ? 'recursos-gratis' : 'recursos-pagos';
+		$child_label = $is_free
+			? __( 'Gratis', 'daniela-child' )
+			: __( 'Pagos', 'daniela-child' );
+		$child_id = $this->ensure_product_cat( $child_slug, $child_label, $parent_id );
+
+		$term_ids = array_filter( array( $parent_id, $child_id ) );
+		if ( ! empty( $term_ids ) ) {
+			wp_set_object_terms( $product_id, $term_ids, 'product_cat', true );
+		}
+	}
+
+	/**
+	 * Ensure a product_cat term exists and return its term ID.
+	 *
+	 * @param string $slug      Category slug.
+	 * @param string $name      Category display name.
+	 * @param int    $parent_id Parent term ID (0 = top level).
+	 * @return int              Term ID, or 0 on failure.
+	 */
+	private function ensure_product_cat( $slug, $name, $parent_id = 0 ) {
+		$term = get_term_by( 'slug', $slug, 'product_cat' );
+		if ( $term ) {
+			return (int) $term->term_id;
+		}
+
+		$args = array( 'slug' => $slug );
+		if ( $parent_id > 0 ) {
+			$args['parent'] = $parent_id;
+		}
+		$result = wp_insert_term( $name, 'product_cat', $args );
+		if ( is_wp_error( $result ) ) {
+			$this->log( sprintf( '    ERROR: Could not create product_cat "%s": %s', $slug, $result->get_error_message() ) );
+			return 0;
+		}
+		return (int) $result['term_id'];
 	}
 
 	// -------------------------------------------------------------------------
