@@ -52,16 +52,9 @@ add_action( 'wp_enqueue_scripts', function () {
 		}
 	}
 
-	// Progressive-enhancement JS for [dm_recursos] filters.
-	if ( has_shortcode( $post->post_content, 'dm_recursos' ) ) {
-		wp_enqueue_script(
-			'dm-recursos-filters',
-			get_stylesheet_directory_uri() . '/js/recursos-filters.js',
-			array(),
-			'1.0.0',
-			true
-		);
-	}
+	// Note: dm-recursos-filters is registered in recursos-hub.php and
+	// enqueued on-demand by the [dm_recursos] shortcode callback — no
+	// duplicate enqueue needed here.
 
 	// Lightweight scroll-into-view JS for [dm_recursos_temas] chips.
 	if ( has_shortcode( $post->post_content, 'dm_recursos_temas' ) ) {
