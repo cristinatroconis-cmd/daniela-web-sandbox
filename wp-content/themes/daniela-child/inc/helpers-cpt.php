@@ -413,7 +413,7 @@ function dm_cpt_render_grid($query)
 		$html .= '</div>'; // .dm-card__title-row
 
 		if ($excerpt) {
-			$html .= '<p class="dm-card__excerpt">' . wp_kses_post(wp_trim_words($excerpt, 20)) . '</p>';
+			$html .= '<p class="dm-card__excerpt">' . esc_html( wp_trim_words( wp_strip_all_tags( $excerpt ), 20 ) ) . '</p>';
 		}
 
 		$html .= '</div>'; // .dm-card__body
