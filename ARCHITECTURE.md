@@ -555,7 +555,7 @@ Solo se carga cuando `WP_CLI` está definido (sin overhead en peticiones web).
 
 | Condición | Precio |
 |---|---|
-| Título contiene gratis / gratuito / free | $0 |
+| Título contiene **gratuito** (case-insensitive) | $0 |
 | Familia "Afirmaciones" (bundle) | $9 |
 | Cualquier otro | $5 |
 
