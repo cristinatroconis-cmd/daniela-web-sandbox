@@ -3,7 +3,7 @@
  * Archive template — dm_recurso (Recursos CPT).
  *
  * URL: /recursos/
- * Chips: dm_tema (temas transversales). Filtro por ?tema=<slug>.
+ * Chips: dm_tema (temas transversales). Navegación sin categorizar por precio.
  *
  * @package Daniela_Child
  */
@@ -24,7 +24,7 @@ get_header();
 
 			<?php
 			$archive_url = get_post_type_archive_link( 'dm_recurso' );
-			// Chips de temas (dm_tema), filtro por ?tema=<slug>
+			// Chips de tema (temas transversales — sin categorizar por precio).
 			echo dm_cpt_render_taxonomy_chips( 'dm_tema', 'tema', $archive_url ); // phpcs:ignore WordPress.Security.EscapeOutput
 			?>
 		</div>
