@@ -282,31 +282,67 @@ Todos aparecen en el editor de bloques (REST habilitado).
 | `dm_tipo_recurso` | `dm_recurso` | `gratis`, `pagos` | Chips de filtro en `/recursos/` |
 | `dm_tipo_escuela` | `dm_escuela` | `cursos`, `talleres`, `programas` | Chips de filtro en `/escuela/` |
 | `dm_tipo_servicio` | `dm_servicio` | `sesiones`, `membresias` | Chips de filtro en `/servicios/` |
-| `dm_tema` | los 3 CPTs | _(el admin los crea libremente)_ | Temas transversales para chips y cross-navegación |
+| `dm_tema` | los 3 CPTs | _(se sincronizan desde WC product_tag)_ | Temas transversales para chips y cross-navegación |
 
-Los términos de `dm_tipo_*` se crean automáticamente en el primer `init` si no existen. Los términos de `dm_tema` los añade el admin manualmente.
+Los términos de `dm_tipo_*` se crean automáticamente en el primer `init` si no existen.  
+Los términos de `dm_tema` **se crean y sincronizan automáticamente** desde los `product_tag` del
+producto WC vinculado al guardar el CPT (ver sección "Cómo crear un ítem" más abajo).
+
+### Diccionario core de tags de marketing (`dm_tema` / `product_tag`)
+
+Usa siempre estos slugs en minúscula para mantener consistencia entre WooCommerce y los CPTs:
+
+| Slug | Uso / Temática |
+|---|---|
+| `ansiedad` | Recursos para gestionar ansiedad, estrés, activación nerviosa |
+| `autoestima` | Autoconcepto, autoaceptación, autocompasión |
+| `autoconocimiento` | Journaling, identidad, valores, exploración personal |
+| `gestion-emocional` | Regulación emocional, CBT, registros, herramientas |
+| `mindfulness` | Respiración, observación de la mente, presencia |
+| `relaciones` | Pareja, vínculos, comunicación, límites |
+| `sanacion` | Niña interior, perdón, sanar pasado |
+| `abundancia` | Mentalidad de crecimiento, éxito, dinero |
+
+> **Regla:** máximo 3 tags por producto/recurso. Si el producto tiene más de 3 `product_tag`,
+> solo se sincronizan los 3 primeros (orden: `term_id` ASC).
 
 ### Cómo crear un ítem y vincularlo con un producto WooCommerce
 
-1. **Crear el post CPT:**  
+> **Regla de gobernanza: WooCommerce es la fuente de verdad para los tags de marketing.**
+> Los tags (`product_tag`) del producto WC se copian automáticamente a `dm_tema` del CPT
+> al guardar el post. **No edites `dm_tema` manualmente**; edita los tags del producto Woo.
+
+**Procedimiento para Dani (paso a paso):**
+
+1. **Crear el producto en WooCommerce** (si aún no existe):  
+   WP Admin → Productos → Añadir nuevo.  
+   - Asigna nombre, precio, categoría (`recursos-gratis` / `recursos-pagos` / `cursos` / etc.).  
+   - **Asigna máximo 3 tags** de marketing (`product_tag`) usando los slugs del diccionario core (ver más abajo).  
+   - Publica el producto y copia su **ID** (número que aparece en la URL al editarlo).
+
+2. **Crear el post CPT:**  
    WP Admin → (Recursos CPT / Escuela CPT / Servicios CPT) → Añadir nuevo.  
    Rellena título, contenido, imagen destacada y excerpt.
 
-2. **Asignar tipo/taxonomía:**  
+3. **Asignar tipo/taxonomía:**  
    En la barra lateral del editor, elige el tipo correspondiente:  
    - Recursos: selecciona `gratis` o `pagos` en **Tipos de recurso**.  
    - Escuela: selecciona `cursos`, `talleres` o `programas` en **Tipos de Escuela**.  
-   - Servicios: selecciona `sesiones` o `membresias` en **Tipos de servicio**.  
-   - Opcionalmente, añade temas transversales en **Temas**.
+   - Servicios: selecciona `sesiones` o `membresias` en **Tipos de servicio**.
 
-3. **Vincular producto WooCommerce:**  
+4. **Vincular producto WooCommerce:**  
    En la barra lateral del editor verás el metabox **"Producto WooCommerce relacionado"**.  
    - Introduce el **ID del producto** de WooCommerce (número entero).  
+   - El metabox mostrará el nombre del producto, sus `product_tag` y una alerta si tiene más de 3.  
    - Si el producto es gratis (precio = 0), el botón CTA dirá **"Recíbelo gratis"**.  
    - Si el producto es de pago, el CTA dirá **"Comprar"** y mostrará el precio.  
    - Si dejas el campo vacío, no se mostrará ningún CTA (útil para posts informativos).
 
-4. **Publicar.** La URL estará disponible en:
+5. **Publicar / Actualizar** el post CPT.  
+   Al guardar, el sistema copia automáticamente los `product_tag` del producto vinculado
+   a la taxonomía `dm_tema` del CPT (máximo 3, ordenados por `term_id` ASC).
+
+6. **Publicar.** La URL estará disponible en:
    - Recurso: `/recursos/<slug>/`
    - Escuela: `/escuela/<slug>/`
    - Servicio: `/servicios/<slug>/`
@@ -345,6 +381,7 @@ Los templates viven en la raíz del tema hijo (como manda WordPress):
 |---|---|
 | `inc/cpt.php` | Registra CPTs y taxonomías; crea términos por defecto |
 | `inc/helpers-cpt.php` | Metabox WC, CTA renderer, chips de taxonomía, grid CPT |
+| `inc/sync-tags.php` | Sincroniza `product_tag` WC → `dm_tema` al guardar el CPT |
 
 ### Relación con los shortcodes existentes (WooCommerce Pages)
 

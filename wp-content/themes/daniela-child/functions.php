@@ -24,6 +24,7 @@ require_once __DIR__ . '/inc/woocommerce-checkout.php';
 // CPT — Custom Post Types, taxonomías y helpers de catálogo editorial.
 require_once __DIR__ . '/inc/cpt.php';
 require_once __DIR__ . '/inc/helpers-cpt.php';
+require_once __DIR__ . '/inc/sync-tags.php'; // Sincronización Woo product_tag → dm_tema.
 
 // Feature modules.
 require_once __DIR__ . '/inc/dm-products.php';

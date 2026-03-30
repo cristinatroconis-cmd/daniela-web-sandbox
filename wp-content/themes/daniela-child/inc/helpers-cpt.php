@@ -40,12 +40,24 @@ function dm_cpt_register_wc_metabox()
 /**
  * HTML del metabox.
  *
+ * Muestra el campo de ID de producto WC, información del producto vinculado
+ * (nombre, tags, aviso si supera 3) y la nota de sincronización automática
+ * de dm_tema desde product_tag.
+ *
  * @param WP_Post $post
  */
 function dm_cpt_wc_metabox_html($post)
 {
+	/** @var int $product_id ID del producto WC vinculado (0 si no hay). */
 	$product_id = (int) get_post_meta($post->ID, '_dm_wc_product_id', true);
 	wp_nonce_field('dm_wc_product_save', 'dm_wc_product_nonce');
+
+	// Diccionario de tags recomendados (slugs core confirmados).
+	$core_tags = [
+		'ansiedad', 'autoestima', 'autoconocimiento',
+		'gestion-emocional', 'mindfulness', 'relaciones',
+		'sanacion', 'abundancia',
+	];
 ?>
 	<p>
 		<label for="dm_wc_product_id">
@@ -61,8 +73,62 @@ function dm_cpt_wc_metabox_html($post)
 			style="width:100%;margin-top:4px;"
 			placeholder="Ej: 123" />
 	</p>
-	<p class="description">
-		<?php esc_html_e('Deja vacío si no hay producto vinculado. El CTA (botón de compra) usará este ID para mostrar precio y enlace.', 'daniela-child'); ?>
+
+<?php
+	// --- Información del producto vinculado (si WC está activo y hay ID) ---
+	if ($product_id > 0 && function_exists('wc_get_product')) :
+		$product = wc_get_product($product_id);
+		if ($product instanceof WC_Product) :
+			$wc_tags = wp_get_object_terms(
+				$product_id,
+				'product_tag',
+				[
+					'orderby' => 'term_id',
+					'order'   => 'ASC',
+					'fields'  => 'all',
+				]
+			);
+			$total_tags  = is_wp_error($wc_tags) ? 0 : count($wc_tags);
+			$synced_tags = is_wp_error($wc_tags) ? [] : array_slice($wc_tags, 0, 3);
+?>
+	<div style="background:#f0f6ff;border-left:3px solid #2271b1;padding:8px 10px;margin-bottom:8px;font-size:12px;">
+		<strong><?php esc_html_e('Producto vinculado:', 'daniela-child'); ?></strong>
+		<?php echo esc_html($product->get_name()); ?>
+		<span style="color:#666;"> (#<?php echo esc_html($product_id); ?>)</span>
+	</div>
+
+<?php		if ($total_tags > 0) : ?>
+	<p style="margin:0 0 4px;font-size:12px;"><strong><?php esc_html_e('Tags del producto (product_tag):', 'daniela-child'); ?></strong></p>
+	<p style="margin:0 0 6px;font-size:12px;">
+<?php
+			foreach ($synced_tags as $i => $tag) {
+				$style = 'display:inline-block;background:#e0ffe0;border:1px solid #5cb85c;border-radius:3px;padding:1px 6px;margin:2px 2px 2px 0;font-size:11px;';
+				echo '<span style="' . esc_attr($style) . '">' . esc_html($tag->slug) . '</span>';
+			}
+			if ($total_tags > 3) {
+				$extra = $total_tags - 3;
+				echo '<span style="color:#d63638;font-weight:bold;font-size:11px;margin-left:4px;">';
+				/* translators: %d = número de tags adicionales que no se sincronizan */
+				echo esc_html(sprintf(_n('(+%d tag no se sincronizará)', '(+%d tags no se sincronizarán)', $extra, 'daniela-child'), $extra));
+				echo '</span>';
+			}
+?>
+	</p>
+<?php		else : ?>
+	<p class="description" style="font-size:12px;">
+		<?php esc_html_e('Este producto aún no tiene product_tag asignados en WooCommerce.', 'daniela-child'); ?>
+	</p>
+<?php		endif; // $total_tags > 0 ?>
+<?php	endif; // $product instanceof WC_Product ?>
+<?php	endif; // $product_id > 0 && wc ?>
+
+	<p class="description" style="background:#fff8e1;border-left:3px solid #f0b429;padding:6px 8px;margin-top:6px;font-size:11px;">
+		<?php esc_html_e('Los temas del CPT (dm_tema) se sincronizan automáticamente desde los tags de este producto en WooCommerce. Máximo 3 tags (orden: term_id ASC). No edites dm_tema manualmente.', 'daniela-child'); ?>
+	</p>
+
+	<p class="description" style="font-size:11px;margin-top:6px;">
+		<strong><?php esc_html_e('Tags recomendados:', 'daniela-child'); ?></strong>
+		<?php echo esc_html(implode(', ', $core_tags)); ?>
 	</p>
 <?php
 }
