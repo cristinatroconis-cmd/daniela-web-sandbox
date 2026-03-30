@@ -285,20 +285,7 @@ function dm_necesitas_get_slides() {
 }
 
 /* =========================================================================
-   Inyección de CSS variables (inline en <head>)
+   Nota: la inyección de variables CSS inline (dm-necesitas-vars) se eliminó.
+   Los valores visuales se editan directamente en:
+   assets/css/home-necesitas.css  ← única fuente de verdad para esta sección.
    ========================================================================= */
-add_action( 'wp_head', 'dm_necesitas_inject_css_vars' );
-
-function dm_necesitas_inject_css_vars() {
-	$pad_y      = absint( get_theme_mod( 'dm_necesitas_pad_y',      72   ) );
-	$gap        = absint( get_theme_mod( 'dm_necesitas_gap',        48   ) );
-	$min_height = absint( get_theme_mod( 'dm_necesitas_min_height', 420  ) );
-	$radius     = absint( get_theme_mod( 'dm_necesitas_radius',     16   ) );
-
-	echo '<style id="dm-necesitas-vars">:root{';
-	echo '--dm-necesitas-pad-y:'    . $pad_y      . 'px;';
-	echo '--dm-necesitas-gap:'      . $gap        . 'px;';
-	echo '--dm-necesitas-min-height:' . $min_height . 'px;';
-	echo '--dm-necesitas-radius:'   . $radius     . 'px;';
-	echo '}</style>' . "\n";
-}

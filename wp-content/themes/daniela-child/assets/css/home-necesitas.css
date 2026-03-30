@@ -1,14 +1,18 @@
 /**
  * Home — Sección "¿Qué necesitas?"
  *
- * Variables CSS inyectadas desde el Customizer (customizer-home-necesitas.php).
- * Carousel sin Bootstrap; JS liviano en assets/js/home-necesitas-carousel.js.
+ * FUENTE ÚNICA DE VERDAD para los estilos de esta sección.
+ * Para cambiar colores, espaciados, tipografía o layout edita SÓLO este archivo.
+ * No depende del Customizer ni de variables inline; todas las variables CSS
+ * tienen sus valores por defecto aquí abajo en el bloque :root.
+ *
+ * Carousel JS: assets/js/home-necesitas-carousel.js
  *
  * @package Daniela_Child
  */
 
 /* =========================================================================
-   Variables con defaults — el Customizer las sobreescribe en línea.
+   Variables con defaults — editar aquí para tunear la sección.
    ========================================================================= */
 :root {
 	--dm-necesitas-pad-y: 72px;
