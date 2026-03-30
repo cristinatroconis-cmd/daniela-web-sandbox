@@ -16,43 +16,68 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /* -------------------------------------------------------------------------
-   Secciones del hub con sus destinos
+   Tema activo desde URL (?tema=slug) — permite filtrar el hub por tema
    ---------------------------------------------------------------------- */
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+$active_tema = isset( $_GET['tema'] ) ? sanitize_title( wp_unslash( $_GET['tema'] ) ) : '';
+$tema_label  = '';
+if ( $active_tema ) {
+	$tema_term  = get_term_by( 'slug', $active_tema, 'product_tag' );
+	if ( ! $tema_term ) {
+		$tema_term = get_term_by( 'slug', $active_tema, 'dm_tema' );
+	}
+	$tema_label = $tema_term ? $tema_term->name : $active_tema;
+}
+
+/* -------------------------------------------------------------------------
+   Secciones del hub con sus destinos
+   Cuando hay un tema activo, los links incluyen el filtro de tema donde el
+   archive lo soporta (dm_topic en /recursos/, dm_topic en /escuela/?tipo=).
+   ---------------------------------------------------------------------- */
+$temas_hub_url = home_url( '/temas/' );
+
+$build_type_url = function ( string $base_url ) use ( $active_tema ) : string {
+	if ( ! $active_tema ) {
+		return $base_url;
+	}
+	return add_query_arg( 'dm_topic', $active_tema, $base_url );
+};
+
 $hub_sections = [
 	[
 		'id'    => 'recursos',
 		'label' => __( 'Recursos', 'daniela-child' ),
 		'desc'  => __( 'PDFs, guías y registros para trabajar a tu ritmo.', 'daniela-child' ),
 		'icon'  => '📄',
-		'url'   => home_url( '/recursos/' ),
+		'url'   => $build_type_url( home_url( '/recursos/' ) ),
 	],
 	[
 		'id'    => 'cursos',
 		'label' => __( 'Cursos', 'daniela-child' ),
 		'desc'  => __( 'Aprendizaje online paso a paso, cuando tú quieras.', 'daniela-child' ),
 		'icon'  => '🎓',
-		'url'   => home_url( '/escuela/?tipo=curso' ),
+		'url'   => $build_type_url( home_url( '/escuela/?tipo=curso' ) ),
 	],
 	[
 		'id'    => 'talleres',
 		'label' => __( 'Talleres', 'daniela-child' ),
 		'desc'  => __( 'Experiencias en vivo para trabajar en comunidad.', 'daniela-child' ),
 		'icon'  => '🤝',
-		'url'   => home_url( '/escuela/?tipo=taller' ),
+		'url'   => $build_type_url( home_url( '/escuela/?tipo=taller' ) ),
 	],
 	[
 		'id'    => 'programas',
 		'label' => __( 'Programas', 'daniela-child' ),
 		'desc'  => __( 'Procesos más profundos y acompañados.', 'daniela-child' ),
 		'icon'  => '🌱',
-		'url'   => home_url( '/escuela/?tipo=programa' ),
+		'url'   => $build_type_url( home_url( '/escuela/?tipo=programa' ) ),
 	],
 	[
 		'id'    => 'sesiones',
 		'label' => __( 'Sesiones', 'daniela-child' ),
 		'desc'  => __( 'Apoyo profesional directo y personalizado.', 'daniela-child' ),
 		'icon'  => '💬',
-		'url'   => home_url( '/servicios/' ),
+		'url'   => $build_type_url( home_url( '/servicios/' ) ),
 	],
 ];
 
@@ -115,6 +140,20 @@ if ( function_exists( 'wc_get_product_tag_tax_class' ) || taxonomy_exists( 'prod
 		<p class="dm-temas-hub__subtitle">
 			<?php esc_html_e( 'Explora por tipo de ayuda o por el tema que más te resuene.', 'daniela-child' ); ?>
 		</p>
+		<?php if ( $tema_label ) : ?>
+		<p class="dm-temas-hub__active-tema">
+			<?php
+			printf(
+				/* translators: %s: topic label */
+				esc_html__( 'Filtrando por: %s', 'daniela-child' ),
+				'<strong>' . esc_html( $tema_label ) . '</strong>'
+			);
+			?>
+			<a class="dm-temas-hub__clear-tema" href="<?php echo esc_url( $temas_hub_url ); ?>">
+				<?php esc_html_e( '✕ Ver todo', 'daniela-child' ); ?>
+			</a>
+		</p>
+		<?php endif; ?>
 	</header>
 
 	<!-- ── Por tipo ─────────────────────────────────────────────────────── -->
@@ -145,11 +184,18 @@ if ( function_exists( 'wc_get_product_tag_tax_class' ) || taxonomy_exists( 'prod
 			<?php esc_html_e( 'O elige el tema que más te resuene', 'daniela-child' ); ?>
 		</h3>
 		<ul class="dm-temas-hub__chips">
-			<?php foreach ( $topic_tags as $tag ) : ?>
+			<?php foreach ( $topic_tags as $tag ) :
+				$is_active_chip = ( $active_tema === $tag->slug );
+				// Chip links filter the hub itself; a click shows all types for that tema.
+				$chip_url = $is_active_chip
+					? $temas_hub_url
+					: add_query_arg( 'tema', $tag->slug, $temas_hub_url );
+			?>
 			<li>
 				<a
-					class="dm-temas-hub__chip"
-					href="<?php echo esc_url( home_url( '/recursos/?dm_topic=' . urlencode( $tag->slug ) ) ); ?>"
+					class="dm-temas-hub__chip<?php echo $is_active_chip ? ' dm-temas-hub__chip--active' : ''; ?>"
+					href="<?php echo esc_url( $chip_url ); ?>"
+					<?php echo $is_active_chip ? 'aria-current="true"' : ''; ?>
 				>
 					<?php echo esc_html( $tag->name ); ?>
 					<span class="dm-temas-hub__chip-count"><?php echo absint( $tag->cnt ); ?></span>
