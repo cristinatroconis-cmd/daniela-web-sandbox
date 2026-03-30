@@ -26,8 +26,14 @@ require_once __DIR__ . '/inc/cpt.php';
 require_once __DIR__ . '/inc/helpers-cpt.php';
 require_once __DIR__ . '/inc/sync-tags.php'; // Sincronización Woo product_tag → dm_tema.
 
-// Customizer modules.
-require_once __DIR__ . '/inc/customizer-home-necesitas.php';
+/**
+ * Customizer modules.
+ *
+ * Desactivado a propósito: la sección Home "¿Qué necesitas?" ya NO se gestiona
+ * desde el Customizer/Kirki. El contenido se define en el template y el diseño
+ * se controla en: assets/css/home-necesitas.css
+ */
+// require_once __DIR__ . '/inc/customizer-home-necesitas.php';
 
 // Feature modules.
 require_once __DIR__ . '/inc/dm-products.php';
@@ -37,9 +43,9 @@ require_once __DIR__ . '/inc/freebie-delivery.php';
 require_once __DIR__ . '/inc/freebie-download.php';
 
 // WP-CLI + admin importer (loaded after WooCommerce is ready).
-add_action( 'plugins_loaded', function () {
+add_action('plugins_loaded', function () {
 	require_once __DIR__ . '/inc/cli-import-recursos.php';
-} );
+});
 
 // Admin settings (loaded via WooCommerce filter so WC_Settings_Page is available).
 add_filter('woocommerce_get_settings_pages', function ($settings) {
