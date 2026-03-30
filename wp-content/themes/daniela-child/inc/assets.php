@@ -66,4 +66,25 @@ add_action( 'wp_enqueue_scripts', function () {
 			true
 		);
 	}
+
+	// Home sección "¿Qué necesitas?" carousel + estilos.
+	if (
+		has_shortcode( $post->post_content, 'dm_home_necesitas' )
+		|| has_shortcode( $post->post_content, 'dm_temas_hub' )
+		|| is_front_page()
+	) {
+		wp_enqueue_style(
+			'dm-home-necesitas',
+			get_stylesheet_directory_uri() . '/assets/css/home-necesitas.css',
+			array(),
+			'1.0.0'
+		);
+		wp_enqueue_script(
+			'dm-home-necesitas-carousel',
+			get_stylesheet_directory_uri() . '/assets/js/home-necesitas-carousel.js',
+			array(),
+			'1.0.0',
+			true
+		);
+	}
 }, 25 );

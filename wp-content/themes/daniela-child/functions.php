@@ -26,6 +26,9 @@ require_once __DIR__ . '/inc/cpt.php';
 require_once __DIR__ . '/inc/helpers-cpt.php';
 require_once __DIR__ . '/inc/sync-tags.php'; // Sincronización Woo product_tag → dm_tema.
 
+// Customizer modules.
+require_once __DIR__ . '/inc/customizer-home-necesitas.php';
+
 // Feature modules.
 require_once __DIR__ . '/inc/dm-products.php';
 require_once __DIR__ . '/inc/recursos-hub.php';
@@ -51,5 +54,12 @@ add_filter('woocommerce_get_settings_pages', function ($settings) {
 add_shortcode('dm_home_necesitas', function () {
 	ob_start();
 	get_template_part('template-parts/home/section', 'necesitas');
+	return ob_get_clean();
+});
+
+// Hub de temas (destino del slide 4).
+add_shortcode('dm_temas_hub', function () {
+	ob_start();
+	get_template_part('template-parts/home/section', 'temas-hub');
 	return ob_get_clean();
 });
