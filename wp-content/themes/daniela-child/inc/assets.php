@@ -28,7 +28,33 @@ add_action( 'wp_enqueue_scripts', function () {
  */
 add_action( 'wp_enqueue_scripts', function () {
 	global $post;
-	if ( ! is_a( $post, 'WP_Post' ) || ! function_exists( 'WC' ) ) {
+	if ( ! is_a( $post, 'WP_Post' ) ) {
+		return;
+	}
+
+	// Home sección "¿Qué necesitas?" carousel + estilos (no depende de WC).
+	if (
+		has_shortcode( $post->post_content, 'dm_home_necesitas' )
+		|| has_shortcode( $post->post_content, 'dm_temas_hub' )
+		|| is_front_page()
+	) {
+		wp_enqueue_style(
+			'dm-home-necesitas',
+			get_stylesheet_directory_uri() . '/assets/css/home-necesitas.css',
+			array(),
+			'1.0.0'
+		);
+		wp_enqueue_script(
+			'dm-home-necesitas-carousel',
+			get_stylesheet_directory_uri() . '/assets/js/home-necesitas-carousel.js',
+			array(),
+			'1.0.0',
+			true
+		);
+	}
+
+	// The rest requires WooCommerce.
+	if ( ! function_exists( 'WC' ) ) {
 		return;
 	}
 
@@ -61,27 +87,6 @@ add_action( 'wp_enqueue_scripts', function () {
 		wp_enqueue_script(
 			'dm-temas-chips',
 			get_stylesheet_directory_uri() . '/js/temas-chips.js',
-			array(),
-			'1.0.0',
-			true
-		);
-	}
-
-	// Home sección "¿Qué necesitas?" carousel + estilos.
-	if (
-		has_shortcode( $post->post_content, 'dm_home_necesitas' )
-		|| has_shortcode( $post->post_content, 'dm_temas_hub' )
-		|| is_front_page()
-	) {
-		wp_enqueue_style(
-			'dm-home-necesitas',
-			get_stylesheet_directory_uri() . '/assets/css/home-necesitas.css',
-			array(),
-			'1.0.0'
-		);
-		wp_enqueue_script(
-			'dm-home-necesitas-carousel',
-			get_stylesheet_directory_uri() . '/assets/js/home-necesitas-carousel.js',
 			array(),
 			'1.0.0',
 			true
