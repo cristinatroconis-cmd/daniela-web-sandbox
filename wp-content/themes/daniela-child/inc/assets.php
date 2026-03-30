@@ -25,19 +25,13 @@ add_action( 'wp_enqueue_scripts', function () {
 }, 20 );
 
 /**
- * Garantiza que el CSS adicional del Customizer (Apariencia → Personalizar →
- * "CSS adicional") siempre se imprima en <head>, incluso si el tema padre
- * lo suprime o usa caching agresivo.
- *
- * WordPress imprime ese CSS vía wp_custom_css_cb() en wp_head con prioridad 101.
- * Este hook lo refuerza a prioridad 102 usando wp_add_inline_style() como
- * fallback, de modo que si ya fue impreso el bloque queda vacío y no duplica.
+ * Evita que style.css del child se cargue dos veces.
+ * Shoptimizer encola automáticamente el child style como 'shoptimizer-child-style'.
+ * Aquí lo quitamos para que sólo quede 'daniela-child-style' (con filemtime).
  */
 add_action( 'wp_enqueue_scripts', function () {
-	$custom_css = function_exists( 'wp_get_custom_css' ) ? wp_get_custom_css() : '';
-	if ( $custom_css ) {
-		wp_add_inline_style( 'daniela-child-style', $custom_css );
-	}
+	wp_dequeue_style( 'shoptimizer-child-style' );
+	wp_deregister_style( 'shoptimizer-child-style' );
 }, 21 );
 
 /**
