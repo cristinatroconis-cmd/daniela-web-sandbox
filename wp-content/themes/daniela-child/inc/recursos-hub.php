@@ -215,6 +215,12 @@ function dm_recursos_render_card( WC_Product $product ) {
 	if ( empty( $excerpt ) ) {
 		$excerpt = wp_trim_words( $product->get_description(), 15 );
 	}
+
+	// Topic tags (product_tag terms) for display
+	$topic_tags = get_the_terms( $product_id, 'product_tag' );
+	if ( is_wp_error( $topic_tags ) ) {
+		$topic_tags = [];
+	}
 	?>
 	<li class="dm-recursos__item">
 		<article class="dm-recurso-card<?php echo $is_gratis ? ' dm-recurso-card--gratis' : ' dm-recurso-card--pago'; ?>"
@@ -242,6 +248,21 @@ function dm_recursos_render_card( WC_Product $product ) {
 				<p class="dm-recurso-card__excerpt">
 					<?php echo wp_kses_post( $excerpt ); ?>
 				</p>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $topic_tags ) ) : ?>
+				<ul class="dm-recurso-card__tags" aria-label="<?php esc_attr_e( 'Temas', 'daniela-child' ); ?>">
+					<?php foreach ( $topic_tags as $tag ) : ?>
+					<li>
+						<a
+							class="dm-recurso-card__tag"
+							href="<?php echo esc_url( add_query_arg( 'dm_topic', $tag->slug, home_url( '/recursos/' ) ) ); ?>"
+						>
+							<?php echo esc_html( $tag->name ); ?>
+						</a>
+					</li>
+					<?php endforeach; ?>
+				</ul>
 				<?php endif; ?>
 
 				<?php if ( ! $is_gratis && ! empty( $price_html ) ) : ?>
@@ -300,11 +321,12 @@ add_action( 'wp_enqueue_scripts', 'dm_recursos_enqueue_assets' );
  * The shortcode callback enqueues it when actually used.
  */
 function dm_recursos_enqueue_assets() {
+	$js_file = get_stylesheet_directory() . '/js/recursos-filters.js';
 	wp_register_script(
 		'dm-recursos-filters',
 		get_stylesheet_directory_uri() . '/js/recursos-filters.js',
 		array(),
-		'1.0.0',
+		file_exists( $js_file ) ? (string) filemtime( $js_file ) : '1.0.0',
 		true
 	);
 }

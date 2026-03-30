@@ -683,3 +683,35 @@ Text Domain: daniela-child
 		transition: none;
 	}
 }
+
+/* ==========================================================================
+   Recurso card — tags por tema
+   ========================================================================== */
+
+.dm-recurso-card__tags {
+	list-style: none;
+	margin: 0 0 12px;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.dm-recurso-card__tag {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 999px;
+	border: 1px solid var(--dm-color-border);
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--dm-color-text-muted);
+	text-decoration: none;
+	transition: background var(--dm-transition), color var(--dm-transition);
+}
+
+.dm-recurso-card__tag:hover {
+	background: var(--dm-color-primary);
+	border-color: var(--dm-color-primary);
+	color: #fff;
+	text-decoration: none;
+}
