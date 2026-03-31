@@ -656,6 +656,185 @@ Text Domain: daniela-child
 }
 
 /* ==========================================================================
+   Archive pages — dm-archive (recursos / escuela / servicios)
+   ========================================================================== */
+
+.dm-archive {
+	padding: 3rem 0 4rem;
+	background: var(--dm-color-bg);
+}
+
+.dm-archive__header {
+	margin-bottom: 2.5rem;
+}
+
+.dm-archive__header-inner {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1.5rem;
+}
+
+.dm-archive__title {
+	font-size: clamp(1.5rem, 4vw, 2.25rem);
+	font-weight: 700;
+	color: var(--dm-color-text);
+	margin: 0 0 0.75rem;
+	line-height: 1.2;
+}
+
+.dm-archive__description {
+	font-size: 1rem;
+	color: var(--dm-color-text-muted);
+	margin: 0 0 1.75rem;
+	max-width: 600px;
+	line-height: 1.6;
+}
+
+.dm-archive__content {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1.5rem 3rem;
+}
+
+/* ==========================================================================
+   Single pages — dm-single
+   Full-height section. Two-column grid: image left, content right.
+   Proportions match global grid containers (minmax(0, 1fr) minmax(0, 1fr)).
+   ========================================================================== */
+
+.dm-single {
+	padding: 3rem 0 4rem;
+	background: var(--dm-color-bg);
+	min-height: calc(100vh - 120px);
+	display: flex;
+	align-items: center;
+}
+
+.dm-single__article {
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1.5rem;
+}
+
+/* Two-column grid layout — image left, body right */
+.dm-single__layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: 3rem;
+	align-items: center;
+	justify-content: center;
+}
+
+/* No-image fallback: single centred column */
+.dm-single__layout--no-image {
+	grid-template-columns: minmax(0, 1fr);
+	max-width: 720px;
+	margin: 0 auto;
+}
+
+/* Left column: image */
+.dm-single__media {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.dm-single__thumbnail {
+	width: 100%;
+	border-radius: var(--dm-radius);
+	overflow: hidden;
+	aspect-ratio: var(--dm-card-thumb-ratio);  /* 16 : 9 — matches cards */
+	background: var(--dm-card-thumb-bg);
+}
+
+.dm-single__thumbnail img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* Right column: title, description, actions, footer */
+.dm-single__body {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	justify-content: center;
+	align-items: flex-start;
+}
+
+.dm-single__header {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.dm-single__type,
+.dm-single__terms {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.dm-single__title {
+	font-size: clamp(1.5rem, 3vw, 2rem);
+	font-weight: 700;
+	color: var(--dm-color-text);
+	margin: 0;
+	line-height: 1.25;
+}
+
+.dm-single__content {
+	font-size: 0.975rem;
+	color: var(--dm-color-text-muted);
+	line-height: 1.7;
+}
+
+.dm-single__content p:last-child {
+	margin-bottom: 0;
+}
+
+/* CTAs side by side */
+.dm-single__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+}
+
+.dm-single__actions .dm-single__cta,
+.dm-single__actions .dm-cta {
+	display: flex;
+	align-items: center;
+}
+
+/* Footer back link */
+.dm-single__footer {
+	padding-top: 0.5rem;
+}
+
+/* Small chip variant — used in single pages */
+.dm-chip--sm {
+	padding: 0.2rem 0.65rem;
+	font-size: 0.75rem;
+}
+
+/* Responsive: stack columns below 768px */
+@media (max-width: 768px) {
+	.dm-single {
+		align-items: flex-start;
+		padding: 2rem 0 3rem;
+		min-height: auto;
+	}
+
+	.dm-single__layout {
+		grid-template-columns: 1fr;
+		gap: 1.5rem;
+	}
+}
+
+/* ==========================================================================
    Add-to-Cart Popup — dm-cart-popup
    ========================================================================== */
 
