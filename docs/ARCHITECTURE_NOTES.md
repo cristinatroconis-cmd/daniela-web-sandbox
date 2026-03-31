@@ -1,6 +1,6 @@
 # Architecture Notes — Daniela Montes Psicóloga (Sandbox)
 
-**Última actualización:** 2026-03-28  
+**Última actualización:** 2026-03-31  
 Este documento complementa `ARCHITECTURE.md` (no lo reemplaza).  
 Aquí queda el "qué está implementado", el "por qué" de las decisiones y el backlog inmediato.
 
@@ -132,6 +132,30 @@ El sitio usa **un solo sistema visual** de cards + grids para todos los catálog
 - **Consistencia visual → mejor conversión:** el usuario no tiene que reaprender la interfaz entre secciones.
 - **Mantenimiento reducido:** un cambio en el grid o en la tarjeta aplica a todas las secciones simultáneamente.
 - **Bajo presupuesto:** no hay ROI en mantener grids diferenciados por sección.
+
+### Actualización 2026-03-31 — Thumb unificado + Hero "¿Qué necesitas?"
+
+#### Decisión: proporción 16:9 unificada para todas las card-thumbs
+- Las card-thumbs de todos los catálogos (CPT grids + Woo/producto/recurso cards) usan ahora **`aspect-ratio: 16/9`** (variable `--dm-card-thumb-ratio`), alineado con el hero del carousel de la Home.
+- `object-fit: cover` + `overflow: hidden` en el wrapper garantizan recorte homogéneo sin deformación, independientemente del tamaño original de la imagen.
+- Hover: escala suave (`transform: scale(...)` + `transition`) aplicada sobre la imagen interior.
+
+#### Contrato de markup para thumbs (referencia rápida)
+
+| Familia de card | Wrapper (ratio + overflow) | Elemento imagen |
+|---|---|---|
+| `.dm-card` (CPT grids: escuela, servicios…) | `a.dm-card__image-link` | `div.dm-card__thumb > img` (de `get_the_post_thumbnail()`) |
+| `.dm-recurso-card` (hub WooCommerce recursos) | `a.dm-recurso-card__thumb-link` | `img.dm-recurso-card__thumb` |
+| `.dm-product-card` (grids de producto Woo) | `a.dm-product-card__thumb-link` | `img.dm-product-card__thumb` |
+
+- Para `.dm-card`, el ratio 16:9 se aplica sobre `a.dm-card__image-link`; el `div.dm-card__thumb` interior hereda `width/height: 100%`; el `<img>` (clase WordPress `wp-post-image`) se fuerza a `width/height: 100%` con `object-fit: cover`.
+- Para los dos casos Woo (`__thumb-link` / `__thumb`), el ratio y `overflow: hidden` van en el link wrapper; la imagen `<img>` rellena el box.
+- El sistema CSS en `style.css` trata los tres casos de forma consistente mediante selectores agrupados.
+
+#### Carousel Home "¿Qué necesitas?" (sección `section-necesitas`)
+- El hero de cada ítem del carousel usa **`aspect-ratio` fijo + `object-fit: cover`** (mismo principio que las card-thumbs).
+- Hover con escala (`transform: scale`) implementado en `assets/css/home-necesitas.css`.
+- Template: `template-parts/home/section-necesitas.php`.
 
 ### Checklist para cambios futuros
 

@@ -1,6 +1,6 @@
 # Daniela Montes Psicóloga — Project Status (Sandbox)
 
-**Última actualización:** 2026-03-28  
+**Última actualización:** 2026-03-31  
 **Repo:** `cristinatroconis-cmd/daniela-web-sandbox`  
 **Producción (referencia):** https://danielamontespsic.com/ (rocket.net)  
 **Modo de trabajo:** sandbox / aislado — NO tocar producción directo.
@@ -97,6 +97,8 @@ Todos en `wp-content/themes/daniela-child/`:
 - ✅ Estilos centralizados en `style.css`; PHP renderers no llevan layout inline.
 - ✅ CTA neutro: "Ver detalles" (excepción: "Ver curso" en `/escuela/` con `_dm_tutor_course_url`).
 - ✅ Regla: 3 columnas en desktop (≥1024px), responsivo en tablet/mobile.
+- ✅ **Thumb unificado 16:9** — todas las card-thumbs (CPT grids + recurso hub + product grids) usan `aspect-ratio: 16/9` (`--dm-card-thumb-ratio`) con `object-fit: cover`, alineado con el hero del carousel de la Home.
+- ✅ **Cuerpo y footer flex** — `.dm-card__body` usa flex-column con `flex-grow` en el excerpt para que el footer de CTAs quede siempre al fondo; las cards no "saltan" de altura por diferencias en imagen o descripción.
 - **Motivo:** proyecto low budget — consistencia visual mejora conversión; sistema único reduce mantenimiento.
 - **Referencia:** `ARCHITECTURE.md` § 18 + `docs/ARCHITECTURE_NOTES.md` § 3c.
 
@@ -125,6 +127,7 @@ Todos en `wp-content/themes/daniela-child/`:
 - [ ] **Email automation** — integración MailerLite post-compra
 - [ ] **Flush de rewrite rules** tras activar CPTs en entorno nuevo  
   `WP Admin → Ajustes → Enlaces permanentes → Guardar cambios` (o `wp rewrite flush` con WP-CLI)
+- [ ] **Verificar consistencia visual de cards** en `/recursos/`, `/escuela/`, `/servicios/` y cualquier grid de producto Woo: confirmar que el thumb 16:9 y el footer flex se aplican correctamente en todos los contextos (incluyendo imágenes verticales y tarjetas sin imagen destacada).
 
 ---
 
