@@ -71,33 +71,26 @@ add_action('wp_enqueue_scripts', function () {
 		return;
 	}
 
-	// Registrar el popup de confirmación de "Agregar al carrito".
-	$popup_js = get_stylesheet_directory() . '/js/add-to-cart-popup.js';
+	// Registrar el drawer lateral de "Agregar al carrito" (reemplaza el popup anterior).
+	$drawer_js = get_stylesheet_directory() . '/js/cart-drawer.js';
 	wp_register_script(
-		'dm-add-to-cart-popup',
-		get_stylesheet_directory_uri() . '/js/add-to-cart-popup.js',
-		array( 'jquery', 'wc-add-to-cart' ),
-		file_exists( $popup_js ) ? (string) filemtime( $popup_js ) : '1.0.0',
+		'dm-cart-drawer',
+		get_stylesheet_directory_uri() . '/js/cart-drawer.js',
+		array( 'jquery', 'wc-add-to-cart', 'wc-cart-fragments' ),
+		file_exists( $drawer_js ) ? (string) filemtime( $drawer_js ) : '1.0.0',
 		true
-	);
-	wp_localize_script(
-		'dm-add-to-cart-popup',
-		'dmCartPopup',
-		[
-			'checkout_url' => function_exists( 'wc_get_checkout_url' ) ? wc_get_checkout_url() : home_url( '/checkout/' ),
-		]
 	);
 
 	// Enqueue WooCommerce add-to-cart scripts on CPT archive and single pages.
 	$is_cpt_page = (
-		is_post_type_archive( [ 'dm_recurso', 'dm_escuela', 'dm_servicio' ] ) ||
+		is_post_type_archive( [ 'dm_recurso', 'dm_escuela', 'dm_servicio', 'dm_temas' ] ) ||
 		is_singular( [ 'dm_recurso', 'dm_escuela', 'dm_servicio' ] )
 	);
 	if ( $is_cpt_page ) {
 		wp_enqueue_script( 'woocommerce' );
 		wp_enqueue_script( 'wc-add-to-cart' );
 		wp_enqueue_script( 'wc-cart-fragments' );
-		wp_enqueue_script( 'dm-add-to-cart-popup' );
+		wp_enqueue_script( 'dm-cart-drawer' );
 	}
 
 	// Enqueue scripts for pages using DM shortcodes (requires $post to be a WP_Post).
@@ -119,7 +112,7 @@ add_action('wp_enqueue_scripts', function () {
 				wp_enqueue_script('woocommerce');
 				wp_enqueue_script('wc-add-to-cart');
 				wp_enqueue_script('wc-cart-fragments');
-				wp_enqueue_script('dm-add-to-cart-popup');
+				wp_enqueue_script('dm-cart-drawer');
 				break;
 			}
 		}

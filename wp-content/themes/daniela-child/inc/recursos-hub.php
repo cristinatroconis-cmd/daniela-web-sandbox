@@ -272,14 +272,13 @@ function dm_recursos_render_card( WC_Product $product ) {
 				<?php endif; ?>
 
 				<div class="dm-recurso-card__cta">
-					<?php if ( $is_gratis ) : ?>
-						<a href="<?php echo esc_url( $email_url ); ?>"
-						   class="dm-btn dm-btn--gratis">
-							<?php esc_html_e( 'Recíbelo por email', 'daniela-child' ); ?>
-						</a>
-					<?php elseif ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
+					<a href="<?php echo esc_url( $product_url ); ?>"
+					   class="dm-btn dm-btn--ghost">
+						<?php esc_html_e( 'Ver detalles', 'daniela-child' ); ?>
+					</a>
+					<?php if ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
 						<?php
-						$cart_url = esc_url( add_query_arg( 'add-to-cart', $product_id, home_url( '/' ) ) );
+						$cart_url = add_query_arg( 'add-to-cart', $product_id, home_url( '/' ) );
 						?>
 						<a href="<?php echo esc_url( $cart_url ); ?>"
 						   class="dm-btn dm-btn--comprar add_to_cart_button ajax_add_to_cart"

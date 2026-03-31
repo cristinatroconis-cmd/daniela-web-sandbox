@@ -78,7 +78,7 @@ function dm_register_cpts() {
 			'show_in_rest'  => true,
 			'menu_icon'     => 'dashicons-welcome-learn-more',
 			'supports'      => [ 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ],
-			'rewrite'       => [ 'slug' => 'escuela/%dm_tipo_escuela%', 'with_front' => false ],
+			'rewrite'       => [ 'slug' => 'escuela', 'with_front' => false ],
 		]
 	);
 
@@ -109,6 +109,37 @@ function dm_register_cpts() {
 			'menu_icon'     => 'dashicons-awards',
 			'supports'      => [ 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ],
 			'rewrite'       => [ 'slug' => 'servicios', 'with_front' => false ],
+		]
+	);
+
+	// ------------------------------------------------------------------
+	// dm_temas  →  /temas/  (archive: products grouped by product_tag)
+	// ------------------------------------------------------------------
+	register_post_type(
+		'dm_temas',
+		[
+			'labels'       => [
+				'name'               => __( 'Temas', 'daniela-child' ),
+				'singular_name'      => __( 'Tema', 'daniela-child' ),
+				'add_new'            => __( 'Añadir tema', 'daniela-child' ),
+				'add_new_item'       => __( 'Añadir nuevo tema', 'daniela-child' ),
+				'edit_item'          => __( 'Editar tema', 'daniela-child' ),
+				'new_item'           => __( 'Nuevo tema', 'daniela-child' ),
+				'view_item'          => __( 'Ver tema', 'daniela-child' ),
+				'view_items'         => __( 'Ver temas', 'daniela-child' ),
+				'search_items'       => __( 'Buscar temas', 'daniela-child' ),
+				'not_found'          => __( 'No se encontraron temas.', 'daniela-child' ),
+				'not_found_in_trash' => __( 'No hay temas en la papelera.', 'daniela-child' ),
+				'all_items'          => __( 'Todos los temas', 'daniela-child' ),
+				'menu_name'          => __( 'Temas', 'daniela-child' ),
+			],
+			'public'            => true,
+			'has_archive'       => true,
+			'show_in_rest'      => true,
+			'show_in_nav_menus' => true,
+			'menu_icon'         => 'dashicons-tag',
+			'supports'          => [ 'title' ],
+			'rewrite'           => [ 'slug' => 'temas', 'with_front' => false ],
 		]
 	);
 }
@@ -250,48 +281,14 @@ function dm_create_default_terms() {
 }
 
 // =============================================================================
-// PERMALINK — Resuelve %dm_tipo_escuela% en las URLs de dm_escuela.
-// =============================================================================
-
-/**
- * Sustituye el placeholder %dm_tipo_escuela% en los permalinks de dm_escuela
- * por el slug del primer término de la taxonomía asignado al post.
- *
- * Si el post no tiene término, usa 'escuela' como fallback para evitar
- * URL con literal "%dm_tipo_escuela%".
- */
-add_filter( 'post_type_link', 'dm_escuela_post_type_link', 10, 2 );
-
-function dm_escuela_post_type_link( $post_link, $post ) {
-	if ( 'dm_escuela' !== $post->post_type ) {
-		return $post_link;
-	}
-
-	if ( strpos( $post_link, '%dm_tipo_escuela%' ) === false ) {
-		return $post_link;
-	}
-
-	$terms = get_the_terms( $post->ID, 'dm_tipo_escuela' );
-
-	if ( $terms && ! is_wp_error( $terms ) ) {
-		$term = reset( $terms );
-		$slug = $term->slug;
-	} else {
-		$slug = 'escuela';
-	}
-
-	return str_replace( '%dm_tipo_escuela%', $slug, $post_link );
-}
-
-// =============================================================================
 // REWRITE FLUSH — Actualiza las reglas de reescritura al actualizar el tema.
 // =============================================================================
 
 add_action( 'init', 'dm_maybe_flush_rewrites', 999 );
 
 function dm_maybe_flush_rewrites() {
-	if ( get_option( 'dm_rewrite_version' ) !== '1.1' ) {
+	if ( get_option( 'dm_rewrite_version' ) !== '1.2' ) {
 		flush_rewrite_rules();
-		update_option( 'dm_rewrite_version', '1.1' );
+		update_option( 'dm_rewrite_version', '1.2' );
 	}
 }

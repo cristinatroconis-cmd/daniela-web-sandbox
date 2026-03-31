@@ -154,6 +154,9 @@ Text Domain: daniela-child
 .dm-recurso-card__cta {
 	margin-top: auto;
 	padding-top: 0.5rem;
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
 }
 
 /* Badge for type */
@@ -656,78 +659,179 @@ Text Domain: daniela-child
 }
 
 /* ==========================================================================
-   Add-to-Cart Popup — dm-cart-popup
+   Cart Drawer — off-canvas mini-cart (right side)
+   Replaces the old .dm-cart-popup modal overlay.
    ========================================================================== */
 
-.dm-cart-popup__overlay {
-display: none;
-position: fixed;
-inset: 0;
-z-index: 9999;
-background: rgba(0, 0, 0, 0.45);
-align-items: center;
-justify-content: center;
+.dm-cart-drawer {
+	position: fixed;
+	inset: 0;
+	z-index: 10000;
+	pointer-events: none;
 }
 
-.dm-cart-popup__overlay.is-visible {
-display: flex;
+.dm-cart-drawer.is-open {
+	pointer-events: auto;
 }
 
-.dm-cart-popup {
-position: relative;
-background: #fff;
-border-radius: 12px;
-padding: 2rem 2.5rem 2rem;
-max-width: 420px;
-width: calc(100% - 2rem);
-box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
-text-align: center;
-animation: dm-popup-in 0.22s ease;
+.dm-cart-drawer__overlay {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.45);
+	opacity: 0;
+	transition: opacity 0.3s ease;
 }
 
-@keyframes dm-popup-in {
-from { transform: translateY(-20px); opacity: 0; }
-to   { transform: translateY(0);    opacity: 1; }
+.dm-cart-drawer.is-open .dm-cart-drawer__overlay {
+	opacity: 1;
 }
 
-.dm-cart-popup__close {
-position: absolute;
-top: 0.75rem;
-right: 0.9rem;
-background: none;
-border: none;
-font-size: 1.1rem;
-cursor: pointer;
-color: var(--dm-color-text-muted, #888);
-line-height: 1;
-padding: 0.25rem;
+.dm-cart-drawer__panel {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: min(400px, 100vw);
+	background: #fff;
+	display: flex;
+	flex-direction: column;
+	box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+	transform: translateX(100%);
+	transition: transform 0.32s ease;
+	overflow: hidden;
 }
 
-.dm-cart-popup__close:hover {
-color: var(--dm-color-text, #222);
+.dm-cart-drawer.is-open .dm-cart-drawer__panel {
+	transform: translateX(0);
 }
 
-.dm-cart-popup__icon {
-font-size: 2.5rem;
-color: var(--dm-color-primary, #5b4fcf);
-margin-bottom: 0.5rem;
+.dm-cart-drawer__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 1rem 1.25rem;
+	border-bottom: 1px solid var(--dm-color-border);
+	flex-shrink: 0;
 }
 
-.dm-cart-popup__message {
-font-size: 1rem;
-font-weight: 600;
-color: var(--dm-color-text, #222);
-margin: 0 0 1.5rem;
-line-height: 1.4;
+.dm-cart-drawer__title {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: var(--dm-color-text);
+	margin: 0;
 }
 
-.dm-cart-popup__actions {
-display: flex;
-flex-wrap: wrap;
-gap: 0.75rem;
-justify-content: center;
+.dm-cart-drawer__close {
+	background: none;
+	border: none;
+	font-size: 1.1rem;
+	cursor: pointer;
+	color: var(--dm-color-text-muted);
+	line-height: 1;
+	padding: 0.25rem 0.4rem;
+	border-radius: var(--dm-radius);
+	transition: color var(--dm-transition);
 }
 
-.dm-cart-popup__actions .dm-btn {
-flex: 1 1 140px;
+.dm-cart-drawer__close:hover,
+.dm-cart-drawer__close:focus-visible {
+	color: var(--dm-color-text);
+	outline: 2px solid var(--dm-color-primary);
+}
+
+.dm-cart-drawer__body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1rem 1.25rem;
+}
+
+/* Mini-cart list inside drawer */
+.dm-cart-drawer__body .woocommerce-mini-cart__empty-message {
+	color: var(--dm-color-text-muted);
+	font-style: italic;
+}
+
+.dm-cart-drawer__body ul.woocommerce-mini-cart.cart_list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.dm-cart-drawer__body ul.woocommerce-mini-cart.cart_list li {
+	padding: 0.75rem 0;
+	border-bottom: 1px solid var(--dm-color-border);
+	display: flex;
+	gap: 0.75rem;
+	align-items: flex-start;
+}
+
+.dm-cart-drawer__body .woocommerce-mini-cart__total {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 0 0;
+	font-weight: 700;
+	border-top: 2px solid var(--dm-color-border);
+	margin-top: 0.5rem;
+}
+
+/* Hide WooCommerce's own action buttons — we use the drawer footer instead */
+.dm-cart-drawer__body .woocommerce-mini-cart__buttons {
+	display: none;
+}
+
+.dm-cart-drawer__footer {
+	display: flex;
+	gap: 0.75rem;
+	padding: 1rem 1.25rem;
+	border-top: 1px solid var(--dm-color-border);
+	flex-shrink: 0;
+}
+
+.dm-cart-drawer__footer .dm-btn {
+	flex: 1;
+	justify-content: center;
+}
+
+/* Prevent body scroll while drawer is open */
+body.dm-cart-drawer-open {
+	overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.dm-cart-drawer__panel,
+	.dm-cart-drawer__overlay {
+		transition: none;
+	}
+}
+
+/* ==========================================================================
+   Temas Archive — /temas/
+   ========================================================================== */
+
+.dm-archive__content--temas {
+	padding-bottom: 2rem;
+}
+
+.dm-temas__section {
+	margin-bottom: 3.5rem;
+}
+
+.dm-temas__section-header {
+	margin-bottom: 1.5rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 2px solid var(--dm-color-primary);
+}
+
+.dm-temas__section-title {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: var(--dm-color-primary);
+	margin: 0;
+}
+
+.dm-temas__section-desc {
+	font-size: 0.9rem;
+	color: var(--dm-color-text-muted);
+	margin: 0.4rem 0 0;
 }
