@@ -277,10 +277,17 @@ function dm_recursos_render_card( WC_Product $product ) {
 						   class="dm-btn dm-btn--gratis">
 							<?php esc_html_e( 'Recíbelo por email', 'daniela-child' ); ?>
 						</a>
-					<?php else : ?>
-						<a href="<?php echo esc_url( $add_to_cart ); ?>"
-						   class="dm-btn dm-btn--comprar">
-							<?php esc_html_e( 'Comprar y descargar', 'daniela-child' ); ?>
+					<?php elseif ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
+						<?php
+						$cart_url = esc_url( add_query_arg( 'add-to-cart', $product_id, home_url( '/' ) ) );
+						?>
+						<a href="<?php echo esc_url( $cart_url ); ?>"
+						   class="dm-btn dm-btn--comprar add_to_cart_button ajax_add_to_cart"
+						   data-product_id="<?php echo esc_attr( $product_id ); ?>"
+						   data-product_sku="<?php echo esc_attr( $product->get_sku() ); ?>"
+						   data-quantity="1"
+						   data-product_name="<?php echo esc_attr( $product->get_name() ); ?>">
+							<?php esc_html_e( 'Agregar al carrito', 'daniela-child' ); ?>
 						</a>
 					<?php endif; ?>
 				</div>

@@ -64,6 +64,18 @@ while ( have_posts() ) :
 				</aside>
 			<?php endif; ?>
 
+			<?php
+			// Enlace al curso en Tutor LMS (si está configurado).
+			$tutor_url = trim( (string) get_post_meta( get_the_ID(), '_dm_tutor_course_url', true ) );
+			if ( $tutor_url ) :
+			?>
+			<aside class="dm-single__cta dm-single__cta--tutor">
+				<a href="<?php echo esc_url( $tutor_url ); ?>" class="dm-btn dm-btn--primary" target="_blank" rel="noopener">
+					<?php esc_html_e( 'Iniciar curso', 'daniela-child' ); ?>
+				</a>
+			</aside>
+			<?php endif; ?>
+
 			<footer class="dm-single__footer">
 				<a href="<?php echo esc_url( get_post_type_archive_link( 'dm_escuela' ) ); ?>" class="dm-btn dm-btn--ghost">
 					&larr; <?php esc_html_e( 'Volver a Escuela', 'daniela-child' ); ?>

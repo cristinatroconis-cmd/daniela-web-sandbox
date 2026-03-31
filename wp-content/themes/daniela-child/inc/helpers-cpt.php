@@ -202,16 +202,16 @@ function dm_cpt_get_linked_product($post_id = null)
 }
 
 /**
- * Renderiza el CTA (botón de compra/descarga) para el producto relacionado.
+ * Renderiza el CTA (botón de compra) para el producto relacionado.
  *
  * Comportamiento:
- * - Precio 0 → "Agregar al carrito" (gratis) (add_to_cart_url).
- * - Precio > 0 → "Agregar al carrito" (pago) (add_to_cart_url).
+ * - Producto comprable → "Agregar al carrito" vía AJAX (sin redirección a /carrito/).
+ * - Producto NO comprable o sin stock → cadena vacía (no se muestra botón).
  * - Sin producto vinculado o WC inactivo → cadena vacía (falla silenciosamente).
  *
  * NOTA UX (Daniela Montes):
- * - El precio NO se imprime aquí: se muestra al lado del título en el grid,
- *   para evitar que quede “entre botones” cuando existe "Ver curso" + CTA Woo.
+ * - El precio NO se imprime aquí: se muestra al lado del título en el grid.
+ * - El popup de confirmación lo gestiona js/add-to-cart-popup.js.
  *
  * @param int|null $post_id  ID del post CPT. Usa el global si es null.
  * @return string            HTML del botón o cadena vacía.
@@ -223,12 +223,19 @@ function dm_cpt_render_cta($post_id = null)
 		return '';
 	}
 
+	// Solo mostrar "Agregar al carrito" si el producto es realmente comprable.
+	// Si no es comprable, add_to_cart_url() devuelve la página del producto,
+	// lo que causaría el error "Sorry, this product cannot be purchased".
+	if (! $product->is_purchasable() || ! $product->is_in_stock()) {
+		return '';
+	}
+
 	$price   = (float) $product->get_price();
 	$is_free = ((float) $price <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
 
 	$label     = __('Agregar al carrito', 'daniela-child');
 	$btn_class = $is_free ? 'dm-btn dm-btn--secondary' : 'dm-btn dm-btn--primary';
-	$url       = $product->add_to_cart_url();
+	$url       = esc_url(add_query_arg('add-to-cart', $product->get_id(), home_url('/')));
 
 	ob_start();
 ?>
@@ -237,7 +244,9 @@ function dm_cpt_render_cta($post_id = null)
 			href="<?php echo esc_url($url); ?>"
 			class="<?php echo esc_attr($btn_class); ?> add_to_cart_button ajax_add_to_cart"
 			data-product_id="<?php echo esc_attr($product->get_id()); ?>"
-			data-product_sku="<?php echo esc_attr($product->get_sku()); ?>">
+			data-product_sku="<?php echo esc_attr($product->get_sku()); ?>"
+			data-quantity="1"
+			data-product_name="<?php echo esc_attr($product->get_name()); ?>">
 			<?php echo esc_html($label); ?>
 		</a>
 	</div>
@@ -486,23 +495,22 @@ function dm_cpt_render_grid($query)
 
 		$cta_buy = dm_cpt_render_cta($post_id);
 
-		if ($tutor_url !== '' || ! empty($cta_buy)) {
-			$html .= '<div class="dm-card__footer dm-card__footer--actions">';
+		// Siempre renderizar el footer con "Ver detalles" para todos los CPTs.
+		// Para dm_escuela: enlace al single CPT (que tiene la URL con tipo).
+		// Para dm_recurso / dm_servicio: enlace al single CPT también.
+		$html .= '<div class="dm-card__footer dm-card__footer--actions">';
 
-			// 1) "Ver curso" primero — abre en nueva pestaña (solo dm_escuela con URL).
-			if ($tutor_url !== '') {
-				$html .= '<a class="dm-btn dm-btn--ghost" target="_blank" rel="noopener" href="' . esc_url($tutor_url) . '">'
-					. esc_html__('Ver detalles', 'daniela-child')
-					. '</a>';
-			}
+		// 1) "Ver detalles" — siempre enlaza al single del CPT.
+		$html .= '<a class="dm-btn dm-btn--ghost" href="' . esc_url($permalink) . '">'
+			. esc_html__('Ver detalles', 'daniela-child')
+			. '</a>';
 
-			// 2) CTA WooCommerce (Agregar al carrito).
-			if (! empty($cta_buy)) {
-				$html .= $cta_buy; // phpcs:ignore WordPress.Security.EscapeOutput
-			}
-
-			$html .= '</div>';
+		// 2) CTA WooCommerce (Agregar al carrito) — solo si el producto es comprable.
+		if (! empty($cta_buy)) {
+			$html .= $cta_buy; // phpcs:ignore WordPress.Security.EscapeOutput
 		}
+
+		$html .= '</div>';
 
 		$html .= '</article>';
 	}

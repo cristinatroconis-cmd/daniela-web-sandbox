@@ -654,3 +654,80 @@ Text Domain: daniela-child
 	color: #fff;
 	text-decoration: none;
 }
+
+/* ==========================================================================
+   Add-to-Cart Popup — dm-cart-popup
+   ========================================================================== */
+
+.dm-cart-popup__overlay {
+display: none;
+position: fixed;
+inset: 0;
+z-index: 9999;
+background: rgba(0, 0, 0, 0.45);
+align-items: center;
+justify-content: center;
+}
+
+.dm-cart-popup__overlay.is-visible {
+display: flex;
+}
+
+.dm-cart-popup {
+position: relative;
+background: #fff;
+border-radius: 12px;
+padding: 2rem 2.5rem 2rem;
+max-width: 420px;
+width: calc(100% - 2rem);
+box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+text-align: center;
+animation: dm-popup-in 0.22s ease;
+}
+
+@keyframes dm-popup-in {
+from { transform: translateY(-20px); opacity: 0; }
+to   { transform: translateY(0);    opacity: 1; }
+}
+
+.dm-cart-popup__close {
+position: absolute;
+top: 0.75rem;
+right: 0.9rem;
+background: none;
+border: none;
+font-size: 1.1rem;
+cursor: pointer;
+color: var(--dm-color-text-muted, #888);
+line-height: 1;
+padding: 0.25rem;
+}
+
+.dm-cart-popup__close:hover {
+color: var(--dm-color-text, #222);
+}
+
+.dm-cart-popup__icon {
+font-size: 2.5rem;
+color: var(--dm-color-primary, #5b4fcf);
+margin-bottom: 0.5rem;
+}
+
+.dm-cart-popup__message {
+font-size: 1rem;
+font-weight: 600;
+color: var(--dm-color-text, #222);
+margin: 0 0 1.5rem;
+line-height: 1.4;
+}
+
+.dm-cart-popup__actions {
+display: flex;
+flex-wrap: wrap;
+gap: 0.75rem;
+justify-content: center;
+}
+
+.dm-cart-popup__actions .dm-btn {
+flex: 1 1 140px;
+}

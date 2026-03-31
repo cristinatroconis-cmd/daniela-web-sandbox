@@ -78,7 +78,7 @@ function dm_register_cpts() {
 			'show_in_rest'  => true,
 			'menu_icon'     => 'dashicons-welcome-learn-more',
 			'supports'      => [ 'title', 'editor', 'thumbnail', 'excerpt', 'revisions' ],
-			'rewrite'       => [ 'slug' => 'escuela', 'with_front' => false ],
+			'rewrite'       => [ 'slug' => 'escuela/%dm_tipo_escuela%', 'with_front' => false ],
 		]
 	);
 
@@ -246,5 +246,52 @@ function dm_create_default_terms() {
 				wp_insert_term( $name, $taxonomy, [ 'slug' => $slug ] );
 			}
 		}
+	}
+}
+
+// =============================================================================
+// PERMALINK — Resuelve %dm_tipo_escuela% en las URLs de dm_escuela.
+// =============================================================================
+
+/**
+ * Sustituye el placeholder %dm_tipo_escuela% en los permalinks de dm_escuela
+ * por el slug del primer término de la taxonomía asignado al post.
+ *
+ * Si el post no tiene término, usa 'escuela' como fallback para evitar
+ * URL con literal "%dm_tipo_escuela%".
+ */
+add_filter( 'post_type_link', 'dm_escuela_post_type_link', 10, 2 );
+
+function dm_escuela_post_type_link( $post_link, $post ) {
+	if ( 'dm_escuela' !== $post->post_type ) {
+		return $post_link;
+	}
+
+	if ( strpos( $post_link, '%dm_tipo_escuela%' ) === false ) {
+		return $post_link;
+	}
+
+	$terms = get_the_terms( $post->ID, 'dm_tipo_escuela' );
+
+	if ( $terms && ! is_wp_error( $terms ) ) {
+		$term = reset( $terms );
+		$slug = $term->slug;
+	} else {
+		$slug = 'escuela';
+	}
+
+	return str_replace( '%dm_tipo_escuela%', $slug, $post_link );
+}
+
+// =============================================================================
+// REWRITE FLUSH — Actualiza las reglas de reescritura al actualizar el tema.
+// =============================================================================
+
+add_action( 'init', 'dm_maybe_flush_rewrites', 999 );
+
+function dm_maybe_flush_rewrites() {
+	if ( get_option( 'dm_rewrite_version' ) !== '1.1' ) {
+		flush_rewrite_rules();
+		update_option( 'dm_rewrite_version', '1.1' );
 	}
 }

@@ -65,3 +65,43 @@ add_action( 'template_redirect', function () {
         exit;
     }
 } );
+
+// =============================================================================
+// CART REDIRECT — Evitar redirección a /tienda/ y al carrito tras agregar.
+// =============================================================================
+
+/**
+ * Después de agregar un producto al carrito (no-AJAX), evitar la redirección
+ * a /tienda/ (página de la tienda WooCommerce). Vuelve a la página de origen.
+ *
+ * @param string $url URL de redirección propuesta por WooCommerce.
+ * @return string     URL de redirección corregida.
+ */
+add_filter( 'woocommerce_add_to_cart_redirect', function ( $url ) {
+    $shop_url = get_permalink( wc_get_page_id( 'shop' ) );
+
+    // Si WooCommerce quería redirigir a la tienda, preferimos quedarnos en la
+    // página actual (o ir a /recursos/ como fallback).
+    if ( $shop_url && trailingslashit( $url ) === trailingslashit( $shop_url ) ) {
+        $referer = wp_get_referer();
+        return $referer ?: home_url( '/recursos/' );
+    }
+
+    return $url;
+} );
+
+/**
+ * Filtrar el enlace "Seguir comprando" en el carrito para que no apunte a /tienda/.
+ *
+ * @param string $url URL de "seguir comprando".
+ * @return string     URL corregida.
+ */
+add_filter( 'woocommerce_continue_shopping_redirect', function ( $url ) {
+    $shop_url = get_permalink( wc_get_page_id( 'shop' ) );
+
+    if ( $shop_url && trailingslashit( $url ) === trailingslashit( $shop_url ) ) {
+        return home_url( '/' );
+    }
+
+    return $url;
+} );
