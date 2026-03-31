@@ -14,8 +14,8 @@ if (! defined('ABSPATH')) {
 }
 
 /* --- Contenido fijo (ya no depende del Customizer) ---------------------- */
-$kicker    = '¿Dónde estás parada hoy?';
-$title     = '¿Qué necesitas?';
+$kicker    = '';
+$title     = '¿Dónde estás parada hoy?';
 $lead      = 'Elige el camino que mejor encaja con lo que estás viviendo ahora mismo.';
 $image_url = '';      // pon aquí una URL si quieres fijar imagen desde código
 $autoplay  = 4000;    // ms
@@ -23,32 +23,40 @@ $autoplay  = 4000;    // ms
 /* --- Slides (hardcode) -------------------------------------------------- */
 $slides = [
 	[
-		'kicker' => 'Recursos descargables',
+		'kicker' => '',
 		'title'  => 'Quiero herramientas prácticas',
 		'text'   => 'PDFs, guías y registros para trabajar hoy mismo, a tu ritmo.',
 		'url'    => '/recursos/',
-		'bg'     => '#c9b8a8',
+		'bg'     => '#ead2ac',
+		'image'  => 'http://dani-backup.local/wp-content/uploads/2023/08/dani_consultoria6.png', // pon aquí una URL si quieres fijar imagen desde código
+		'image_alt' => 'Icono de recursos descargables',
 	],
 	[
-		'kicker' => 'Cursos y talleres',
+		'kicker' => '',
 		'title'  => 'Quiero aprender de forma guiada',
 		'text'   => 'Formación online a tu ritmo o en vivo, en comunidad.',
 		'url'    => '/escuela/',
-		'bg'     => '#a8b8c9',
+		'bg'     => '#ad8fb7',
+		'image'  => 'http://dani-backup.local/wp-content/uploads/2023/08/dani_consultoria5.png', // pon aquí una URL si quieres fijar imagen desde código
+		'image_alt' => 'Icono de formación online',
 	],
 	[
-		'kicker' => 'Servicios',
+		'kicker' => '',
 		'title'  => 'Quiero acompañamiento profesional',
-		'text'   => 'Sesiones, programas y membresías con apoyo personalizado.',
+		'text'   => 'Te ofrezco mis servicios de terapia.',
 		'url'    => '/servicios/',
-		'bg'     => '#b8c9a8',
+		'bg'     => '#eaefbd',
+		'image'  => 'http://dani-backup.local/wp-content/uploads/2023/08/dani_consultoria4.png', // pon aquí una URL si quieres fijar imagen desde código
+		'image_alt' => 'Icono de acompañamiento profesional',
 	],
 	[
-		'kicker' => 'Explorar por tema',
+		'kicker' => '',
 		'title'  => 'No sé bien qué necesito',
-		'text'   => 'Cuéntame dónde estás parada y encuentra lo que mejor encaja.',
+		'text'   => 'Cuéntame que estás sintiendo y encuentra lo que mejor encaja.',
 		'url'    => '/temas/',
-		'bg'     => '#c9a8b8',
+		'bg'     => '#2cb5ae',
+		'image'  => 'http://dani-backup.local/wp-content/uploads/2023/08/dani_consultoria3.png', // pon aquí una URL si quieres fijar imagen desde código
+		'image_alt' => 'Icono de orientación',
 	],
 ];
 ?>
@@ -95,6 +103,8 @@ $slides = [
 					<?php foreach ($slides as $i => $slide) :
 						$slide_url    = ! empty($slide['url']) ? esc_url(home_url($slide['url'])) : '#';
 						$slide_bg     = ! empty($slide['bg']) ? esc_attr($slide['bg']) : '#f4f0eb';
+						$slide_image  = ! empty($slide['image']) ? esc_url($slide['image']) : '';
+						$slide_image_alt = isset($slide['image_alt']) ? esc_attr($slide['image_alt']) : '';
 						$slide_kicker = ! empty($slide['kicker']) ? esc_html($slide['kicker']) : '';
 						$slide_title  = ! empty($slide['title']) ? esc_html($slide['title']) : '';
 						$slide_text   = ! empty($slide['text']) ? esc_html($slide['text']) : '';
@@ -105,6 +115,18 @@ $slides = [
 							style="--dm-slide-bg:<?php echo $slide_bg; ?>;"
 							aria-label="<?php echo $slide_title; ?>"
 							tabindex="<?php echo $i === 0 ? '0' : '-1'; ?>">
+
+							<?php if ($slide_image) : ?>
+								<div class="dm-carousel__slide-hero">
+									<img
+										class="dm-carousel__slide-hero-img"
+										src="<?php echo $slide_image; ?>"
+										alt="<?php echo $slide_image_alt; ?>"
+										loading="lazy"
+										decoding="async" />
+								</div>
+							<?php endif; ?>
+
 							<div class="dm-carousel__slide-body">
 								<?php if ($slide_kicker) : ?>
 									<span class="dm-carousel__slide-kicker"><?php echo $slide_kicker; ?></span>
@@ -118,8 +140,8 @@ $slides = [
 									<p class="dm-carousel__slide-text"><?php echo $slide_text; ?></p>
 								<?php endif; ?>
 
-								<span class="dm-carousel__slide-cta" aria-hidden="true">
-									<?php esc_html_e('Ver más', 'daniela-child'); ?> →
+								<span class="dm-carousel__slide-cta dm-btn dm-btn--ghost" aria-hidden="true">
+									<?php esc_html_e('Ver detalles', 'daniela-child'); ?> →
 								</span>
 							</div>
 						</a>

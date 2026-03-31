@@ -1,218 +1,282 @@
 /**
  * Home — Sección "¿Qué necesitas?"
  *
- * FUENTE ÚNICA DE VERDAD para los estilos de esta sección.
- * Para cambiar colores, espaciados, tipografía o layout edita SÓLO este archivo.
- * No depende del Customizer ni de variables inline; todas las variables CSS
- * tienen sus valores por defecto aquí abajo en el bloque :root.
+ * Objetivo:
+ * - CSS único y mantenible para el HTML actual:
+ *   .dm-necesitas / .dm-carousel / .dm-carousel__*
  *
- * Carousel JS: assets/js/home-necesitas-carousel.js
+ * JS: assets/js/home-necesitas-carousel.js
  *
  * @package Daniela_Child
  */
 
-/* =========================================================================
-   Variables con defaults — editar aquí para tunear la sección.
-   ========================================================================= */
+/* ==========================================================================
+   Tokens / variables (solo para esta sección)
+   - Usan variables del theme si existen; si no, caen a defaults seguros.
+   ========================================================================== */
 :root {
+	/* Spacing/layout */
 	--dm-necesitas-pad-y: 72px;
 	--dm-necesitas-gap: 48px;
 	--dm-necesitas-min-height: 420px;
 	--dm-necesitas-radius: 16px;
-	--dm-necesitas-autoplay: 4000; /* sólo referencia; JS la lee del data-attr */
+
+	/* Typography (no definimos font-family; heredamos) */
+	--dm-necesitas-kicker-tracking: 0.12em;
+
+	/* Colors: preferimos tokens del theme si existen */
+	--dm-necesitas-text: var(--dm-color-text, #111);
+	--dm-necesitas-muted: var(--dm-color-text-muted, rgba(0, 0, 0, 0.65));
+	--dm-necesitas-border: var(--dm-color-border, rgba(0, 0, 0, 0.12));
+
+	/* Effects */
+	--dm-necesitas-shadow: var(--dm-shadow, 0 10px 30px rgba(0, 0, 0, 0.08));
+	--dm-necesitas-transition: 200ms ease;
 }
 
-/* =========================================================================
-   Wrapper de sección
-   ========================================================================= */
+/* ==========================================================================
+   Wrapper / layout
+   ========================================================================== */
 .dm-necesitas {
-	padding: var(--dm-necesitas-pad-y) 24px;
-	overflow: hidden;
+	padding: var(--dm-necesitas-pad-y) 0px;
 	position: relative;
+	overflow: hidden;
+	isolation: isolate;
+	/* Heredar tipografía del theme */
+	color: var(--dm-necesitas-text);
 }
 
 .dm-necesitas__inner {
 	max-width: 1200px;
 	margin: 0 auto;
+	position: relative;
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	gap: var(--dm-necesitas-gap);
 	align-items: center;
+
 	min-height: var(--dm-necesitas-min-height);
 }
 
-/* =========================================================================
-   Columna izquierda — texto + imagen
-   ========================================================================= */
+/* ==========================================================================
+   Columna izquierda
+   ========================================================================== */
 .dm-necesitas__left {
+	background-image: url("http://dani-backup.local/wp-content/uploads/2024/05/dani_estrella.png");
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
 	display: flex;
 	flex-direction: column;
-	gap: 20px;
+	justify-content: center;
+	align-items: center;
+	gap: 25px;
+	min-height: var(--dm-necesitas-min-height);
+	min-width: 0;
 }
 
 .dm-necesitas__kicker {
-	font-size: 0.8rem;
-	font-weight: 700;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	opacity: 0.6;
 	margin: 0;
+	font-weight: 700;
+	font-size: 0.8rem;
+	letter-spacing: var(--dm-necesitas-kicker-tracking);
+	text-transform: uppercase;
+	opacity: 0.7;
 }
 
 .dm-necesitas__title {
-	font-size: clamp(1.6rem, 3vw, 2.4rem);
-	line-height: 1.2;
 	margin: 0;
+	line-height: 1.08;
+	font-size: clamp(1.75rem, 3vw, 2.6rem);
 }
 
 .dm-necesitas__lead {
-	font-size: 1.05rem;
-	line-height: 1.65;
-	opacity: 0.85;
 	margin: 0;
-	max-width: 44ch;
+	text-align: center;
+	max-width: 52ch;
+	line-height: 1.6;
+	font-family: Kollektif, var(--dm-font-sans, sans-serif);
+	font-size: 1.25rem;
+	color: #222;
 }
 
 .dm-necesitas__image {
-	border-radius: var(--dm-necesitas-radius);
+	display: block;
 	width: 100%;
 	max-width: 360px;
 	height: auto;
-	display: block;
-	object-fit: cover;
+
+	border-radius: var(--dm-necesitas-radius);
+	border: 1px solid var(--dm-necesitas-border);
+	box-shadow: var(--dm-necesitas-shadow);
 }
 
-/* =========================================================================
-   Columna derecha — carousel
-   ========================================================================= */
+/* ==========================================================================
+   Columna derecha — Carousel wrapper
+   ========================================================================== */
 .dm-necesitas__right {
+	min-width: 0;
 	position: relative;
 }
 
-/* =========================================================================
-   Carousel wrapper
-   ========================================================================= */
 .dm-carousel {
 	position: relative;
 	overflow: hidden;
+
 	border-radius: var(--dm-necesitas-radius);
 	min-height: var(--dm-necesitas-min-height);
+
+	/* Para que se vea “card” sin pelear con el theme */
+	border: 1px solid var(--dm-necesitas-border);
+	box-shadow: var(--dm-necesitas-shadow);
+	background: var(--dm-color-bg-card, #fff);
 }
 
+/* Track */
 .dm-carousel__track {
 	display: flex;
-	transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 	height: 100%;
+	will-change: transform;
+	transition: transform 420ms ease;
 }
 
-/* =========================================================================
-   Slide individual
-   ========================================================================= */
+/* Slide (anchor completo) */
 .dm-carousel__slide {
 	flex: 0 0 100%;
 	width: 100%;
 	min-height: var(--dm-necesitas-min-height);
+
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-end;
-	padding: 40px 36px;
+	justify-content: flex-start;
+	gap: 14px;
+	padding: 42px 36px;
 	box-sizing: border-box;
+
 	text-decoration: none;
 	color: inherit;
+
+	/* Color por slide vía inline style: --dm-slide-bg */
 	background: var(--dm-slide-bg, #f4f0eb);
-	border-radius: var(--dm-necesitas-radius);
 	position: relative;
 	overflow: hidden;
-	transition: background 0.3s;
+
+	transition: transform var(--dm-necesitas-transition);
 }
 
-.dm-carousel__slide::after {
-	content: '';
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(
-		180deg,
-		transparent 40%,
-		rgba(0, 0, 0, 0.35) 100%
-	);
-	pointer-events: none;
+.dm-carousel__slide-hero {
+	display: flex;
+	width: 100%;
+	aspect-ratio: 16 / 9; /* consistente en todos los slides */
+	overflow: hidden;
+	border-radius: calc(var(--dm-necesitas-radius, 16px) - 6px);
+	background: rgba(0, 0, 0, 0.06);
 }
 
-.dm-carousel__slide:hover {
-	color: inherit;
-	text-decoration: none;
+/* Imagen hero */
+.dm-carousel__slide-hero-img {
+	width: 100%;
+	height: auto;
+	object-fit: contain;
+	object-position: center;
+	display: block;
+	transform: scale(1.01);
+	transition: transform 260ms ease;
+}
+
+/* Hover premium */
+@media (hover: hover) and (pointer: fine) {
+	.dm-carousel__slide:hover .dm-carousel__slide-hero-img {
+		transform: scale(1.06);
+	}
 }
 
 .dm-carousel__slide-body {
 	position: relative;
 	z-index: 1;
-	color: #fff;
+	color: #fff; /* aquí sí: sobre overlay necesitamos contraste estable */
 }
 
+/* Tipos */
 .dm-carousel__slide-kicker {
 	display: block;
-	font-size: 0.72rem;
+	margin: 0 0 8px;
+	font-size: 0.75rem;
 	font-weight: 700;
-	letter-spacing: 0.12em;
+	letter-spacing: var(--dm-necesitas-kicker-tracking);
 	text-transform: uppercase;
-	opacity: 0.8;
-	margin-bottom: 6px;
+	opacity: 0.9;
 }
 
 .dm-carousel__slide-title {
-	font-size: clamp(1.2rem, 2.5vw, 1.7rem);
-	font-weight: 700;
-	line-height: 1.25;
 	margin: 0 0 10px;
+	font-size: 40px; /* para un título de 3 palabras, 2 líneas, max-width ~44ch */;
+	color: #222;
+	line-height: 1.25;
+	font-weight: 600;
 }
 
 .dm-carousel__slide-text {
-	font-size: 0.95rem;
+	margin: 0 0 16px;
+	max-width: 44ch;
 	line-height: 1.55;
-	opacity: 0.9;
-	margin: 0 0 18px;
-}
-
-.dm-carousel__slide-cta {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	font-size: 0.9rem;
-	font-weight: 600;
-	text-decoration: underline;
-	text-underline-offset: 3px;
+	font-size: 1.25rem;
+	color: #222;
+	font-family: Kollektif, var(--dm-font-sans, sans-serif);
 	opacity: 0.95;
 }
 
-/* =========================================================================
-   Controles prev / next
-   ========================================================================= */
+/* CTA */
+.dm-carousel__slide-cta {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+
+	font-weight: 700;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+/* ==========================================================================
+   Controles prev/next
+   (sin tocar estilos globales de botones del theme)
+   ========================================================================== */
 .dm-carousel__controls {
 	display: flex;
-	gap: 10px;
-	margin-top: 16px;
 	justify-content: flex-end;
+	gap: 10px;
+
+	position: absolute;
+	right: 14px;
+	bottom: 14px;
+	z-index: 3;
 }
 
 .dm-carousel__btn {
-	width: 40px;
-	height: 40px;
-	border-radius: 50%;
-	border: 2px solid currentColor;
-	background: transparent;
-	cursor: pointer;
-	display: flex;
+	width: 42px;
+	height: 42px;
+	padding: 0;
+
+	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0;
-	opacity: 0.65;
-	transition: opacity 0.2s, background 0.2s;
-	color: inherit;
+
+	border-radius: 999px;
+	border: 1px solid rgba(255, 255, 255, 0.55);
+	background: rgba(0, 0, 0, 0.22);
+
+	cursor: pointer;
+	color: #fff;
+
+	transition: transform var(--dm-necesitas-transition),
+		background var(--dm-necesitas-transition),
+		border-color var(--dm-necesitas-transition);
 }
 
 .dm-carousel__btn:hover {
-	opacity: 1;
-	background: rgba(0, 0, 0, 0.08);
+	transform: translateY(-1px);
+	background: rgba(0, 0, 0, 0.3);
+	border-color: rgba(255, 255, 255, 0.75);
 }
 
 .dm-carousel__btn svg {
@@ -225,37 +289,44 @@
 	stroke-linejoin: round;
 }
 
-/* =========================================================================
-   Dots / indicadores
-   ========================================================================= */
+/* ==========================================================================
+   Dots
+   ========================================================================== */
 .dm-carousel__dots {
+	position: absolute;
+	left: 16px;
+	bottom: 18px;
+	z-index: 3;
+
 	display: flex;
-	gap: 6px;
+	gap: 7px;
 	align-items: center;
-	margin-top: 14px;
-	justify-content: center;
 }
 
 .dm-carousel__dot {
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	background: currentColor;
-	opacity: 0.3;
 	border: none;
 	padding: 0;
+
 	cursor: pointer;
-	transition: opacity 0.2s, transform 0.2s;
+	background: #fff;
+	opacity: 0.35;
+
+	transition: opacity var(--dm-necesitas-transition),
+		transform var(--dm-necesitas-transition);
 }
 
 .dm-carousel__dot.is-active {
-	opacity: 0.9;
-	transform: scale(1.3);
+	opacity: 0.95;
+	transform: scale(1.25);
 }
 
-/* =========================================================================
-   Estado: sin JS (no-js) — mostrar tarjetas en grid
-   ========================================================================= */
+/* ==========================================================================
+   Fallback: sin JS → track en grid
+   (tu JS puede agregar .no-js al html si no carga; mantenemos compat)
+   ========================================================================== */
 .no-js .dm-carousel__track {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
@@ -264,6 +335,7 @@
 
 .no-js .dm-carousel__slide {
 	flex: unset;
+	min-height: 320px;
 }
 
 .no-js .dm-carousel__controls,
@@ -271,10 +343,10 @@
 	display: none;
 }
 
-/* =========================================================================
-   Responsive — una columna en móvil
-   ========================================================================= */
-@media (max-width: 768px) {
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 980px) {
 	.dm-necesitas__inner {
 		grid-template-columns: 1fr;
 	}
@@ -282,349 +354,25 @@
 	.dm-necesitas__image {
 		max-width: 100%;
 	}
+}
+
+@media (max-width: 480px) {
+	.dm-necesitas {
+		padding-left: 16px;
+		padding-right: 16px;
+	}
 
 	.dm-carousel__slide {
 		padding: 28px 20px;
 	}
-}
 
-/* =========================================================================
-   Hub de temas — [dm_temas_hub]
-   ========================================================================= */
-.dm-temas-hub {
-	max-width: 960px;
-	margin: 0 auto;
-	padding: 48px 24px;
-}
-
-.dm-temas-hub__header {
-	text-align: center;
-	margin-bottom: 40px;
-}
-
-.dm-temas-hub__title {
-	font-size: clamp(1.5rem, 3vw, 2.2rem);
-	margin: 0 0 12px;
-}
-
-.dm-temas-hub__subtitle {
-	font-size: 1.05rem;
-	opacity: 0.8;
-	margin: 0;
-}
-
-.dm-temas-hub__section {
-	margin-bottom: 48px;
-}
-
-.dm-temas-hub__section-title {
-	font-size: 0.85rem;
-	font-weight: 700;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	opacity: 0.55;
-	margin: 0 0 20px;
-}
-
-/* ── Por tipo ─────────────────────────────────────────────────────────── */
-.dm-temas-hub__types {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-	gap: 16px;
-}
-
-.dm-temas-hub__type-card {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	text-align: center;
-	gap: 8px;
-	padding: 24px 16px;
-	border-radius: 12px;
-	background: #f7f4f0;
-	text-decoration: none;
-	color: inherit;
-	transition: background 0.2s, transform 0.2s;
-}
-
-.dm-temas-hub__type-card:hover {
-	background: #ede8e2;
-	transform: translateY(-3px);
-	color: inherit;
-	text-decoration: none;
-}
-
-.dm-temas-hub__type-icon {
-	font-size: 2rem;
-	line-height: 1;
-}
-
-.dm-temas-hub__type-label {
-	font-weight: 700;
-	font-size: 0.95rem;
-}
-
-.dm-temas-hub__type-desc {
-	font-size: 0.8rem;
-	opacity: 0.7;
-	line-height: 1.4;
-}
-
-/* ── Chips por tema ───────────────────────────────────────────────────── */
-.dm-temas-hub__chips {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 10px;
-}
-
-.dm-temas-hub__chip {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 8px 16px;
-	border-radius: 999px;
-	border: 1.5px solid currentColor;
-	font-size: 0.88rem;
-	font-weight: 600;
-	text-decoration: none;
-	color: inherit;
-	opacity: 0.75;
-	transition: opacity 0.2s, background 0.2s;
-}
-
-.dm-temas-hub__chip:hover {
-	opacity: 1;
-	background: rgba(0, 0, 0, 0.06);
-	color: inherit;
-	text-decoration: none;
-}
-
-.dm-temas-hub__chip--active {
-	opacity: 1;
-	background: var(--dm-color-primary, #7c6b8e);
-	border-color: var(--dm-color-primary, #7c6b8e);
-	color: #fff;
-}
-
-.dm-temas-hub__chip--active:hover {
-	background: var(--dm-color-primary-dark, #5e4f6c);
-	border-color: var(--dm-color-primary-dark, #5e4f6c);
-	color: #fff;
-}
-
-.dm-temas-hub__chip-count {
-	font-size: 0.75rem;
-	opacity: 0.65;
-}
-
-/* Active-tema banner */
-.dm-temas-hub__active-tema {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	flex-wrap: wrap;
-	justify-content: center;
-	margin-top: 12px;
-	font-size: 0.9rem;
-	opacity: 0.85;
-}
-
-.dm-temas-hub__clear-tema {
-	font-size: 0.8rem;
-	font-weight: 600;
-	padding: 3px 10px;
-	border-radius: 999px;
-	border: 1px solid currentColor;
-	text-decoration: none;
-	color: inherit;
-	opacity: 0.7;
-	transition: opacity 0.2s;
-}
-
-.dm-temas-hub__clear-tema:hover {
-	opacity: 1;
-	color: inherit;
-	text-decoration: none;
-}
-
-@media (max-width: 480px) {
-	.dm-temas-hub__types {
-		grid-template-columns: repeat(2, 1fr);
-	}
-}
-/* ==========================================================================
-   Home — ¿Qué necesitas? (base styling / aligns to DM design system)
-   ========================================================================== */
-
-.dm-home-necesitas {
-	padding: var(--dm-nec-py, 64px) 0;
-	background: transparent;
-}
-
-.dm-home-necesitas__inner {
-	max-width: 1200px;
-	margin: 0 auto;
-	padding: 0 16px;
-
-	display: grid;
-	/* Give the left side a bit more room so the title + image feel intentional */
-	grid-template-columns: minmax(320px, 1.15fr) minmax(360px, 0.85fr);
-	gap: var(--dm-nec-gap, 24px);
-	align-items: center;
-
-	min-height: var(--dm-nec-minh, 420px);
-}
-
-.dm-home-necesitas__left {
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
-}
-
-.dm-home-necesitas__title {
-	margin: 0;
-	line-height: 1.05;
-	/* Let the theme typography drive the font, but add a bit of presence */
-	max-width: 18ch;
-}
-
-.dm-home-necesitas__lead {
-	margin: 0;
-	color: var(--dm-color-text-muted);
-	max-width: 56ch;
-}
-
-.dm-home-necesitas__image {
-	margin-top: 10px;
-}
-
-.dm-home-necesitas__image img {
-	width: 100%;
-	height: clamp(260px, 34vw, 420px);
-	object-fit: cover;
-	display: block;
-	border-radius: var(--dm-nec-radius, 16px);
-	border: 1px solid var(--dm-color-border);
-	box-shadow: var(--dm-shadow);
-}
-
-/* Right column: keep carousel visually “contained”, not edge-to-edge huge */
-.dm-home-necesitas__right {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	align-items: stretch;
-}
-
-.dm-necesitas-carousel {
-	border-radius: var(--dm-nec-radius, 16px);
-	background: var(--dm-color-bg-card);
-	border: 1px solid var(--dm-color-border);
-	box-shadow: var(--dm-shadow);
-	padding: 18px;
-	overflow: hidden;
-
-	/* Prevent the carousel from feeling excessively wide on desktop */
-	max-width: 480px;
-	margin-left: auto;
-}
-
-/* Track / slide spacing */
-.dm-necesitas-carousel__track {
-	display: grid;
-	grid-auto-flow: column;
-	grid-auto-columns: 100%;
-	transition: transform 420ms ease;
-	will-change: transform;
-}
-
-.dm-necesitas-slide {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	text-decoration: none;
-	color: var(--dm-color-text);
-	padding: 10px;
-	border-radius: calc(var(--dm-nec-radius, 16px) - 6px);
-}
-
-.dm-necesitas-slide:hover,
-.dm-necesitas-slide:focus-visible {
-	background: rgba(0, 0, 0, 0.03);
-	outline: none;
-}
-
-.dm-necesitas-slide__kicker {
-	font-size: 12px;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--dm-color-text-muted);
-}
-
-.dm-necesitas-slide__title {
-	margin: 0;
-	font-size: 20px;
-	line-height: 1.2;
-}
-
-.dm-necesitas-slide__text {
-	margin: 0;
-	color: var(--dm-color-text-muted);
-	line-height: 1.5;
-}
-
-/* Make CTA look like a real theme button */
-.dm-necesitas-slide__cta.dm-btn {
-	align-self: flex-start;
-	margin-top: 2px;
-}
-
-/* Controls */
-.dm-necesitas-carousel__controls {
-	display: flex;
-	gap: 10px;
-	justify-content: flex-end;
-	margin-top: 12px;
-}
-
-.dm-necesitas-carousel__btn {
-	width: 40px;
-	height: 40px;
-	border-radius: 999px;
-	border: 1px solid var(--dm-color-border);
-	background: #fff;
-	cursor: pointer;
-	line-height: 1;
-	font-size: 22px;
-	color: var(--dm-color-text);
-	transition: transform var(--dm-transition), background var(--dm-transition);
-}
-
-.dm-necesitas-carousel__btn:hover {
-	transform: translateY(-1px);
-	background: #f3f1ee;
-}
-
-.dm-home-necesitas__hint {
-	margin: 0;
-	font-size: 13px;
-	color: var(--dm-color-text-muted);
-}
-
-/* Responsive */
-@media (max-width: 980px) {
-	.dm-home-necesitas__inner {
-		grid-template-columns: 1fr;
+	.dm-carousel__controls {
+		right: 10px;
+		bottom: 10px;
 	}
 
-	.dm-necesitas-carousel {
-		max-width: 100%;
-		margin-left: 0;
+	.dm-carousel__dots {
+		left: 12px;
+		bottom: 14px;
 	}
 }
