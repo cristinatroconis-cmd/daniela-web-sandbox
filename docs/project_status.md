@@ -9,9 +9,9 @@
 
 ## 1) Contexto / objetivo de negocio
 Negocio terapéutico con foco en:
-1. **Recursos** (entrada económica — PDFs, guías)
+1. **Recursos** (entrada económica — PDFs gratuitos y de pago)
 2. **Escuela** (cursos / talleres / programas — ticket medio)
-3. **Servicios** (sesiones / membresías — último nivel / premium)
+3. **Servicios** (sesiones / paquetes / membresías / supervisiones — último nivel / premium)
 
 Objetivo: plataforma de formación psicológica escalable con conversión optimizada (CTAs claros → checkout WooCommerce → acceso Tutor LMS).
 
