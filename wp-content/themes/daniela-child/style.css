@@ -28,6 +28,7 @@ Text Domain: daniela-child
 
 	/* Cards catálogo (recursos / escuela / servicios) */
 	--dm-card-thumb-ratio: 16 / 9;      /* como el carousel */
+	--dm-card-thumb-bg:    rgba(0,0,0,.06);
 	--dm-card-min-height: 460px;        /* ajustable: 420–520 según tu contenido */
 
 	/* Card hover lift — premium effect */
@@ -125,70 +126,7 @@ Text Domain: daniela-child
 	padding: 1.5rem 0;
 }
 
-/* ---- Recurso card ---- */
-
-.dm-recurso-card {
-	display: flex;
-	flex-direction: column;
-	background: var(--dm-color-bg-card);
-	border: 1px solid var(--dm-color-border);
-	border-radius: var(--dm-radius);
-	box-shadow: var(--dm-shadow);
-	overflow: hidden;
-	transition: box-shadow var(--dm-card-transition), transform var(--dm-card-transition);
-	width: 100%;
-}
-
-.dm-recurso-card__thumb-link {
-	display: block;
-	overflow: hidden;
-	aspect-ratio: 1;
-}
-
-.dm-recurso-card__thumb {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	transition: transform var(--dm-card-transition);
-}
-
-.dm-recurso-card__body {
-	display: flex;
-	flex-direction: column;
-	flex: 1;
-	padding: 1.1rem 1.25rem 1.25rem;
-	gap: 0.6rem;
-}
-
-.dm-recurso-card__title {
-	font-size: 1rem;
-	font-weight: 600;
-	margin: 0;
-	line-height: 1.35;
-}
-
-.dm-recurso-card__title a {
-	color: var(--dm-color-text);
-	text-decoration: none;
-}
-
-.dm-recurso-card__title a:hover {
-	color: var(--dm-color-primary);
-}
-
-.dm-recurso-card__excerpt {
-	font-size: 0.875rem;
-	color: var(--dm-color-text-muted);
-	margin: 0;
-	line-height: 1.5;
-}
-
-.dm-recurso-card__price {
-	font-size: 1rem;
-	font-weight: 700;
-	color: var(--dm-color-primary-dark);
-	margin: 0;
-}
+/* ---- Recurso card — type-specific styles only ---- */
 
 .dm-recurso-card__cta {
 	margin-top: auto;
@@ -239,74 +177,8 @@ Text Domain: daniela-child
 	font-style: italic;
 }
 
-.dm-product-card {
-	display: flex;
-	flex-direction: column;
-	background: var(--dm-color-bg-card);
-	border: 1px solid var(--dm-color-border);
-	border-radius: var(--dm-radius);
-	box-shadow: var(--dm-shadow);
-	overflow: hidden;
-	transition: box-shadow var(--dm-card-transition), transform var(--dm-card-transition);
-	width: 100%;
-}
-
-.dm-product-card__thumb-link {
-	display: block;
-	overflow: hidden;
-	aspect-ratio: 1;
-}
-
-.dm-product-card__thumb {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	transition: transform var(--dm-card-transition);
-}
-
-.dm-product-card__body {
-	display: flex;
-	flex-direction: column;
-	flex: 1;
-	padding: 1.1rem 1.25rem 1.25rem;
-	gap: 0.6rem;
-}
-
-.dm-product-card__title {
-	font-size: 1rem;
-	font-weight: 600;
-	margin: 0;
-	line-height: 1.35;
-}
-
-.dm-product-card__title a {
-	color: var(--dm-color-text);
-	text-decoration: none;
-}
-
-.dm-product-card__title a:hover {
-	color: var(--dm-color-primary);
-}
-
-.dm-product-card__excerpt {
-	font-size: 0.875rem;
-	color: var(--dm-color-text-muted);
-	margin: 0;
-	line-height: 1.5;
-}
-
-.dm-product-card__price {
-	font-size: 1rem;
-	font-weight: 700;
-	color: var(--dm-color-primary-dark);
-	margin: 0;
-}
-
 /* ==========================================================================
-   CPT Grid Cards — .dm-card (escuela / recursos / servicios archives)
-   ========================================================================== */
-/* ==========================================================================
-   dm-grid — evitar cards gigantes cuando hay pocos ítems
+   CPT Grid — dm-grid layout
    Motivo: con 1 solo item, grid con 1fr estira demasiado la card.
    Solución: columnas auto-fit con ancho máximo por card + centrado.
    ========================================================================== */
@@ -325,33 +197,59 @@ Text Domain: daniela-child
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
-.dm-card {
+
+/* ==========================================================================
+   Unified Card System — .dm-card · .dm-recurso-card · .dm-product-card
+   One visual baseline for all catalog cards (CPT archives / recursos hub /
+   products grid). Thumb ratio matches the home carousel (16 : 9).
+   ========================================================================== */
+
+/* 1 · Card container — flex column + shared chrome */
+.dm-card,
+.dm-recurso-card,
+.dm-product-card {
 	display: flex;
 	flex-direction: column;
-	min-height: var(--dm-card-min-height);
 	background: var(--dm-color-bg-card);
 	border: 1px solid var(--dm-color-border);
 	border-radius: var(--dm-radius);
 	box-shadow: var(--dm-shadow);
 	overflow: hidden;
 	transition: box-shadow var(--dm-card-transition), transform var(--dm-card-transition);
+	width: 100%;
 }
 
-.dm-card__thumb,.dm-card__thumb-link {
-	overflow: hidden;
+/* CPT cards also enforce a minimum height */
+.dm-card {
+	min-height: var(--dm-card-min-height);
+}
+
+/* 2 · Thumb wrapper — unified 16 : 9 ratio */
+.dm-card__thumb,
+.dm-card__thumb-link,
+.dm-recurso-card__thumb-link,
+.dm-product-card__thumb-link {
 	display: block;
 	aspect-ratio: var(--dm-card-thumb-ratio);
 	overflow: hidden;
+	background: var(--dm-card-thumb-bg);
 }
 
-.dm-card__thumb img {
+/* 3 · Thumb image — fill wrapper, never distort */
+.dm-card__thumb img,
+.dm-recurso-card__thumb,
+.dm-product-card__thumb {
 	display: block;
 	width: 100%;
-	height: auto;
+	height: 100%;
+	object-fit: cover;
 	transition: transform var(--dm-card-transition);
 }
 
-.dm-card__body {
+/* 4 · Card body — grows so CTA can align to bottom */
+.dm-card__body,
+.dm-recurso-card__body,
+.dm-product-card__body {
 	display: flex;
 	flex-direction: column;
 	flex: 1;
@@ -359,37 +257,61 @@ Text Domain: daniela-child
 	gap: 0.6rem;
 }
 
-.dm-card__title {
+/* 5 · Title */
+.dm-card__title,
+.dm-recurso-card__title,
+.dm-product-card__title {
 	font-size: 1rem;
 	font-weight: 600;
 	margin: 0;
 	line-height: 1.35;
 }
 
-.dm-card__title a {
+.dm-card__title a,
+.dm-recurso-card__title a,
+.dm-product-card__title a {
 	color: var(--dm-color-text);
 	text-decoration: none;
 }
 
-.dm-card__title a:hover {
+.dm-card__title a:hover,
+.dm-recurso-card__title a:hover,
+.dm-product-card__title a:hover {
 	color: var(--dm-color-primary);
 }
 
-/* Título + precio en la misma línea (CPT cards) */
-.dm-card__title-row{
-	display:flex;
-	align-items:baseline;
-	justify-content:space-between;
-	gap:12px;
+/* 6 · Excerpt */
+.dm-card__excerpt,
+.dm-recurso-card__excerpt,
+.dm-product-card__excerpt {
+	font-size: 0.875rem;
+	color: var(--dm-color-text-muted);
+	margin: 0;
+	line-height: 1.5;
 }
 
-.dm-card__price{
-	white-space:nowrap;
-	font-weight:700;
+/* 7 · Price */
+.dm-card__price,
+.dm-recurso-card__price,
+.dm-product-card__price {
+	font-size: 1rem;
+	font-weight: 700;
 	color: var(--dm-color-primary-dark);
+	margin: 0;
+	white-space: nowrap;
 }
 
-.dm-card__price--free{
+/* --- .dm-card specific --- */
+
+/* Título + precio en la misma línea (CPT cards) */
+.dm-card__title-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.dm-card__price--free {
 	font-size: 0.75rem;
 	font-weight: 800;
 	letter-spacing: 0.05em;
@@ -398,13 +320,6 @@ Text Domain: daniela-child
 	border-radius: 999px;
 	background: #e5f5e0;
 	color: #2e7d32;
-}
-
-.dm-card__excerpt {
-	font-size: 0.875rem;
-	color: var(--dm-color-text-muted);
-	margin: 0;
-	line-height: 1.5;
 }
 
 /* ==========================================================================
@@ -426,15 +341,9 @@ Text Domain: daniela-child
 	}
 
 	.dm-card:hover .dm-card__thumb img,
-	.dm-card:focus-within .dm-card__thumb img {
-		transform: scale(1.03);
-	}
-
+	.dm-card:focus-within .dm-card__thumb img,
 	.dm-product-card:hover .dm-product-card__thumb,
-	.dm-product-card:focus-within .dm-product-card__thumb {
-		transform: scale(1.03);
-	}
-
+	.dm-product-card:focus-within .dm-product-card__thumb,
 	.dm-recurso-card:hover .dm-recurso-card__thumb,
 	.dm-recurso-card:focus-within .dm-recurso-card__thumb {
 		transform: scale(1.03);
