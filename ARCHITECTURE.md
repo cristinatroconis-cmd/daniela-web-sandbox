@@ -21,35 +21,55 @@ Esto permite:
 La estructura es la siguiente:
 
 Nivel 1 — Recursos
-Nivel 2 — Cursos
-Nivel 3 — Talleres
-Nivel 4 — Programas
-Nivel 5 — Sesiones
+Nivel 2 — Escuela (Cursos · Talleres · Programas)
+Nivel 3 — Servicios (Sesiones · Paquetes · Membresías · Supervisiones)
 
 ---
 
 # 2. Tipos de Producto
 
-## 2.1 PDF Handouts
+Los productos se agrupan en los tres niveles del modelo:
+
+---
+
+## 2.1 Nivel 1 — Recursos
+
+### 2.1.1 Recursos gratuitos
 
 Tipo de producto:
-WooCommerce Simple Product
+WooCommerce Simple Product (descargable, precio $0)
 
 Formato:
 
-- PDF descargable
-- ejercicios terapéuticos
-- guías prácticas
+- PDF descargable gratuito
+- ejercicios terapéuticos de entrada
+- guías prácticas básicas
+
+Objetivo:
+
+- captación de nuevos usuarios
+- primer contacto con el ecosistema
+
+### 2.1.2 Recursos de pago
+
+Tipo de producto:
+WooCommerce Simple Product (descargable, precio > $0)
+
+Formato:
+
+- PDF descargable premium
+- guías terapéuticas avanzadas
+- paquetes de ejercicios
 
 Objetivo:
 
 - entrada económica al ecosistema
-- captación de nuevos usuarios
-
 
 ---
 
-## 2.2 Cursos
+## 2.2 Nivel 2 — Escuela
+
+### 2.2.1 Cursos
 
 Tipo:
 
@@ -67,10 +87,7 @@ Objetivo:
 
 profundización individual.
 
-
----
-
-## 2.3 Talleres
+### 2.2.2 Talleres
 
 Tipo:
 producto WooCommerce
@@ -89,10 +106,7 @@ Objetivo:
 
 experiencia en comunidad.
 
-
----
-
-## 2.4 Programas
+### 2.2.3 Programas
 
 Producto premium.
 
@@ -107,34 +121,70 @@ Objetivo:
 
 transformación profunda.
 
-
 ---
 
-## 2.5 Sesiones individuales
+## 2.3 Nivel 3 — Servicios
 
-Servicio profesional.
+### 2.3.1 Sesiones individuales
 
-Debe mostrarse como:
-
-último nivel de intervención.
+Servicio profesional de consulta individual.
 
 Objetivo:
 
-no saturar agenda con clientes que aún no están preparados.
+intervención directa y personalizada.
+
+### 2.3.2 Paquetes
+
+Conjuntos de sesiones a precio especial.
+
+Objetivo:
+
+compromiso de continuidad a mejor valor.
+
+### 2.3.3 Membresías
+
+Acceso recurrente a contenido y/o servicios.
+
+Objetivo:
+
+recurrencia y acompañamiento continuo.
+
+### 2.3.4 Supervisiones
+
+Servicio de supervisión profesional (para profesionales de la psicología).
+
+Objetivo:
+
+soporte y formación continua para psicólogos y terapeutas.
+
+Debe mostrarse como:
+
+último nivel de intervención / servicio de mayor profundidad.
 
 ---
 
 # 3. Estructura WooCommerce recomendada
 
-Categorías principales:
+Categorías principales y subcategorías:
+
+```
 Recursos
-Cursos
-Talleres
-Programas
-Sesiones
+├── recursos-gratis
+└── recursos-pagos
 
+Escuela
+├── cursos
+├── talleres
+└── programas
 
-Cada producto debe pertenecer a una de estas categorías.
+Servicios
+├── sesiones
+├── paquetes
+├── membresias
+└── supervisiones
+```
+
+Cada producto debe pertenecer a una de estas categorías (padre o hija según corresponda).
 
 ---
 
@@ -143,12 +193,19 @@ Cada producto debe pertenecer a una de estas categorías.
 La navegación debe reflejar el modelo de producto.
 
 Ejemplo:
+```
 Recursos
-Cursos
-Talleres
-Programas
+Escuela
+  ├── Cursos       → /escuela/?tipo=cursos
+  ├── Talleres     → /escuela/?tipo=talleres
+  └── Programas    → /escuela/?tipo=programas
+Servicios
+  ├── Sesiones     → /servicios/?tipo=sesiones
+  ├── Paquetes     → /servicios/?tipo=paquetes
+  ├── Membresías   → /servicios/?tipo=membresias
+  └── Supervisiones → /servicios/?tipo=supervisiones
 Sobre Dani
-
+```
 
 Evitar navegación confusa.
 
@@ -180,9 +237,8 @@ Esta sección funciona como **sistema de orientación del usuario**.
 El visitante elige entre:
 
 - Recursos
-- Cursos
-- Talleres
-- Programas
+- Escuela (Cursos / Talleres / Programas)
+- Servicios (Sesiones / Paquetes / Membresías / Supervisiones)
 
 Esto reduce:
 
@@ -206,19 +262,15 @@ Descubre contenido
 
 ↓
 
-Compra recurso PDF
+Compra recurso (PDF gratuito o de pago)
 
 ↓
 
-Compra curso
+Compra en Escuela (curso / taller / programa)
 
 ↓
 
-Participa en taller
-
-↓
-
-Entra en programa
+Contrata Servicio (sesión / paquete / membresía / supervisión)
 
 
 Este es el modelo de crecimiento del proyecto.
