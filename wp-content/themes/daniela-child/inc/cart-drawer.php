@@ -17,6 +17,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Disable Shoptimizer's built-in cart drawer so it doesn't open alongside ours.
+ *
+ * Shoptimizer registers shoptimizer_header_cart_drawer on shoptimizer_before_site
+ * (priority 5) at file-include time. We remove it here — after the parent theme
+ * has already run — to prevent two separate drawers from opening on added_to_cart.
+ */
+remove_action( 'shoptimizer_before_site', 'shoptimizer_header_cart_drawer', 5 );
+
+/**
  * Inject the cart drawer HTML into the footer.
  *
  * Runs late (priority 100) so it lands after the theme's own footer markup.
