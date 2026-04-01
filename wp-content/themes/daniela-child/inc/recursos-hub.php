@@ -200,8 +200,6 @@ function dm_recursos_render_card( WC_Product $product ) {
 
 	$product_url = get_permalink( $product_id );
 	$add_to_cart = esc_url( $product->add_to_cart_url() );
-
-	// Thumbnail
 	$thumbnail_id  = $product->get_image_id();
 	$thumbnail_url = $thumbnail_id
 		? wp_get_attachment_image_url( $thumbnail_id, 'woocommerce_thumbnail' )
@@ -277,10 +275,7 @@ function dm_recursos_render_card( WC_Product $product ) {
 						<?php esc_html_e( 'Ver detalles', 'daniela-child' ); ?>
 					</a>
 					<?php if ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
-						<?php
-						$cart_url = add_query_arg( 'add-to-cart', $product_id, home_url( '/' ) );
-						?>
-						<a href="<?php echo esc_url( $cart_url ); ?>"
+						<a href="<?php echo esc_url( $add_to_cart ); ?>"
 						   class="dm-btn dm-btn--comprar add_to_cart_button ajax_add_to_cart"
 						   data-product_id="<?php echo esc_attr( $product_id ); ?>"
 						   data-product_sku="<?php echo esc_attr( $product->get_sku() ); ?>"

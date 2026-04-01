@@ -71,24 +71,46 @@ add_action( 'template_redirect', function () {
 // =============================================================================
 
 /**
- * Después de agregar un producto al carrito (no-AJAX), evitar la redirección
- * a /tienda/ (página de la tienda WooCommerce). Vuelve a la página de origen.
+ * Hard override: forzar que WooCommerce nunca redirija al carrito tras agregar
+ * un producto, independientemente de la configuración en el panel de WP.
+ * El cart drawer off-canvas se encarga de mostrar el carrito al usuario.
+ */
+add_filter( 'option_woocommerce_cart_redirect_after_add', function () {
+    return 'no';
+}, 20 );
+
+/**
+ * Después de agregar un producto al carrito, evitar cualquier redirección a
+ * /tienda/ o /carrito/. Para peticiones AJAX devolvemos false para que
+ * WooCommerce omita el redirect en la respuesta JSON y dispare added_to_cart
+ * normalmente. Para peticiones no-AJAX (fallback sin JS) volvemos a la página
+ * de origen en lugar de ir al carrito.
  *
  * @param string $url URL de redirección propuesta por WooCommerce.
- * @return string     URL de redirección corregida.
+ * @return string|false URL corregida, o false para suprimir el redirect en AJAX.
  */
 add_filter( 'woocommerce_add_to_cart_redirect', function ( $url ) {
-    $shop_url = get_permalink( wc_get_page_id( 'shop' ) );
+    // En peticiones AJAX: suprimir el redirect para que el drawer pueda abrirse.
+    if ( wp_doing_ajax() ) {
+        return false;
+    }
 
-    // Si WooCommerce quería redirigir a la tienda, preferimos quedarnos en la
-    // página actual (o ir a /recursos/ como fallback).
-    if ( $shop_url && trailingslashit( $url ) === trailingslashit( $shop_url ) ) {
+    // En peticiones no-AJAX: no redirigir ni a /tienda/ ni a /carrito/.
+    $shop_url = function_exists( 'wc_get_page_id' ) ? get_permalink( wc_get_page_id( 'shop' ) ) : '';
+    $cart_url = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : '';
+
+    if (
+        ( $shop_url && trailingslashit( $url ) === trailingslashit( $shop_url ) ) ||
+        ( $cart_url && trailingslashit( $url ) === trailingslashit( $cart_url ) )
+    ) {
         $referer = wp_get_referer();
-        return $referer ?: home_url( '/recursos/' );
+        return $referer
+            ? wp_validate_redirect( $referer, home_url( '/recursos/' ) )
+            : home_url( '/recursos/' );
     }
 
     return $url;
-} );
+}, 20 );
 
 /**
  * Filtrar el enlace "Seguir comprando" en el carrito para que no apunte a /tienda/.

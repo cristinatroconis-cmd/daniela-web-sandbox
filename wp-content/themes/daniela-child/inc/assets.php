@@ -71,7 +71,9 @@ add_action('wp_enqueue_scripts', function () {
 		return;
 	}
 
-	// Registrar el drawer lateral de "Agregar al carrito" (reemplaza el popup anterior).
+	// Registrar y encolar globalmente el drawer lateral de "Agregar al carrito".
+	// Se carga en todas las páginas del frontend cuando WooCommerce está activo,
+	// para que el listener added_to_cart exista siempre que haya un CTA.
 	$drawer_js = get_stylesheet_directory() . '/js/cart-drawer.js';
 	wp_register_script(
 		'dm-cart-drawer',
@@ -81,42 +83,13 @@ add_action('wp_enqueue_scripts', function () {
 		true
 	);
 
-	// Enqueue WooCommerce add-to-cart scripts on CPT archive and single pages.
-	$is_cpt_page = (
-		is_post_type_archive( [ 'dm_recurso', 'dm_escuela', 'dm_servicio', 'dm_temas' ] ) ||
-		is_singular( [ 'dm_recurso', 'dm_escuela', 'dm_servicio' ] )
-	);
-	if ( $is_cpt_page ) {
-		wp_enqueue_script( 'woocommerce' );
-		wp_enqueue_script( 'wc-add-to-cart' );
-		wp_enqueue_script( 'wc-cart-fragments' );
-		wp_enqueue_script( 'dm-cart-drawer' );
-	}
+	wp_enqueue_script( 'woocommerce' );
+	wp_enqueue_script( 'wc-add-to-cart' );
+	wp_enqueue_script( 'wc-cart-fragments' );
+	wp_enqueue_script( 'dm-cart-drawer' );
 
-	// Enqueue scripts for pages using DM shortcodes (requires $post to be a WP_Post).
+	// Enqueue scripts for pages using DM shortcodes that need the filter JS.
 	if ( $post_obj ) {
-		$dm_shortcodes = [
-			'dm_recursos_gratis',
-			'dm_recursos_pagos',
-			'dm_recursos_temas',
-			'dm_escuela_cursos',
-			'dm_escuela_talleres',
-			'dm_escuela_home',
-			'dm_recursos_home',
-			'dm_recursos',
-			'dm_products',
-		];
-
-		foreach ($dm_shortcodes as $sc) {
-			if (has_shortcode($post_obj->post_content, $sc)) {
-				wp_enqueue_script('woocommerce');
-				wp_enqueue_script('wc-add-to-cart');
-				wp_enqueue_script('wc-cart-fragments');
-				wp_enqueue_script('dm-cart-drawer');
-				break;
-			}
-		}
-
 		// Note: dm-recursos-filters is registered in recursos-hub.php and enqueued on-demand.
 
 		// Lightweight scroll-into-view JS for [dm_recursos_temas] chips.
