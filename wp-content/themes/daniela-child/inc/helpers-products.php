@@ -109,6 +109,7 @@ function dm_render_product_card( $product, $back_url = '' ) {
             <a href="<?php echo esc_url( $product->add_to_cart_url() ); ?>"
                data-product_id="<?php echo esc_attr( $product->get_id() ); ?>"
                data-product_sku="<?php echo esc_attr( $product->get_sku() ); ?>"
+               data-quantity="1"
                class="button add_to_cart_button ajax_add_to_cart dm-btn dm-btn--primary">
                 <?php esc_html_e( 'Agregar al carrito', 'daniela-child' ); ?>
             </a>
