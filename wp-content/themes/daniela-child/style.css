@@ -166,6 +166,9 @@ Text Domain: daniela-child
 .dm-recurso-card__cta {
 	margin-top: auto;
 	padding-top: 0.5rem;
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
 }
 
 /* Badge for type */
