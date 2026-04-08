@@ -71,6 +71,21 @@ add_action('wp_enqueue_scripts', function () {
 		return;
 	}
 
+	// CSS del child theme para todas las páginas WooCommerce (tienda, carrito,
+	// checkout, mi cuenta). Se carga después del CSS de Shoptimizer para poder
+	// sobrescribir sus estilos. La condición incluye is_woocommerce() (páginas
+	// de tienda/producto/archivo) más las páginas especiales que usan shortcodes
+	// como [woocommerce_cart] o [woocommerce_checkout].
+	if ( is_woocommerce() || is_cart() || is_checkout() || is_account_page() ) {
+		$wc_css = get_stylesheet_directory() . '/assets/css/woocommerce.css';
+		wp_enqueue_style(
+			'daniela-child-woocommerce',
+			get_stylesheet_directory_uri() . '/assets/css/woocommerce.css',
+			array( 'daniela-child-style' ),
+			file_exists( $wc_css ) ? (string) filemtime( $wc_css ) : '1.0.0'
+		);
+	}
+
 	// Registrar y encolar globalmente el drawer lateral de "Agregar al carrito".
 	// Se carga en todas las páginas del frontend cuando WooCommerce está activo,
 	// para que el listener added_to_cart exista siempre que haya un CTA.

@@ -1,0 +1,92 @@
+/**
+ * WooCommerce — Estilos del child theme "Daniela Child"
+ *
+ * Este archivo se encola en TODAS las páginas de WooCommerce del front-end
+ * (tienda, producto, carrito, checkout, mi cuenta) después del CSS del tema
+ * padre Shoptimizer, permitiendo sobrescribir cualquier estilo.
+ *
+ * Para añadir personalizaciones:
+ *   - Usa selectores como .woocommerce, .woocommerce-page, body.woocommerce-cart,
+ *     body.woocommerce-checkout, body.woocommerce-account para limitar el alcance.
+ *   - Documenta cada cambio con un comentario indicando qué sobrescribes y por qué.
+ *
+ * Actualización: si Shoptimizer o WooCommerce cambian su CSS base, revisa aquí
+ * para verificar que los selectores siguen siendo válidos.
+ *
+ * @package daniela-child
+ */
+
+/* =============================================================================
+   GLOBAL — Aplica a todas las páginas WooCommerce
+   ============================================================================= */
+
+/* Tipografía consistente con el sistema de diseño del child theme */
+.woocommerce,
+.woocommerce-page {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* =============================================================================
+   BOTONES — Colores del sistema de diseño
+   ============================================================================= */
+
+.woocommerce a.button,
+.woocommerce button.button,
+.woocommerce input.button,
+.woocommerce #respond input#submit,
+.woocommerce-page a.button,
+.woocommerce-page button.button,
+.woocommerce-page input.button {
+	/* Valores base — ajusta con las variables CSS del child theme si están disponibles */
+}
+
+/* =============================================================================
+   CARRITO (/carrito/ con [woocommerce_cart])
+   ============================================================================= */
+
+body.woocommerce-cart .woocommerce {
+	/* Estilos específicos de la página de carrito */
+}
+
+/* =============================================================================
+   CHECKOUT (/finalizar-compra/)
+   ============================================================================= */
+
+body.woocommerce-checkout .woocommerce {
+	/* Estilos específicos del checkout */
+}
+
+/* =============================================================================
+   MI CUENTA (/mi-cuenta/)
+   ============================================================================= */
+
+body.woocommerce-account .woocommerce {
+	/* Estilos específicos del área de cliente */
+}
+
+/* =============================================================================
+   TIENDA Y ARCHIVOS DE PRODUCTOS
+   ============================================================================= */
+
+.woocommerce ul.products li.product,
+.woocommerce-page ul.products li.product {
+	/* Ajustes de tarjetas de producto */
+}
+
+/* =============================================================================
+   PÁGINA DE PRODUCTO INDIVIDUAL
+   ============================================================================= */
+
+.woocommerce div.product {
+	/* Ajustes del layout de producto individual */
+}
+
+/* =============================================================================
+   MENSAJES / NOTICES
+   ============================================================================= */
+
+.woocommerce-message,
+.woocommerce-info,
+.woocommerce-error {
+	/* Ajustes visuales de mensajes de WooCommerce */
+}
