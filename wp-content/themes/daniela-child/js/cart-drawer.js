@@ -18,6 +18,20 @@
 	var isOpen   = false;
 
 	/**
+	 * Remove WooCommerce's injected "View cart" link, but ONLY inside DM cards.
+	 *
+	 * WooCommerce (wc-add-to-cart.js) appends:
+	 *   <a class="added_to_cart wc-forward">View cart</a>
+	 * after successful AJAX add-to-cart.
+	 *
+	 * We keep AJAX behavior (needed for the drawer + no redirects) and simply
+	 * remove that extra link to keep card UI clean.
+	 */
+	function dmCardsRemoveViewCartLink() {
+		$( '.dm-card a.added_to_cart.wc-forward' ).remove();
+	}
+
+	/**
 	 * Cache DOM references and bind close triggers.
 	 */
 	function init() {
@@ -85,13 +99,26 @@
 		}, 360 );
 	}
 
-	// Open on WooCommerce AJAX add-to-cart success.
+	// When WooCommerce AJAX add-to-cart succeeds:
+	// - open the drawer
+	// - remove the injected "View cart" link inside DM cards
 	$( document.body ).on( 'added_to_cart', function () {
 		openDrawer();
+
+		// Woo sometimes inserts the link after the event fires; remove on next tick.
+		window.setTimeout( dmCardsRemoveViewCartLink, 0 );
+	} );
+
+	// If fragments are refreshed, the link could reappear in updated markup.
+	$( document.body ).on( 'wc_fragments_loaded wc_fragments_refreshed', function () {
+		dmCardsRemoveViewCartLink();
 	} );
 
 	$( document ).ready( function () {
 		init();
+
+		// Clean any existing injected links on initial load.
+		dmCardsRemoveViewCartLink();
 	} );
 
 }( jQuery ) );
