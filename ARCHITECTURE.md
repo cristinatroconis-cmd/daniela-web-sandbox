@@ -711,3 +711,138 @@ Para recursos con precio $0 (vinculados por `_dm_wc_product_id`), `single-dm_rec
 Mismo flujo que `newsletter-optin.php`:
 1. Si el hook `mailerlite_woocommerce_subscribe` existe → delega al plugin oficial.
 2. Si no, y el fallback API está habilitado en DM Settings → llama a la API de MailerLite directamente.
+
+---
+
+# 21. Personalización de emails WooCommerce
+
+## Archivos
+
+| Archivo | Responsabilidad |
+|---|---|
+| `wp-content/themes/daniela-child/inc/email-tokens.php` | Extrae tokens de diseño de `style.css` `:root {}` |
+| `wp-content/themes/daniela-child/inc/woocommerce-emails.php` | Aplica diseño + CTAs a emails transaccionales de WooCommerce |
+
+Cargados desde `functions.php` (antes del bloque de feature modules).
+
+## email-tokens.php
+
+- **`dm_get_email_tokens(): array`** — devuelve tokens cacheados en transient `dm_email_tokens_v1` (TTL 12 h). Claves: `color_primary`, `color_primary_dark`, `color_accent`, `color_text`, `color_text_muted`, `color_bg`, `color_bg_card`, `color_border`, `radius`, `shadow`.
+- **`dm_parse_email_tokens(): array`** — lee `style.css`, extrae el bloque `:root {}` con regex, parsea todas las variables `--dm-*` y las mapea a las claves anteriores.
+- **`dm_email_tokens_fallback(): array`** — valores hardcodeados idénticos a las variables CSS del tema, usados si `style.css` no se puede leer (tests, rutas no estándar).
+
+**Decisión de diseño:** los estilos de email se derivan automáticamente del sistema de diseño del tema (variables CSS). Cualquier cambio en `style.css` `:root {}` se refleja en los emails sin duplicación manual.
+
+## woocommerce-emails.php
+
+### 1) Defaults de opciones (no destructivo)
+
+`dm_set_woo_email_defaults()` en `init`: establece `woocommerce_email_base_color`, `woocommerce_email_background_color`, etc. usando tokens del tema, **solo si la opción no existe todavía** (`get_option($k, null) === null`). No sobreescribe configuración guardada por el admin.
+
+### 2) CSS email-safe
+
+`dm_woo_email_styles()` en filtro `woocommerce_email_styles` (priority 20): añade CSS email-safe al final de los estilos base de WooCommerce. Cubre: wrapper, cabecera, cuerpo, títulos, tabla de pedido, pie, botones WooCommerce, y bloque `.dm-email-cta`.
+
+### 3) Asunto y encabezado personalizados
+
+Cuatro filtros activos:
+
+| Filtro | Resultado |
+|---|---|
+| `woocommerce_email_subject_customer_processing_order` | `"✅ Recibimos tu pedido #X — ya lo estamos procesando"` |
+| `woocommerce_email_heading_customer_processing_order` | `"¡Gracias por tu compra! 🌿"` |
+| `woocommerce_email_subject_customer_completed_order` | `"🎉 Tu pedido #X está listo — descarga tu recurso"` |
+| `woocommerce_email_heading_customer_completed_order` | `"¡Tu recurso está listo! 🎉"` |
+
+### 4) Bloque CTA de descarga (guest-friendly)
+
+`dm_email_cta_block()` en acción `woocommerce_email_after_order_table` (priority 20):
+
+- Solo se inyecta en emails de cliente (no admin) en formato HTML, para pedidos Processing o Completed.
+- Llama a `dm_get_order_download_links($order)`, que usa `WC_Order_Item_Product::get_item_downloads()` — genera URLs de descarga únicas por pedido que no requieren login del cliente.
+- Muestra un botón de descarga por producto descargable del pedido.
+- Si no hay descargas disponibles (ej. email Processing sin archivos listos), no muestra el bloque.
+- Siempre incluye enlace "Ver detalles del pedido" (`$order->get_view_order_url()`).
+
+---
+
+# 22. Cart Drawer (`inc/cart-drawer.php`)
+
+## Archivo principal
+
+`wp-content/themes/daniela-child/inc/cart-drawer.php`
+
+También involucra: `js/cart-drawer.js`, `style.css`.
+
+## Eliminación de botones WooCommerce nativos
+
+WooCommerce registra por defecto dos acciones en `woocommerce_widget_shopping_cart_buttons`:
+- `woocommerce_widget_shopping_cart_button_view_cart` (priority 10)
+- `woocommerce_widget_shopping_cart_proceed_to_checkout` (priority 20)
+
+Estas acciones se eliminan en un callback de `wp_loaded`:
+
+```php
+add_action( 'wp_loaded', function () {
+    remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_button_view_cart', 10 );
+    remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_proceed_to_checkout', 20 );
+} );
+```
+
+**Por qué `wp_loaded` y no inline en el template:** el drawer usa `.widget_shopping_cart_content`, que es el contenedor que WooCommerce refresca vía AJAX (`wc-cart-fragments`). En una respuesta de fragmento AJAX, el template del drawer no se ejecuta, pero los hooks de WooCommerce sí. Si los `remove_action` estuvieran solo en el template, los botones duplicados reaparecerían en el refresh del mini-cart tras un add-to-cart.
+
+**CSS safety-net** (`style.css`): como segunda línea de defensa ante plugins que re-registren esos hooks después de `wp_loaded`:
+
+```css
+#dm-cart-drawer .woocommerce-mini-cart__buttons { display: none !important; }
+```
+
+## Botón "Seguir comprando"
+
+El footer del drawer tiene dos CTAs:
+1. `<button id="dm-cart-drawer-continue" class="dm-btn dm-btn--ghost">Seguir comprando</button>` — cierra el drawer, permanece en la página actual.
+2. `<a href="<?php echo esc_url( wc_get_checkout_url() ); ?>">Checkout</a>` — navega al checkout.
+
+**Decisión UX:** se reemplazó el anterior enlace "Ver carrito" (que llevaba a `/carrito/`) por "Seguir comprando". El objetivo es reducir interrupciones en el funnel de compra: el usuario puede seguir añadiendo productos al carrito sin abandonar la página en la que está.
+
+**JS** (`js/cart-drawer.js`): `$('#dm-cart-drawer-continue').on('click', closeDrawer)`.
+
+---
+
+# 23. `helpers-products.php` — Tarjetas de producto WooCommerce
+
+## Archivo
+
+`wp-content/themes/daniela-child/inc/helpers-products.php`
+
+## `dm_render_product_card( $product, $back_url = '' )`
+
+Renderiza una tarjeta de producto WooCommerce (`.dm-product-card` o equivalente).
+
+### Detección de producto gratuito (`$is_free`)
+
+```php
+$price_raw = $product->get_price(); // '' = sin precio configurado; '0' = gratis explícito
+$is_free   = ( $price_raw !== '' && (float) $price_raw <= 0.0 );
+```
+
+**Invariante crítica:** un producto sin precio configurado (`get_price() === ''`) **no** es tratado como gratuito. Solo los productos con precio explícitamente en `$0` activan el flujo de freebie.
+
+### Clase del botón
+
+| Condición | Clase |
+|---|---|
+| `$is_free === true` | `dm-btn dm-btn--secondary` |
+| `$is_free === false` | `dm-btn dm-btn--primary` |
+
+### Guard `$show_cta`
+
+El botón "Agregar al carrito" solo se renderiza si:
+
+```php
+$show_cta = $is_free || ( $product->is_purchasable() && $product->is_in_stock() );
+```
+
+- Productos gratuitos: siempre muestran el CTA (precio = $0 → siempre disponible).
+- Productos de pago: solo muestran el CTA si son comprables **y** están en stock.
+- Productos no comprables y sin precio (ej. borradores, productos descontinuados): no renderizan botón.

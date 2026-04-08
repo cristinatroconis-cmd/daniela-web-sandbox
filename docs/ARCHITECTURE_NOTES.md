@@ -1,6 +1,6 @@
 # Architecture Notes — Daniela Montes Psicóloga (Sandbox)
 
-**Última actualización:** 2026-03-31  
+**Última actualización:** 2026-04-08  
 Este documento complementa `ARCHITECTURE.md` (no lo reemplaza).  
 Aquí queda el "qué está implementado", el "por qué" de las decisiones y el backlog inmediato.
 
@@ -47,6 +47,9 @@ Una sola "fuente de verdad" para gating:
 | `wp-content/themes/daniela-child/single-dm_recurso.php` | Template single `/recursos/<slug>/` |
 | `wp-content/themes/daniela-child/single-dm_servicio.php` | Template single `/servicios/<slug>/` |
 | `wp-content/themes/daniela-child/functions.php` | Bootstrap del child theme; carga `inc/cpt.php` e `inc/helpers-cpt.php` |
+| `wp-content/themes/daniela-child/inc/email-tokens.php` | Extrae tokens CSS `--dm-*` de `style.css` `:root {}` para emails |
+| `wp-content/themes/daniela-child/inc/woocommerce-emails.php` | Personalización de emails WooCommerce (CSS, asuntos, CTA de descarga) |
+| `wp-content/themes/daniela-child/inc/cart-drawer.php` | Drawer del carrito; elimina botones WC nativos vía `wp_loaded` |
 
 ### CPTs registrados
 
@@ -75,6 +78,23 @@ Una sola "fuente de verdad" para gating:
 - Usa **categorías de producto WooCommerce** (`product_cat`: cursos/talleres/programas) como fuente de filtro.
 - **Por qué Ruta A (no taxonomía interna):** evita duplicar la clasificación entre `dm_tipo_escuela` y `product_cat` de WooCommerce. Una sola fuente de verdad para "qué tipo de formación es".
 - Filtrado PHP: `dm_escuela_query_args_by_woo_cat()` resuelve qué posts `dm_escuela` pertenecen a la categoría WC seleccionada cruzando `_dm_wc_product_id` + `has_term()`.
+
+---
+
+### 3.8 Personalización de emails (`inc/email-tokens.php` + `inc/woocommerce-emails.php`)
+
+- ✅ Tokens de diseño extraídos automáticamente de `style.css` `:root {}` (transient 12 h).
+- ✅ CSS email-safe (filtro `woocommerce_email_styles`, priority 20).
+- ✅ Asunto y heading personalizados para emails Processing y Completed.
+- ✅ Bloque CTA de descarga directa (guest-friendly) inyectado en `woocommerce_email_after_order_table`.
+- **Referencia:** `ARCHITECTURE.md` §21.
+
+### 3.9 Cart Drawer (`inc/cart-drawer.php`)
+
+- ✅ Botones WooCommerce nativos del mini-cart eliminados vía `wp_loaded` (cubre peticiones AJAX de fragmentos).
+- ✅ CSS safety-net: `#dm-cart-drawer .woocommerce-mini-cart__buttons { display: none !important; }`.
+- ✅ Botón "Seguir comprando" (cierra drawer, permanece en página actual) reemplaza "Ver carrito".
+- **Referencia:** `ARCHITECTURE.md` §22.
 
 ---
 

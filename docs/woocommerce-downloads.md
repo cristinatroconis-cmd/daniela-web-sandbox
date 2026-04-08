@@ -1,7 +1,7 @@
 # Flujo de Descargas — Guía de Referencia
 
 **Proyecto:** Daniela Montes Psicóloga  
-**Última actualización:** 2025
+**Última actualización:** 2026-04-08
 
 ---
 
@@ -25,7 +25,7 @@ Ninguno de los dos flujos interfiere con el otro. El flujo freebie **no se ejecu
 1. El cliente añade el producto al carrito y completa el checkout (Stripe).
 2. Stripe confirma el pago → WooCommerce marca el pedido como `processing` → `completed`.
 3. WooCommerce concede automáticamente permisos de descarga al email del comprador.
-4. WooCommerce envía el email "Pedido completado" con el **link de descarga protegido**.
+4. WooCommerce envía el email "Pedido completado" con el **link de descarga protegido**. El email usa el diseño personalizado del child theme (tokens del sistema de diseño, asunto/heading propios, bloque CTA de descarga directa). Ver `ARCHITECTURE.md` §21 e `inc/woocommerce-emails.php`.
 5. El cliente descarga el archivo desde "Mi cuenta → Descargas" o desde el enlace del email.
 6. WooCommerce valida: permisos activos, límite de descargas no superado, fecha de expiración no vencida.
 
