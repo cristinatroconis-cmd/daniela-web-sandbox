@@ -35,6 +35,10 @@ require_once __DIR__ . '/inc/sync-tags.php'; // Sincronización Woo product_tag 
  */
 // require_once __DIR__ . '/inc/customizer-home-necesitas.php';
 
+// Email customization (design tokens + WooCommerce email styles/CTA).
+require_once __DIR__ . '/inc/email-tokens.php';
+require_once __DIR__ . '/inc/woocommerce-emails.php';
+
 // Feature modules.
 require_once __DIR__ . '/inc/dm-products.php';
 require_once __DIR__ . '/inc/recursos-hub.php';
