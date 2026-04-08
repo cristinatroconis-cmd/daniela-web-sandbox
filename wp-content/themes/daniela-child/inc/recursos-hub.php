@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Recursos Hub — Shortcode [dm_recursos]
  *
@@ -21,7 +22,7 @@
  * @package daniela-child
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit;
 }
 
@@ -29,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Shortcode registration
 // ---------------------------------------------------------------------------
 
-add_shortcode( 'dm_recursos', 'dm_recursos_shortcode' );
+add_shortcode('dm_recursos', 'dm_recursos_shortcode');
 
 /**
  * Main shortcode callback.
@@ -37,7 +38,8 @@ add_shortcode( 'dm_recursos', 'dm_recursos_shortcode' );
  * @param array $atts Shortcode attributes.
  * @return string     HTML output.
  */
-function dm_recursos_shortcode( $atts ) {
+function dm_recursos_shortcode($atts)
+{
 	$atts = shortcode_atts(
 		array(
 			'per_page' => 12,
@@ -47,25 +49,25 @@ function dm_recursos_shortcode( $atts ) {
 		'dm_recursos'
 	);
 
-	$per_page = absint( $atts['per_page'] );
-	$columns  = absint( $atts['columns'] );
-	if ( $columns < 1 || $columns > 6 ) {
+	$per_page = absint($atts['per_page']);
+	$columns  = absint($atts['columns']);
+	if ($columns < 1 || $columns > 6) {
 		$columns = 3;
 	}
 
 	// --- Read active topic filter from querystring (sanitized) ---
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-	$active_topic = isset( $_GET['dm_topic'] ) ? sanitize_key( $_GET['dm_topic'] ) : '';
+	$active_topic = isset($_GET['dm_topic']) ? sanitize_key($_GET['dm_topic']) : '';
 
 	// --- Build WP_Query args ---
-	$tax_query = array( 'relation' => 'AND' );
+	$tax_query = array('relation' => 'AND');
 
 	// Topic filter: uses product_tag taxonomy.
-	if ( $active_topic !== '' ) {
+	if ($active_topic !== '') {
 		$tax_query[] = array(
 			'taxonomy' => 'product_tag',
 			'field'    => 'slug',
-			'terms'    => array( $active_topic ),
+			'terms'    => array($active_topic),
 		);
 	}
 
@@ -75,11 +77,11 @@ function dm_recursos_shortcode( $atts ) {
 		'posts_per_page' => $per_page,
 	);
 
-	if ( count( $tax_query ) > 1 ) {
+	if (count($tax_query) > 1) {
 		$query_args['tax_query'] = $tax_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 	}
 
-	$products = new WP_Query( $query_args );
+	$products = new WP_Query($query_args);
 
 	// --- Fetch available topic tags for filter pills ---
 	$topic_terms = get_terms(
@@ -88,7 +90,7 @@ function dm_recursos_shortcode( $atts ) {
 			'hide_empty' => true,
 		)
 	);
-	if ( is_wp_error( $topic_terms ) ) {
+	if (is_wp_error($topic_terms)) {
 		$topic_terms = array();
 	}
 
@@ -97,76 +99,79 @@ function dm_recursos_shortcode( $atts ) {
 
 	// --- Render ---
 	ob_start();
-	?>
-	<div class="dm-recursos" data-columns="<?php echo esc_attr( $columns ); ?>">
+?>
+	<div class="dm-recursos" data-columns="<?php echo esc_attr($columns); ?>">
 
-		<?php // ---- Filter bar ---- ?>
-		<?php if ( ! empty( $topic_terms ) ) : ?>
-		<div class="dm-recursos__filters" role="navigation" aria-label="<?php esc_attr_e( 'Filtros de recursos', 'daniela-child' ); ?>">
+		<?php // ---- Filter bar ---- 
+		?>
+		<?php if (! empty($topic_terms)) : ?>
+			<div class="dm-recursos__filters" role="navigation" aria-label="<?php esc_attr_e('Filtros de recursos', 'daniela-child'); ?>">
 
-			<?php // Topic filters ?>
-			<div class="dm-recursos__filter-group dm-recursos__filter-group--topic">
-				<span class="dm-recursos__filter-label"><?php esc_html_e( 'Tema:', 'daniela-child' ); ?></span>
-
-				<?php
-				// "Todos los temas"
-				$all_topics_url = remove_query_arg( 'dm_topic', $current_url );
+				<?php // Topic filters 
 				?>
-				<a href="<?php echo esc_url( $all_topics_url ); ?>"
-				   class="dm-filter-pill dm-filter-pill--topic<?php echo $active_topic === '' ? ' is-active' : ''; ?>"
-				   data-filter-type="topic"
-				   data-filter-value=""
-				   <?php echo $active_topic === '' ? 'aria-current="true"' : ''; ?>>
-					<?php esc_html_e( 'Todos', 'daniela-child' ); ?>
-				</a>
+				<div class="dm-recursos__filter-group dm-recursos__filter-group--topic">
+					<span class="dm-recursos__filter-label"><?php esc_html_e('Tema:', 'daniela-child'); ?></span>
 
-				<?php foreach ( $topic_terms as $term ) : ?>
 					<?php
-					$term_url = add_query_arg( 'dm_topic', $term->slug, $current_url );
-					$is_active_topic = ( $term->slug === $active_topic );
+					// "Todos los temas"
+					$all_topics_url = remove_query_arg('dm_topic', $current_url);
 					?>
-					<a href="<?php echo esc_url( $term_url ); ?>"
-					   class="dm-filter-pill dm-filter-pill--topic<?php echo $is_active_topic ? ' is-active' : ''; ?>"
-					   data-filter-type="topic"
-					   data-filter-value="<?php echo esc_attr( $term->slug ); ?>"
-					   <?php echo $is_active_topic ? 'aria-current="true"' : ''; ?>>
-						<?php echo esc_html( $term->name ); ?>
+					<a href="<?php echo esc_url($all_topics_url); ?>"
+						class="dm-filter-pill dm-filter-pill--topic<?php echo $active_topic === '' ? ' is-active' : ''; ?>"
+						data-filter-type="topic"
+						data-filter-value=""
+						<?php echo $active_topic === '' ? 'aria-current="true"' : ''; ?>>
+						<?php esc_html_e('Todos', 'daniela-child'); ?>
 					</a>
-				<?php endforeach; ?>
-			</div>
 
-		</div><!-- /.dm-recursos__filters -->
+					<?php foreach ($topic_terms as $term) : ?>
+						<?php
+						$term_url = add_query_arg('dm_topic', $term->slug, $current_url);
+						$is_active_topic = ($term->slug === $active_topic);
+						?>
+						<a href="<?php echo esc_url($term_url); ?>"
+							class="dm-filter-pill dm-filter-pill--topic<?php echo $is_active_topic ? ' is-active' : ''; ?>"
+							data-filter-type="topic"
+							data-filter-value="<?php echo esc_attr($term->slug); ?>"
+							<?php echo $is_active_topic ? 'aria-current="true"' : ''; ?>>
+							<?php echo esc_html($term->name); ?>
+						</a>
+					<?php endforeach; ?>
+				</div>
+
+			</div><!-- /.dm-recursos__filters -->
 		<?php endif; ?>
 
-		<?php // ---- Product grid ---- ?>
-		<?php if ( $products->have_posts() ) : ?>
-		<ul class="dm-recursos__grid" role="list">
-			<?php
-			while ( $products->have_posts() ) :
-				$products->the_post();
-				global $product;
-				if ( ! $product instanceof WC_Product ) {
-					$product = wc_get_product( get_the_ID() );
-				}
-				if ( ! $product ) {
-					continue;
-				}
-				dm_recursos_render_card( $product );
-			endwhile;
-			wp_reset_postdata();
-			?>
-		</ul>
+		<?php // ---- Product grid ---- 
+		?>
+		<?php if ($products->have_posts()) : ?>
+			<ul class="dm-recursos__grid" role="list">
+				<?php
+				while ($products->have_posts()) :
+					$products->the_post();
+					global $product;
+					if (! $product instanceof WC_Product) {
+						$product = wc_get_product(get_the_ID());
+					}
+					if (! $product) {
+						continue;
+					}
+					dm_recursos_render_card($product);
+				endwhile;
+				wp_reset_postdata();
+				?>
+			</ul>
 		<?php else : ?>
-		<p class="dm-recursos__empty">
-			<?php esc_html_e( 'No hay recursos disponibles para estos filtros.', 'daniela-child' ); ?>
-		</p>
+			<p class="dm-recursos__empty">
+				<?php esc_html_e('No hay recursos disponibles para estos filtros.', 'daniela-child'); ?>
+			</p>
 		<?php endif; ?>
 
 	</div><!-- /.dm-recursos -->
-	<?php
+<?php
 
 	// Enqueue the lightweight JS enhancer (progressive enhancement)
-	wp_enqueue_script( 'dm-recursos-filters' );
+	wp_enqueue_script('dm-recursos-filters');
 
 	return ob_get_clean();
 }
@@ -184,104 +189,104 @@ function dm_recursos_shortcode( $atts ) {
  *
  * @param WC_Product $product WooCommerce product object.
  */
-function dm_recursos_render_card( WC_Product $product ) {
+function dm_recursos_render_card(WC_Product $product)
+{
 	$product_id = $product->get_id();
 
 	// Determine gratis/pago by price.
 	$price     = (float) $product->get_price();
-	$is_gratis = ( $price <= 0.0 ); // phpcs:ignore WordPress.PHP.StrictComparisons
+	$is_gratis = ($price <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
 
 	// Per-product custom email landing page URL (optional meta).
 	// Fallback: freebie delivery endpoint (handles email capture + download limit).
-	$email_url = get_post_meta( $product_id, '_dm_email_landing_url', true );
-	if ( empty( $email_url ) ) {
-		$email_url = add_query_arg( 'product_id', $product_id, home_url( '/recursos/recibir/' ) );
+	$email_url = get_post_meta($product_id, '_dm_email_landing_url', true);
+	if (empty($email_url)) {
+		$email_url = add_query_arg('product_id', $product_id, home_url('/recursos/recibir/'));
 	}
 
-	$product_url = get_permalink( $product_id );
-	$add_to_cart = esc_url( $product->add_to_cart_url() );
+	$product_url = get_permalink($product_id);
+	$add_to_cart = esc_url($product->add_to_cart_url());
 	$thumbnail_id  = $product->get_image_id();
 	$thumbnail_url = $thumbnail_id
-		? wp_get_attachment_image_url( $thumbnail_id, 'woocommerce_thumbnail' )
-		: wc_placeholder_img_src( 'woocommerce_thumbnail' );
+		? wp_get_attachment_image_url($thumbnail_id, 'woocommerce_thumbnail')
+		: wc_placeholder_img_src('woocommerce_thumbnail');
 
 	// Price (only for pagos)
 	$price_html = $is_gratis ? '' : $product->get_price_html();
 
 	// Excerpt
 	$excerpt = $product->get_short_description();
-	if ( empty( $excerpt ) ) {
-		$excerpt = wp_trim_words( $product->get_description(), 15 );
+	if (empty($excerpt)) {
+		$excerpt = wp_trim_words($product->get_description(), 15);
 	}
 
 	// Topic tags (product_tag terms) for display
-	$topic_tags = get_the_terms( $product_id, 'product_tag' );
-	if ( is_wp_error( $topic_tags ) ) {
+	$topic_tags = get_the_terms($product_id, 'product_tag');
+	if (is_wp_error($topic_tags)) {
 		$topic_tags = [];
 	}
-	?>
+?>
 	<li class="dm-recursos__item">
 		<article class="dm-recurso-card<?php echo $is_gratis ? ' dm-recurso-card--gratis' : ' dm-recurso-card--pago'; ?>"
-		         aria-label="<?php echo esc_attr( $product->get_name() ); ?>">
+			aria-label="<?php echo esc_attr($product->get_name()); ?>">
 
-			<?php if ( $thumbnail_url ) : ?>
-			<a href="<?php echo esc_url( $product_url ); ?>" class="dm-recurso-card__thumb-link" tabindex="-1" aria-hidden="true">
-				<img src="<?php echo esc_url( $thumbnail_url ); ?>"
-				     alt="<?php echo esc_attr( $product->get_name() ); ?>"
-				     class="dm-recurso-card__thumb"
-				     loading="lazy"
-				     width="300"
-				     height="300">
-			</a>
+			<?php if ($thumbnail_url) : ?>
+				<a href="<?php echo esc_url($product_url); ?>" class="dm-recurso-card__thumb-link" tabindex="-1" aria-hidden="true">
+					<img src="<?php echo esc_url($thumbnail_url); ?>"
+						alt="<?php echo esc_attr($product->get_name()); ?>"
+						class="dm-recurso-card__thumb"
+						loading="lazy"
+						width="300"
+						height="300">
+				</a>
 			<?php endif; ?>
 
 			<div class="dm-recurso-card__body">
 				<h3 class="dm-recurso-card__title">
-					<a href="<?php echo esc_url( $product_url ); ?>">
-						<?php echo esc_html( $product->get_name() ); ?>
+					<a href="<?php echo esc_url($product_url); ?>">
+						<?php echo esc_html($product->get_name()); ?>
 					</a>
 				</h3>
 
-				<?php if ( ! empty( $excerpt ) ) : ?>
-				<p class="dm-recurso-card__excerpt">
-					<?php echo wp_kses_post( $excerpt ); ?>
-				</p>
+				<?php if (! empty($excerpt)) : ?>
+					<p class="dm-recurso-card__excerpt">
+						<?php echo wp_kses_post($excerpt); ?>
+					</p>
 				<?php endif; ?>
 
-				<?php if ( ! empty( $topic_tags ) ) : ?>
-				<ul class="dm-recurso-card__tags" aria-label="<?php esc_attr_e( 'Temas', 'daniela-child' ); ?>">
-					<?php foreach ( $topic_tags as $tag ) : ?>
-					<li>
-						<a
-							class="dm-recurso-card__tag"
-							href="<?php echo esc_url( add_query_arg( 'dm_topic', $tag->slug, home_url( '/recursos/' ) ) ); ?>"
-						>
-							<?php echo esc_html( $tag->name ); ?>
-						</a>
-					</li>
-					<?php endforeach; ?>
-				</ul>
+				<?php if (! empty($topic_tags)) : ?>
+					<ul class="dm-recurso-card__tags" aria-label="<?php esc_attr_e('Temas', 'daniela-child'); ?>">
+						<?php foreach ($topic_tags as $tag) : ?>
+							<li>
+								<a
+									class="dm-recurso-card__tag"
+									href="<?php echo esc_url(add_query_arg('dm_topic', $tag->slug, home_url('/recursos/'))); ?>">
+									<?php echo esc_html($tag->name); ?>
+								</a>
+							</li>
+						<?php endforeach; ?>
+					</ul>
 				<?php endif; ?>
 
-				<?php if ( ! $is_gratis && ! empty( $price_html ) ) : ?>
-				<p class="dm-recurso-card__price">
-					<?php echo wp_kses_post( $price_html ); ?>
-				</p>
+				<?php if (! $is_gratis && ! empty($price_html)) : ?>
+					<p class="dm-recurso-card__price">
+						<?php echo wp_kses_post($price_html); ?>
+					</p>
 				<?php endif; ?>
 
 				<div class="dm-recurso-card__cta">
-					<a href="<?php echo esc_url( $product_url ); ?>"
-					   class="dm-btn dm-btn--ghost">
-						<?php esc_html_e( 'Ver detalles', 'daniela-child' ); ?>
+					<a href="<?php echo esc_url($product_url); ?>"
+						class="dm-btn dm-btn--ghost">
+						<?php esc_html_e('Ver detalles', 'daniela-child'); ?>
 					</a>
-					<?php if ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
-						<a href="<?php echo esc_url( $add_to_cart ); ?>"
-						   class="dm-btn dm-btn--comprar add_to_cart_button ajax_add_to_cart"
-						   data-product_id="<?php echo esc_attr( $product_id ); ?>"
-						   data-product_sku="<?php echo esc_attr( $product->get_sku() ); ?>"
-						   data-quantity="1"
-						   data-product_name="<?php echo esc_attr( $product->get_name() ); ?>">
-							<?php esc_html_e( 'Agregar al carrito', 'daniela-child' ); ?>
+					<?php if ($product->is_in_stock()) : ?>
+						<a href="<?php echo esc_url($add_to_cart); ?>"
+							class="dm-btn dm-btn--comprar add_to_cart_button ajax_add_to_cart"
+							data-product_id="<?php echo esc_attr($product_id); ?>"
+							data-product_sku="<?php echo esc_attr($product->get_sku()); ?>"
+							data-quantity="1"
+							data-product_name="<?php echo esc_attr($product->get_name()); ?>">
+							<?php esc_html_e('Agregar al carrito', 'daniela-child'); ?>
 						</a>
 					<?php endif; ?>
 				</div>
@@ -289,7 +294,7 @@ function dm_recursos_render_card( WC_Product $product ) {
 
 		</article>
 	</li>
-	<?php
+<?php
 }
 
 // ---------------------------------------------------------------------------
@@ -301,12 +306,13 @@ function dm_recursos_render_card( WC_Product $product ) {
  *
  * @return string URL without dm_topic param.
  */
-function dm_recursos_current_url_without_filters() {
+function dm_recursos_current_url_without_filters()
+{
 	global $wp;
-	$url = home_url( add_query_arg( array(), $wp->request ) );
+	$url = home_url(add_query_arg(array(), $wp->request));
 
 	// Remove our own filter params to build clean base URL.
-	$url = remove_query_arg( array( 'dm_topic' ), $url );
+	$url = remove_query_arg(array('dm_topic'), $url);
 
 	return $url;
 }
@@ -315,19 +321,20 @@ function dm_recursos_current_url_without_filters() {
 // Enqueue resources hub JS (progressive enhancement)
 // ---------------------------------------------------------------------------
 
-add_action( 'wp_enqueue_scripts', 'dm_recursos_enqueue_assets' );
+add_action('wp_enqueue_scripts', 'dm_recursos_enqueue_assets');
 
 /**
  * Register (but do not enqueue) the filter JS.
  * The shortcode callback enqueues it when actually used.
  */
-function dm_recursos_enqueue_assets() {
+function dm_recursos_enqueue_assets()
+{
 	$js_file = get_stylesheet_directory() . '/js/recursos-filters.js';
 	wp_register_script(
 		'dm-recursos-filters',
 		get_stylesheet_directory_uri() . '/js/recursos-filters.js',
 		array(),
-		file_exists( $js_file ) ? (string) filemtime( $js_file ) : '1.0.0',
+		file_exists($js_file) ? (string) filemtime($js_file) : '1.0.0',
 		true
 	);
 }
