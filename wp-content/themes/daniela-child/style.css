@@ -986,6 +986,13 @@ body.dm-cart-drawer-open {
 	}
 }
 
+/* Safety-net: hide WooCommerce's default mini-cart buttons inside the DM drawer.
+   The wp_loaded hook in cart-drawer.php removes them server-side, but this rule
+   catches any edge-case where a plugin re-registers those hooks. */
+#dm-cart-drawer .woocommerce-mini-cart__buttons {
+	display: none !important;
+}
+
 /* ==========================================================================
    Add-to-Cart Popup — dm-cart-popup
    ========================================================================== */

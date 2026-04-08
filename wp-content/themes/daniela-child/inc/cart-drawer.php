@@ -26,6 +26,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 remove_action( 'shoptimizer_before_site', 'shoptimizer_header_cart_drawer', 5 );
 
 /**
+ * Remove WooCommerce mini-cart default buttons (View cart / Checkout) on every
+ * request — including WooCommerce AJAX fragment refresh — so they never appear
+ * inside our DM drawer. The DM drawer footer already provides its own CTAs.
+ *
+ * wp_loaded fires after all plugins have initialized, which guarantees that
+ * WooCommerce has already registered these actions before we remove them.
+ */
+add_action(
+	'wp_loaded',
+	function () {
+		remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_button_view_cart', 10 );
+		remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_proceed_to_checkout', 20 );
+	}
+);
+
+/**
  * Inject the cart drawer HTML into the footer.
  *
  * Runs late (priority 100) so it lands after the theme's own footer markup.
@@ -66,11 +82,9 @@ add_action(
 					<?php
 					/*
 					 * .widget_shopping_cart_content is required by wc-cart-fragments to refresh
-					 * the mini-cart after AJAX add-to-cart. We suppress WooCommerce's own button
-					 * hooks here so they don't duplicate the CTAs rendered below in the footer.
+					 * the mini-cart after AJAX add-to-cart. WooCommerce's default mini-cart
+					 * buttons are removed globally via the wp_loaded hook above.
 					 */
-					remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_button_view_cart', 10 );
-					remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_proceed_to_checkout', 20 );
 					?>
 					<div class="widget_shopping_cart_content">
 						<?php woocommerce_mini_cart(); ?>
