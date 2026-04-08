@@ -134,6 +134,17 @@ function dm_freebie_handle_token_download() {
 	$product_id = absint( $data['product_id'] );
 	$file_urls  = (array) $data['file_urls'];
 
+	// Guard: sólo productos gratuitos. Si el producto ahora tiene precio > 0
+	// (cambio posterior al token), invalidar y redirigir al checkout.
+	if ( function_exists( 'wc_get_product' ) ) {
+		$freebie_product = wc_get_product( $product_id );
+		if ( $freebie_product && (float) $freebie_product->get_price() > 0.0 ) {
+			delete_transient( 'dm_freebie_token_' . $token );
+			wp_safe_redirect( get_permalink( $product_id ) );
+			exit;
+		}
+	}
+
 	if ( empty( $file_urls ) ) {
 		wp_die( esc_html__( 'No hay archivos disponibles para este recurso.', 'daniela-child' ), '', array( 'response' => 404 ) );
 	}

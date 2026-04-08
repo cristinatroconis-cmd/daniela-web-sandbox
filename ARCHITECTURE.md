@@ -628,13 +628,42 @@ Solo se carga cuando `WP_CLI` está definido (sin overhead en peticiones web).
 
 ---
 
-# 20. Freebies por email con link tokenizado
+# 20. Descargas de productos
 
-## Archivo
+## Resumen: dos flujos completamente separados
+
+| Flujo | Activación | Archivos |
+|---|---|---|
+| **WooCommerce nativo** | Productos con precio > $0, tras completar el pago con Stripe | Sistema nativo de WC (permisos, límites, expiración) |
+| **Freebie tokenizado** | Productos con precio = $0, formulario de email | `inc/freebie-download.php`, `inc/freebie-delivery.php` |
+
+Ninguno de los dos flujos interfiere con el otro.
+Ver detalles completos en [`docs/woocommerce-downloads.md`](docs/woocommerce-downloads.md).
+
+---
+
+## 20.1 Productos pagados — WooCommerce nativo
+
+Los productos descargables de pago usan **exclusivamente el sistema nativo de WooCommerce**:
+
+- **Permisos de descarga** gestionados por WooCommerce (tabla `woocommerce_downloadable_product_permissions`).
+- **Límite de descargas** y **expiración** configurables en cada producto.
+- **Email automático** "Pedido completado" enviado por WooCommerce con link protegido.
+- **Método de entrega:** `Force downloads` (por defecto). El archivo nunca se expone directamente en `/wp-content/uploads/`.
+
+El child theme **no sobreescribe** ningún hook `woocommerce_download_*` ni modifica la lógica de entrega de WooCommerce.
+
+---
+
+## 20.2 Freebies por email con link tokenizado
+
+**Solo para productos con precio = $0.**
+
+### Archivo principal
 
 `wp-content/themes/daniela-child/inc/freebie-download.php`
 
-## Tabla de base de datos
+### Tabla de base de datos
 
 `{prefix}dm_freebie_tokens` (creada automáticamente en `init` si no existe):
 
@@ -649,7 +678,7 @@ Solo se carga cuando `WP_CLI` está definido (sin overhead en peticiones web).
 | `max_downloads` | INT DEFAULT 10 | Límite de descargas |
 | `newsletter_optin` | TINYINT | Consentimiento newsletter |
 
-## Shortcode
+### Shortcode
 
 ```
 [dm_freebie_form product_id="123"]
@@ -658,17 +687,26 @@ Solo se carga cuando `WP_CLI` está definido (sin overhead en peticiones web).
 
 Muestra: campo email + checkbox opt-in newsletter (no pre-marcado, GDPR-compliant).
 
-## Endpoint de descarga
+### Endpoint de descarga
 
 `?dm_freebie_token=<hex64>` en cualquier URL del sitio.
 
-Valida: token existe, no expirado, no superó `max_downloads`. Entrega el archivo y actualiza el contador.
+Valida: token existe, no expirado, no superó `max_downloads`, producto tiene precio = $0. Entrega el archivo y actualiza el contador.
 
-## Integración con single-dm_recurso.php
+### Aislamiento (garantías)
+
+El flujo freebie **no puede ejecutarse para productos de pago**:
+
+- Si `price > 0`, el shortcode muestra un enlace al producto WooCommerce (no el formulario).
+- Si `price > 0`, `dm_freebie_process_request()` rechaza la solicitud con `WP_Error`.
+- Si `price > 0`, el endpoint `?dm_freebie_token=` devuelve HTTP 403.
+- El flujo freebie no modifica emails ni hooks de WooCommerce.
+
+### Integración con single-dm_recurso.php
 
 Para recursos con precio $0 (vinculados por `_dm_wc_product_id`), `single-dm_recurso.php` muestra automáticamente el `[dm_freebie_form]` en lugar del botón "Agregar al carrito".
 
-## Integración newsletter
+### Integración newsletter
 
 Mismo flujo que `newsletter-optin.php`:
 1. Si el hook `mailerlite_woocommerce_subscribe` existe → delega al plugin oficial.

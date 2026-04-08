@@ -109,13 +109,26 @@ function dm_freebie_form_shortcode( $atts ) {
 			'</p>';
 	}
 
-	// Comprobar que el producto existe y es gratuito.
+	// Comprobar que el producto existe y es gratuito (precio = $0).
+	// El formulario freebie NO debe mostrarse para productos de pago.
 	if ( function_exists( 'wc_get_product' ) ) {
 		$product = wc_get_product( $product_id );
 		if ( ! $product ) {
 			return '<p class="dm-freebie-error">' .
 				esc_html__( 'Recurso no disponible.', 'daniela-child' ) .
 				'</p>';
+		}
+		if ( (float) $product->get_price() > 0.0 ) {
+			// Producto de pago → redirigir a la página del producto WooCommerce.
+			return '<p class="dm-freebie-error">' .
+				sprintf(
+					wp_kses(
+						/* translators: %s: product permalink */
+						__( 'Este recurso requiere compra. <a href="%s">Ver producto</a>.', 'daniela-child' ),
+						array( 'a' => array( 'href' => array() ) )
+					),
+					esc_url( get_permalink( $product_id ) )
+				) . '</p>';
 		}
 	}
 
@@ -223,6 +236,18 @@ function dm_freebie_form_shortcode( $atts ) {
  * @return true|WP_Error
  */
 function dm_freebie_process_request( string $email, int $product_id, bool $newsletter_opt ) {
+	// Guard: the freebie flow is only for free (price = $0) products.
+	// Paid products must go through the standard WooCommerce checkout.
+	if ( function_exists( 'wc_get_product' ) ) {
+		$product = wc_get_product( $product_id );
+		if ( $product && (float) $product->get_price() > 0.0 ) {
+			return new WP_Error(
+				'paid_product',
+				__( 'Este recurso requiere compra. Completa el proceso de pago.', 'daniela-child' )
+			);
+		}
+	}
+
 	global $wpdb;
 
 	$table = $wpdb->prefix . 'dm_freebie_tokens';
@@ -436,6 +461,19 @@ function dm_freebie_handle_download_request() {
 			esc_html__( 'Límite alcanzado', 'daniela-child' ),
 			[ 'response' => 403 ]
 		);
+	}
+
+	// Guard: sólo productos gratuitos. Si el producto ahora tiene precio > 0
+	// (cambio posterior), invalidar el token y redirigir al checkout.
+	if ( function_exists( 'wc_get_product' ) ) {
+		$freebie_product = wc_get_product( (int) $row->product_id );
+		if ( $freebie_product && (float) $freebie_product->get_price() > 0.0 ) {
+			wp_die(
+				esc_html__( 'Este recurso requiere compra. Completa el proceso de pago.', 'daniela-child' ),
+				esc_html__( 'Recurso de pago', 'daniela-child' ),
+				[ 'response' => 403 ]
+			);
+		}
 	}
 
 	// Obtener URL del archivo del producto WC.
