@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Cart Drawer — Off-canvas mini-cart (right side).
  *
@@ -12,7 +13,7 @@
  * @package Daniela_Child
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit;
 }
 
@@ -23,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * (priority 5) at file-include time. We remove it here — after the parent theme
  * has already run — to prevent two separate drawers from opening on added_to_cart.
  */
-remove_action( 'shoptimizer_before_site', 'shoptimizer_header_cart_drawer', 5 );
+remove_action('shoptimizer_before_site', 'shoptimizer_header_cart_drawer', 5);
 
 /**
  * Remove WooCommerce mini-cart default buttons (View cart / Checkout) on every
@@ -36,8 +37,8 @@ remove_action( 'shoptimizer_before_site', 'shoptimizer_header_cart_drawer', 5 );
 add_action(
 	'wp_loaded',
 	function () {
-		remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_button_view_cart', 10 );
-		remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_proceed_to_checkout', 20 );
+		remove_action('woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_button_view_cart', 10);
+		remove_action('woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_proceed_to_checkout', 20);
 	}
 );
 
@@ -52,60 +53,60 @@ add_action(
 add_action(
 	'wp_footer',
 	function () {
-		if ( ! function_exists( 'WC' ) ) {
+		if (! function_exists('WC')) {
 			return;
 		}
-		?>
-		<div id="dm-cart-drawer"
-		     class="dm-cart-drawer"
-		     role="dialog"
-		     aria-modal="true"
-		     aria-label="<?php esc_attr_e( 'Carrito', 'daniela-child' ); ?>"
-		     hidden>
+?>
+	<div id="dm-cart-drawer"
+		class="dm-cart-drawer"
+		role="dialog"
+		aria-modal="true"
+		aria-label="<?php esc_attr_e('Carrito', 'daniela-child'); ?>"
+		hidden>
 
-			<div class="dm-cart-drawer__overlay" id="dm-cart-drawer-overlay" aria-hidden="true"></div>
+		<div class="dm-cart-drawer__overlay" id="dm-cart-drawer-overlay" aria-hidden="true"></div>
 
-			<aside class="dm-cart-drawer__panel">
+		<aside class="dm-cart-drawer__panel">
 
-				<header class="dm-cart-drawer__header">
-					<h2 class="dm-cart-drawer__title">
-						<?php esc_html_e( 'Tu carrito', 'daniela-child' ); ?>
-					</h2>
-					<button class="dm-cart-drawer__close"
-					        id="dm-cart-drawer-close"
-					        aria-label="<?php esc_attr_e( 'Cerrar carrito', 'daniela-child' ); ?>">
-						&#10005;
-					</button>
-				</header>
+			<header class="dm-cart-drawer__header">
+				<h2 class="dm-cart-drawer__title">
+					<?php esc_html_e('Tu carrito', 'daniela-child'); ?>
+				</h2>
+				<button class="dm-cart-drawer__close"
+					id="dm-cart-drawer-close"
+					aria-label="<?php esc_attr_e('Cerrar carrito', 'daniela-child'); ?>">
+					&#10005;
+				</button>
+			</header>
 
-				<div class="dm-cart-drawer__body">
-					<?php
-					/*
+			<div class="dm-cart-drawer__body">
+				<?php
+				/*
 					 * .widget_shopping_cart_content is required by wc-cart-fragments to refresh
 					 * the mini-cart after AJAX add-to-cart. WooCommerce's default mini-cart
 					 * buttons are removed globally via the wp_loaded hook above.
 					 */
-					?>
-					<div class="widget_shopping_cart_content">
-						<?php woocommerce_mini_cart(); ?>
-					</div>
+				?>
+				<div class="widget_shopping_cart_content">
+					<?php woocommerce_mini_cart(); ?>
 				</div>
+			</div>
 
-				<footer class="dm-cart-drawer__footer">
-					<button type="button"
-					        id="dm-cart-drawer-continue"
-					        class="dm-btn dm-btn--ghost dm-cart-drawer__btn--continue">
-						<?php esc_html_e( 'Seguir comprando', 'daniela-child' ); ?>
-					</button>
-					<a href="<?php echo esc_url( wc_get_checkout_url() ); ?>"
-					   class="dm-btn dm-btn--primary dm-cart-drawer__btn--checkout">
-						<?php esc_html_e( 'Checkout', 'daniela-child' ); ?>
-					</a>
-				</footer>
+			<footer class="dm-cart-drawer__footer">
+				<button type="button"
+					id="dm-cart-drawer-continue"
+					class="dm-btn dm-btn--ghost dm-cart-drawer__btn--continue">
+					<?php esc_html_e('Seguir comprando', 'daniela-child'); ?>
+				</button>
+				<a href="<?php echo esc_url(wc_get_checkout_url()); ?>"
+					class="dm-btn dm-btn--primary dm-cart-drawer__btn--checkout">
+					<?php esc_html_e('Finalizar compra', 'daniela-child'); ?>
+				</a>
+			</footer>
 
-			</aside>
-		</div>
-		<?php
+		</aside>
+	</div>
+<?php
 	},
 	100
 );

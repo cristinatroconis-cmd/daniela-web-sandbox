@@ -41,7 +41,7 @@
 			'      Seguir comprando',
 			'    </button>',
 			'    <a class="dm-btn dm-btn--primary dm-cart-popup__btn--checkout" id="dm-cart-popup-checkout" href="' + checkoutUrl + '">',
-			'      Proceder al checkout',
+			'      Finalizar compra',
 			'    </a>',
 			'  </div>',
 			'</div>',
