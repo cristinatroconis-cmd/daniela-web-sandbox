@@ -801,7 +801,7 @@ add_action( 'wp_loaded', function () {
 
 El footer del drawer tiene dos CTAs:
 1. `<button id="dm-cart-drawer-continue" class="dm-btn dm-btn--ghost">Seguir comprando</button>` — cierra el drawer, permanece en la página actual.
-2. `<a href="wc_get_checkout_url()">Checkout</a>` — navega al checkout.
+2. `<a href="<?php echo esc_url( wc_get_checkout_url() ); ?>">Checkout</a>` — navega al checkout.
 
 **Decisión UX:** se reemplazó el anterior enlace "Ver carrito" (que llevaba a `/carrito/`) por "Seguir comprando". El objetivo es reducir interrupciones en el funnel de compra: el usuario puede seguir añadiendo productos al carrito sin abandonar la página en la que está.
 
