@@ -46,6 +46,9 @@
 		$overlay.on( 'click', closeDrawer );
 		$close.on( 'click', closeDrawer );
 
+		// "Seguir comprando" button — closes drawer, stays on current page.
+		$( '#dm-cart-drawer-continue' ).on( 'click', closeDrawer );
+
 		$( document ).on( 'keydown', function ( e ) {
 			if ( ( e.key === 'Escape' || e.key === 'Esc' ) && isOpen ) {
 				closeDrawer();
