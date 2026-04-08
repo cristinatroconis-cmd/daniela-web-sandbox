@@ -64,10 +64,10 @@ function dm_render_product_card( $product, $back_url = '' ) {
         ? add_query_arg( 'dm_back', rawurlencode( $back_url ), $product->get_permalink() )
         : $product->get_permalink();
 
-    $title   = $product->get_name();
-    $excerpt = $product->get_short_description();
-    $price   = (float) $product->get_price();
-    $is_free = ( $price == 0 );
+    $title     = $product->get_name();
+    $excerpt   = $product->get_short_description();
+    $price_raw = $product->get_price(); // '' = sin precio configurado, '0' = gratis explícito
+    $is_free   = ( $price_raw !== '' && (float) $price_raw <= 0.0 ); // phpcs:ignore WordPress.PHP.StrictComparisons
 
     ob_start();
     ?>
@@ -106,13 +106,21 @@ function dm_render_product_card( $product, $back_url = '' ) {
         </div>
 
         <div class="dm-card__footer">
+            <?php
+            $btn_class = $is_free ? 'dm-btn dm-btn--secondary' : 'dm-btn dm-btn--primary';
+            // Para productos de pago: respetar is_purchasable/in_stock.
+            // Para productos gratis (precio = '0'): mostrar siempre el CTA.
+            $show_cta  = $is_free || ( $product->is_purchasable() && $product->is_in_stock() );
+            if ( $show_cta ) :
+            ?>
             <a href="<?php echo esc_url( $product->add_to_cart_url() ); ?>"
                data-product_id="<?php echo esc_attr( $product->get_id() ); ?>"
                data-product_sku="<?php echo esc_attr( $product->get_sku() ); ?>"
                data-quantity="1"
-               class="button add_to_cart_button ajax_add_to_cart dm-btn dm-btn--primary">
+               class="button add_to_cart_button ajax_add_to_cart <?php echo esc_attr( $btn_class ); ?>">
                 <?php esc_html_e( 'Agregar al carrito', 'daniela-child' ); ?>
             </a>
+            <?php endif; ?>
         </div>
 
     </article>
