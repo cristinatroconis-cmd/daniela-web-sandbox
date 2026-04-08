@@ -12,6 +12,11 @@ mu-plugins)
 # Permitir archivos esenciales del repo
 !.gitignore
 !README.md
+!ARCHITECTURE.md
+
+# Permitir docs/
+!docs/
+!docs/**
 
 # Permitir wp-content y, dentro, solo themes (y nuestro child)
 !wp-content/
