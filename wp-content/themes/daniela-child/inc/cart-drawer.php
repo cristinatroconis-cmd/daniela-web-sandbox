@@ -63,17 +63,26 @@ add_action(
 				</header>
 
 				<div class="dm-cart-drawer__body">
-					<?php /* .widget_shopping_cart_content is the hook used by wc-cart-fragments to refresh the mini-cart. */ ?>
+					<?php
+					/*
+					 * .widget_shopping_cart_content is required by wc-cart-fragments to refresh
+					 * the mini-cart after AJAX add-to-cart. We suppress WooCommerce's own button
+					 * hooks here so they don't duplicate the CTAs rendered below in the footer.
+					 */
+					remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_button_view_cart', 10 );
+					remove_action( 'woocommerce_widget_shopping_cart_buttons', 'woocommerce_widget_shopping_cart_proceed_to_checkout', 20 );
+					?>
 					<div class="widget_shopping_cart_content">
 						<?php woocommerce_mini_cart(); ?>
 					</div>
 				</div>
 
 				<footer class="dm-cart-drawer__footer">
-					<a href="<?php echo esc_url( wc_get_cart_url() ); ?>"
-					   class="dm-btn dm-btn--ghost dm-cart-drawer__btn--cart">
-						<?php esc_html_e( 'Ver carrito', 'daniela-child' ); ?>
-					</a>
+					<button type="button"
+					        id="dm-cart-drawer-continue"
+					        class="dm-btn dm-btn--ghost dm-cart-drawer__btn--continue">
+						<?php esc_html_e( 'Seguir comprando', 'daniela-child' ); ?>
+					</button>
 					<a href="<?php echo esc_url( wc_get_checkout_url() ); ?>"
 					   class="dm-btn dm-btn--primary dm-cart-drawer__btn--checkout">
 						<?php esc_html_e( 'Checkout', 'daniela-child' ); ?>
