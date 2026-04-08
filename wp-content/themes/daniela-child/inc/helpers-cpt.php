@@ -247,7 +247,7 @@ function dm_cpt_render_cta($post_id = null)
 	}
 
 	$label     = __('Agregar al carrito', 'daniela-child');
-	$btn_class = $is_free ? 'dm-btn dm-btn--secondary' : 'dm-btn dm-btn--primary';
+	$btn_class = 'dm-btn dm-btn--primary';
 	$url       = esc_url($product->add_to_cart_url());
 
 	ob_start();
