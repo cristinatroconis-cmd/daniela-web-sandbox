@@ -1,6 +1,6 @@
 # Daniela Montes Psicóloga — Project Status (Sandbox)
 
-**Última actualización:** 2026-03-31  
+**Última actualización:** 2026-04-08  
 **Repo:** `cristinatroconis-cmd/daniela-web-sandbox`  
 **Producción (referencia):** https://danielamontespsic.com/ (rocket.net)  
 **Modo de trabajo:** sandbox / aislado — NO tocar producción directo.
@@ -102,6 +102,13 @@ Todos en `wp-content/themes/daniela-child/`:
 - **Motivo:** proyecto low budget — consistencia visual mejora conversión; sistema único reduce mantenimiento.
 - **Referencia:** `ARCHITECTURE.md` § 18 + `docs/ARCHITECTURE_NOTES.md` § 3c.
 
+### 3.8 Email customization (`inc/email-tokens.php` + `inc/woocommerce-emails.php`)
+- ✅ **`dm_get_email_tokens()`** — tokens de diseño cacheados (transient `dm_email_tokens_v1`, 12 h), derivados de `style.css` `:root {}`.
+- ✅ **`dm_woo_email_styles()`** — CSS email-safe aplicado vía filtro `woocommerce_email_styles` (priority 20).
+- ✅ Asunto y heading personalizados para emails "Pedido en proceso" y "Pedido completado".
+- ✅ **`dm_email_cta_block()`** — bloque CTA de descarga directa (guest-friendly) en `woocommerce_email_after_order_table`.
+- ✅ Defaults de opciones WooCommerce email no destructivos (respeta configuración admin existente).
+
 ---
 
 ## 4) Backlog inmediato 🔲
@@ -182,6 +189,9 @@ wp-content/themes/daniela-child/
 │   ├── helpers-cpt.php             # Metaboxes, CTA, chips, grid
 │   ├── shortcodes-escuela.php      # Shortcodes WooCommerce para páginas de Escuela
 │   ├── shortcodes-servicios.php    # Shortcodes para páginas de Servicios
+│   ├── email-tokens.php            # Extrae tokens CSS para emails
+│   ├── woocommerce-emails.php      # Personalización emails WooCommerce (CSS, asuntos, CTA)
+│   ├── cart-drawer.php             # Drawer del carrito; elimina botones WC nativos vía wp_loaded
 │   └── ...                         # Otros módulos (assets, header, checkout, etc.)
 ├── archive-dm_escuela.php          # Template archive /escuela/
 ├── archive-dm_recurso.php          # Template archive /recursos/
