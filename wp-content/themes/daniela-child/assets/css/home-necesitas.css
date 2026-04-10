@@ -11,28 +11,9 @@
  */
 
 /* ==========================================================================
-   Tokens / variables (solo para esta sección)
-   - Usan variables del theme si existen; si no, caen a defaults seguros.
+   Tokens / variables
+   - Fuente única: style.css (:root).
    ========================================================================== */
-:root {
-	/* Spacing/layout */
-	--dm-necesitas-pad-y: 72px;
-	--dm-necesitas-gap: 48px;
-	--dm-necesitas-min-height: 420px;
-	--dm-necesitas-radius: 16px;
-
-	/* Typography (no definimos font-family; heredamos) */
-	--dm-necesitas-kicker-tracking: 0.12em;
-
-	/* Colors: preferimos tokens del theme si existen */
-	--dm-necesitas-text: var(--dm-color-text, #111);
-	--dm-necesitas-muted: var(--dm-color-text-muted, rgba(0, 0, 0, 0.65));
-	--dm-necesitas-border: var(--dm-color-border, rgba(0, 0, 0, 0.12));
-
-	/* Effects */
-	--dm-necesitas-shadow: var(--dm-shadow, 0 10px 30px rgba(0, 0, 0, 0.08));
-	--dm-necesitas-transition: 200ms ease;
-}
 
 /* ==========================================================================
    Wrapper / layout
@@ -167,7 +148,8 @@
 .dm-carousel__slide-hero {
 	display: flex;
 	width: 100%;
-	aspect-ratio: 16 / 9; /* consistente en todos los slides */
+	aspect-ratio: 16 / 9;
+	/* consistente en todos los slides */
 	overflow: hidden;
 	border-radius: calc(var(--dm-necesitas-radius, 16px) - 6px);
 	background: rgba(0, 0, 0, 0.06);
@@ -194,7 +176,8 @@
 .dm-carousel__slide-body {
 	position: relative;
 	z-index: 1;
-	color: #fff; /* aquí sí: sobre overlay necesitamos contraste estable */
+	color: #fff;
+	/* aquí sí: sobre overlay necesitamos contraste estable */
 }
 
 /* Tipos */
@@ -210,7 +193,9 @@
 
 .dm-carousel__slide-title {
 	margin: 0 0 10px;
-	font-size: 40px; /* para un título de 3 palabras, 2 líneas, max-width ~44ch */;
+	font-size: 40px;
+	/* para un título de 3 palabras, 2 líneas, max-width ~44ch */
+	;
 	color: #222;
 	line-height: 1.25;
 	font-weight: 600;

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * WooCommerce Emails — Estética + CTA de descarga directa
  *
@@ -13,7 +14,7 @@
  * @package daniela-child
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit;
 }
 
@@ -21,14 +22,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 // 1) DEFAULTS DE OPCIONES WOO EMAIL (solo si el admin no las ha tocado)
 // =============================================================================
 
-add_action( 'init', 'dm_set_woo_email_defaults' );
+add_action('init', 'dm_set_woo_email_defaults');
 
 /**
  * Establece valores por defecto para las opciones visuales de los emails de
  * WooCommerce solo si todavía no existen (respeta lo que el admin haya
  * configurado desde WP Admin → WooCommerce → Ajustes → Correos electrónicos).
  */
-function dm_set_woo_email_defaults(): void {
+function dm_set_woo_email_defaults(): void
+{
 	$tokens = dm_get_email_tokens();
 
 	$defaults = [
@@ -39,9 +41,9 @@ function dm_set_woo_email_defaults(): void {
 		'woocommerce_email_footer_text'            => 'Daniela Montes Psicóloga · {site_url}',
 	];
 
-	foreach ( $defaults as $option => $value ) {
-		if ( null === get_option( $option, null ) ) {
-			update_option( $option, $value );
+	foreach ($defaults as $option => $value) {
+		if (null === get_option($option, null)) {
+			update_option($option, $value);
 		}
 	}
 }
@@ -50,7 +52,7 @@ function dm_set_woo_email_defaults(): void {
 // 2) CSS EMAIL-SAFE (tokens del tema inyectados vía filtro de WooCommerce)
 // =============================================================================
 
-add_filter( 'woocommerce_email_styles', 'dm_woo_email_styles', 20 );
+add_filter('woocommerce_email_styles', 'dm_woo_email_styles', 20);
 
 /**
  * Añade CSS email-safe al final de los estilos base de WooCommerce.
@@ -59,7 +61,8 @@ add_filter( 'woocommerce_email_styles', 'dm_woo_email_styles', 20 );
  * @param  string $css CSS existente generado por WooCommerce.
  * @return string CSS enriquecido.
  */
-function dm_woo_email_styles( string $css ): string {
+function dm_woo_email_styles(string $css): string
+{
 	$t = dm_get_email_tokens();
 
 	$custom = "
@@ -188,9 +191,10 @@ add_filter(
 	20,
 	3
 );
-function dm_email_subject_processing( string $subject, WC_Order $order, WC_Email $email ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+function dm_email_subject_processing(string $subject, WC_Order $order, WC_Email $email): string
+{ // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 	/* translators: %s: order number */
-	return sprintf( __( '✅ Recibimos tu pedido #%s — ya lo estamos procesando', 'daniela-child' ), $order->get_order_number() );
+	return sprintf(__('✅ Recibimos tu pedido #%s — ya lo estamos procesando', 'daniela-child'), $order->get_order_number());
 }
 
 /**
@@ -207,8 +211,9 @@ add_filter(
 	20,
 	3
 );
-function dm_email_heading_processing( string $heading, WC_Order $order, WC_Email $email ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	return __( '¡Gracias por tu compra! 🌿', 'daniela-child' );
+function dm_email_heading_processing(string $heading, WC_Order $order, WC_Email $email): string
+{ // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+	return __('¡Gracias por tu compra! 🌿', 'daniela-child');
 }
 
 /**
@@ -225,9 +230,10 @@ add_filter(
 	20,
 	3
 );
-function dm_email_subject_completed( string $subject, WC_Order $order, WC_Email $email ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+function dm_email_subject_completed(string $subject, WC_Order $order, WC_Email $email): string
+{ // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 	/* translators: %s: order number */
-	return sprintf( __( '🎉 Tu pedido #%s está listo — descarga tu recurso', 'daniela-child' ), $order->get_order_number() );
+	return sprintf(__('🎉 Tu pedido #%s está listo — descarga tu recurso', 'daniela-child'), $order->get_order_number());
 }
 
 /**
@@ -244,8 +250,9 @@ add_filter(
 	20,
 	3
 );
-function dm_email_heading_completed( string $heading, WC_Order $order, WC_Email $email ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	return __( '¡Tu recurso está listo! 🎉', 'daniela-child' );
+function dm_email_heading_completed(string $heading, WC_Order $order, WC_Email $email): string
+{ // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+	return __('¡Tu recurso está listo! 🎉', 'daniela-child');
 }
 
 // =============================================================================
@@ -267,19 +274,20 @@ add_action(
 	20,
 	4
 );
-function dm_email_cta_block( WC_Order $order, bool $sent_to_admin, bool $plain_text, WC_Email $email ): void {
-	if ( $sent_to_admin || $plain_text ) {
+function dm_email_cta_block(WC_Order $order, bool $sent_to_admin, bool $plain_text, WC_Email $email): void
+{
+	if ($sent_to_admin || $plain_text) {
 		return;
 	}
 
 	$is_processing = $email instanceof WC_Email_Customer_Processing_Order;
 	$is_completed  = $email instanceof WC_Email_Customer_Completed_Order;
 
-	if ( ! $is_processing && ! $is_completed ) {
+	if (! $is_processing && ! $is_completed) {
 		return;
 	}
 
-	dm_render_email_cta( $order, $is_processing ? 'processing' : 'completed' );
+	dm_render_email_cta($order, $is_processing ? 'processing' : 'completed');
 }
 
 /**
@@ -292,55 +300,63 @@ function dm_email_cta_block( WC_Order $order, bool $sent_to_admin, bool $plain_t
  * @param  WC_Order $order  Objeto pedido.
  * @param  string   $context 'processing' | 'completed'.
  */
-function dm_render_email_cta( WC_Order $order, string $context ): void {
+function dm_render_email_cta(WC_Order $order, string $context): void
+{
 	// Recopilar links de descarga asociados al pedido.
-	$download_links = dm_get_order_download_links( $order );
+	$download_links = dm_get_order_download_links($order);
 
-	if ( 'processing' === $context && empty( $download_links ) ) {
+	if ('processing' === $context && empty($download_links)) {
 		// En procesando, si no hay descargas todavía, no mostramos CTA de descarga.
 		return;
 	}
 
 	$order_view_url = $order->get_view_order_url();
 	$t              = dm_get_email_tokens();
+	$cta_title      = (string) get_option('dm_downloads_email_cta_title', __('⬇️ Accede a tu descarga', 'daniela-child'));
+	$cta_note       = (string) get_option('dm_downloads_email_cta_note', __('Los enlaces de descarga tienen un límite de usos y tiempo de validez.', 'daniela-child'));
+	$button_label   = (string) get_option('dm_freebie_email_button_text', __('Descargar recurso', 'daniela-child'));
 
-	?>
-	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:<?php echo esc_attr( $t['color_bg'] ); ?>;border-top:1px solid <?php echo esc_attr( $t['color_border'] ); ?>;margin-top:24px;">
+?>
+	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:<?php echo esc_attr($t['color_bg']); ?>;border-top:1px solid <?php echo esc_attr($t['color_border']); ?>;margin-top:24px;">
 		<tr>
 			<td style="padding:24px 48px;text-align:center;">
-				<?php if ( ! empty( $download_links ) ) : ?>
-					<p style="margin:0 0 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;color:<?php echo esc_attr( $t['color_text'] ); ?>;font-weight:600;">
-						<?php esc_html_e( '⬇️ Accede a tu descarga', 'daniela-child' ); ?>
+				<?php if (! empty($download_links)) : ?>
+					<p style="margin:0 0 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;color:<?php echo esc_attr($t['color_text']); ?>;font-weight:600;">
+						<?php echo esc_html($cta_title); ?>
 					</p>
-					<?php foreach ( $download_links as $dl ) : ?>
+					<?php foreach ($download_links as $dl) : ?>
 						<div style="margin-bottom:12px;">
-							<a href="<?php echo esc_url( $dl['url'] ); ?>"
-							   style="display:inline-block;background-color:<?php echo esc_attr( $t['color_accent'] ); ?>;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:<?php echo esc_attr( $t['radius'] ); ?>;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.02em;">
+							<a href="<?php echo esc_url($dl['url']); ?>"
+								style="display:inline-block;background-color:<?php echo esc_attr($t['color_accent']); ?>;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:<?php echo esc_attr($t['radius']); ?>;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.02em;">
 								<?php
-								/* translators: %s: product name */
-								printf( esc_html__( 'Descargar: %s', 'daniela-child' ), esc_html( $dl['name'] ) );
+								if (false !== strpos($button_label, '%s')) {
+									/* translators: %s: product name */
+									printf(esc_html($button_label), esc_html($dl['name']));
+								} else {
+									echo esc_html($button_label);
+								}
 								?>
 							</a>
 						</div>
 					<?php endforeach; ?>
-					<span style="display:block;margin-top:10px;color:<?php echo esc_attr( $t['color_text_muted'] ); ?>;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;">
-						<?php esc_html_e( 'Los enlaces de descarga tienen un límite de usos y tiempo de validez.', 'daniela-child' ); ?>
+					<span style="display:block;margin-top:10px;color:<?php echo esc_attr($t['color_text_muted']); ?>;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;">
+						<?php echo esc_html($cta_note); ?>
 					</span>
 				<?php endif; ?>
 
-				<?php if ( $order_view_url ) : ?>
-					<p style="margin:<?php echo empty( $download_links ) ? '0' : '16px'; ?> 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;color:<?php echo esc_attr( $t['color_text_muted'] ); ?>;">
-						<?php esc_html_e( '¿Necesitas acceder más tarde?', 'daniela-child' ); ?>
-						<a href="<?php echo esc_url( $order_view_url ); ?>"
-						   style="color:<?php echo esc_attr( $t['color_primary'] ); ?>;text-decoration:underline;">
-							<?php esc_html_e( 'Ver detalles del pedido', 'daniela-child' ); ?>
+				<?php if ($order_view_url) : ?>
+					<p style="margin:<?php echo empty($download_links) ? '0' : '16px'; ?> 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;color:<?php echo esc_attr($t['color_text_muted']); ?>;">
+						<?php esc_html_e('¿Necesitas acceder más tarde?', 'daniela-child'); ?>
+						<a href="<?php echo esc_url($order_view_url); ?>"
+							style="color:<?php echo esc_attr($t['color_primary']); ?>;text-decoration:underline;">
+							<?php esc_html_e('Ver detalles del pedido', 'daniela-child'); ?>
 						</a>
 					</p>
 				<?php endif; ?>
 			</td>
 		</tr>
 	</table>
-	<?php
+<?php
 }
 
 /**
@@ -353,28 +369,29 @@ function dm_render_email_cta( WC_Order $order, string $context ): void {
  * @param  WC_Order $order  Objeto pedido.
  * @return array<int, array{name: string, url: string}> Lista de descargas.
  */
-function dm_get_order_download_links( WC_Order $order ): array {
+function dm_get_order_download_links(WC_Order $order): array
+{
 	$links = [];
 
-	foreach ( $order->get_items() as $item ) {
-		if ( ! $item instanceof WC_Order_Item_Product ) {
+	foreach ($order->get_items() as $item) {
+		if (! $item instanceof WC_Order_Item_Product) {
 			continue;
 		}
 
 		$product = $item->get_product();
-		if ( ! $product || ! $product->is_downloadable() ) {
+		if (! $product || ! $product->is_downloadable()) {
 			continue;
 		}
 
 		// get_item_downloads() devuelve las URLs con clave única por pedido;
 		// no requieren que el cliente esté logueado.
 		$downloads = $item->get_item_downloads();
-		if ( empty( $downloads ) ) {
+		if (empty($downloads)) {
 			continue;
 		}
 
-		foreach ( $downloads as $dl ) {
-			if ( empty( $dl['download_url'] ) ) {
+		foreach ($downloads as $dl) {
+			if (empty($dl['download_url'])) {
 				continue;
 			}
 			$links[] = [

@@ -44,7 +44,6 @@ require_once __DIR__ . '/inc/dm-products.php';
 require_once __DIR__ . '/inc/recursos-hub.php';
 require_once __DIR__ . '/inc/temas-page.php';
 require_once __DIR__ . '/inc/newsletter-optin.php';
-require_once __DIR__ . '/inc/freebie-delivery.php';
 require_once __DIR__ . '/inc/freebie-download.php';
 require_once __DIR__ . '/inc/cart-drawer.php';
 

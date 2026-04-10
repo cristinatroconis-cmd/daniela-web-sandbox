@@ -45,8 +45,8 @@ add_action('wp_enqueue_scripts', function () {
 	// Home sección "¿Qué necesitas?" (single source of truth: assets/css/home-necesitas.css).
 	if (
 		is_front_page() ||
-		( $post_obj && has_shortcode($post_obj->post_content, 'dm_home_necesitas') ) ||
-		( $post_obj && has_shortcode($post_obj->post_content, 'dm_temas_hub') )
+		($post_obj && has_shortcode($post_obj->post_content, 'dm_home_necesitas')) ||
+		($post_obj && has_shortcode($post_obj->post_content, 'dm_temas_hub'))
 	) {
 		$css_file = get_stylesheet_directory() . '/assets/css/home-necesitas.css';
 		wp_enqueue_style(
@@ -71,20 +71,7 @@ add_action('wp_enqueue_scripts', function () {
 		return;
 	}
 
-	// CSS del child theme para todas las páginas WooCommerce (tienda, carrito,
-	// checkout, mi cuenta). Se carga después del CSS de Shoptimizer para poder
-	// sobrescribir sus estilos. La condición incluye is_woocommerce() (páginas
-	// de tienda/producto/archivo) más las páginas especiales que usan shortcodes
-	// como [woocommerce_cart] o [woocommerce_checkout].
-	if ( is_woocommerce() || is_cart() || is_checkout() || is_account_page() ) {
-		$wc_css = get_stylesheet_directory() . '/assets/css/woocommerce.css';
-		wp_enqueue_style(
-			'daniela-child-woocommerce',
-			get_stylesheet_directory_uri() . '/assets/css/woocommerce.css',
-			array( 'daniela-child-style' ),
-			file_exists( $wc_css ) ? (string) filemtime( $wc_css ) : '1.0.0'
-		);
-	}
+	// WooCommerce styles are now centralized in style.css.
 
 	// Registrar y encolar globalmente el drawer lateral de "Agregar al carrito".
 	// Se carga en todas las páginas del frontend cuando WooCommerce está activo,
@@ -93,18 +80,18 @@ add_action('wp_enqueue_scripts', function () {
 	wp_register_script(
 		'dm-cart-drawer',
 		get_stylesheet_directory_uri() . '/js/cart-drawer.js',
-		array( 'jquery', 'wc-add-to-cart', 'wc-cart-fragments' ),
-		file_exists( $drawer_js ) ? (string) filemtime( $drawer_js ) : '1.0.0',
+		array('jquery', 'wc-add-to-cart', 'wc-cart-fragments'),
+		file_exists($drawer_js) ? (string) filemtime($drawer_js) : '1.0.0',
 		true
 	);
 
-	wp_enqueue_script( 'woocommerce' );
-	wp_enqueue_script( 'wc-add-to-cart' );
-	wp_enqueue_script( 'wc-cart-fragments' );
-	wp_enqueue_script( 'dm-cart-drawer' );
+	wp_enqueue_script('woocommerce');
+	wp_enqueue_script('wc-add-to-cart');
+	wp_enqueue_script('wc-cart-fragments');
+	wp_enqueue_script('dm-cart-drawer');
 
 	// Enqueue scripts for pages using DM shortcodes that need the filter JS.
-	if ( $post_obj ) {
+	if ($post_obj) {
 		// Note: dm-recursos-filters is registered in recursos-hub.php and enqueued on-demand.
 
 		// Lightweight scroll-into-view JS for [dm_recursos_temas] chips.
