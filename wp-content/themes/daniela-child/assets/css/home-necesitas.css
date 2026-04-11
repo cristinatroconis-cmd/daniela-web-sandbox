@@ -193,6 +193,7 @@
 
 .dm-carousel__slide-title {
 	margin: 0 0 10px;
+	font-family: Kollektif, var(--dm-font-sans, sans-serif);
 	font-size: 40px;
 	/* para un título de 3 palabras, 2 líneas, max-width ~44ch */
 	;
