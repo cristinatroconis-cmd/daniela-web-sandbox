@@ -1,6 +1,6 @@
 # Architecture Notes — Daniela Montes Psicóloga (Sandbox)
 
-**Última actualización:** 2026-04-08  
+**Última actualización:** 2026-04-10  
 Este documento complementa `ARCHITECTURE.md` (no lo reemplaza).  
 Aquí queda el "qué está implementado", el "por qué" de las decisiones y el backlog inmediato.
 
@@ -93,8 +93,16 @@ Una sola "fuente de verdad" para gating:
 
 - ✅ Botones WooCommerce nativos del mini-cart eliminados vía `wp_loaded` (cubre peticiones AJAX de fragmentos).
 - ✅ CSS safety-net: `#dm-cart-drawer .woocommerce-mini-cart__buttons { display: none !important; }`.
-- ✅ Botón "Seguir comprando" (cierra drawer, permanece en página actual) reemplaza "Ver carrito".
+- ✅ CTAs unificados: **"Seguir comprando"** (cierra drawer, permanece en página actual) + **"Finalizar compra"** (checkout).
 - **Referencia:** `ARCHITECTURE.md` §22.
+
+### 3.10 WooCommerce front-end / checkout polish (2026-04-10)
+
+- ✅ `assets/css/woocommerce.css` hereda tokens del child theme y reutiliza `--dm-necesitas-pad-y` para dar continuidad visual entre Home y WooCommerce.
+- ✅ Botones, formularios, tarjetas y notices de WooCommerce ya usan el lenguaje visual de `style.css`.
+- ✅ `inc/woocommerce-checkout.php` fuerza al español los strings visibles más comunes (`Checkout`, `Place order`, `Billing details`, etc.) vía `gettext`.
+- ✅ `inc/newsletter-optin.php` renderiza el opt-in GDPR en checkout con guard anti-duplicado (`static $rendered`).
+- ✅ Checkout / carrito / mi cuenta usan padding interno consistente mediante `--dm-woo-box-pad`.
 
 ---
 
@@ -217,8 +225,8 @@ Antes de tocar cualquier grid o tarjeta, responde estas preguntas:
   - `/servicios/?tipo=sesiones`, `/servicios/?tipo=paquetes`, `/servicios/?tipo=membresias`, `/servicios/?tipo=supervisiones`
 
 ### 4.3 Optimización checkout
-- Revisar scripts que cargan en `/checkout/` (Elementor, Slider Revolution, etc.).
-- Objetivo: reducir tiempo de carga y fricción en la página de pago.
+- **Ya implementado:** capa visual base, traducción al español y checkbox de newsletter en checkout.
+- **Pendiente:** revisar scripts que cargan en `/checkout/` (Elementor, Slider Revolution, etc.) para reducir peso/performance.
 - No tocar WooCommerce core; solo deshabilitar assets innecesarios vía hooks en `functions.php`.
 
 ### 4.4 Auditar gating Tutor vs Memberships

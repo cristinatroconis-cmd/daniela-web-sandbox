@@ -1,7 +1,7 @@
 # WooCommerce — Overrides del child theme
 
 **Proyecto:** Daniela Montes Psicóloga  
-**Última actualización:** 2026-04-08
+**Última actualización:** 2026-04-10
 
 ---
 
@@ -119,6 +119,29 @@ Abre `assets/css/woocommerce.css` y añade tus reglas CSS dentro de la sección
 correspondiente (carrito, checkout, tienda, etc.). El archivo tiene comentarios
 de sección para orientarte. Usa selectores con prefijo `.woocommerce` o
 `body.woocommerce-cart` etc. para limitar el alcance y evitar conflictos.
+
+### Estado actual del CSS WooCommerce (2026-04-10)
+
+El archivo ya cubre estas decisiones base:
+
+| Área | Comportamiento actual |
+|---|---|
+| Tipografía / color | hereda tokens del child theme (`--dm-color-*`) |
+| Espaciado vertical | reutiliza `--dm-necesitas-pad-y` desde Home para que WooCommerce no se vea “pegado” |
+| Botones / inputs | usan el mismo lenguaje visual del child theme |
+| Carrito / checkout / mi cuenta | cajas con padding interno consistente (`--dm-woo-box-pad`) |
+| Newsletter opt-in | `.dm-newsletter-optin` se estiliza dentro del checkout |
+
+### Checkout, localización y opt-in
+
+Además del CSS, la UX WooCommerce del child theme hoy depende de estos archivos:
+
+| Archivo | Función |
+|---|---|
+| `inc/woocommerce-checkout.php` | fuerza al español textos visibles clave de WooCommerce (`Checkout`, `Place order`, `Billing details`, etc.) |
+| `inc/newsletter-optin.php` | añade el checkbox GDPR de newsletter en checkout y guarda el consentimiento en el pedido |
+| `inc/cart-drawer.php` | unifica CTAs del mini-cart a **“Seguir comprando”** y **“Finalizar compra”** |
+| `js/add-to-cart-popup.js` | mantiene el mismo copy “Finalizar compra” en el popup fallback |
 
 ---
 

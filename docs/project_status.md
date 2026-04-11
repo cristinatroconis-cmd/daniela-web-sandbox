@@ -1,6 +1,6 @@
 # Daniela Montes Psicóloga — Project Status (Sandbox)
 
-**Última actualización:** 2026-04-08  
+**Última actualización:** 2026-04-10  
 **Repo:** `cristinatroconis-cmd/daniela-web-sandbox`  
 **Producción (referencia):** https://danielamontespsic.com/ (rocket.net)  
 **Modo de trabajo:** sandbox / aislado — NO tocar producción directo.
@@ -109,6 +109,13 @@ Todos en `wp-content/themes/daniela-child/`:
 - ✅ **`dm_email_cta_block()`** — bloque CTA de descarga directa (guest-friendly) en `woocommerce_email_after_order_table`.
 - ✅ Defaults de opciones WooCommerce email no destructivos (respeta configuración admin existente).
 
+### 3.9 WooCommerce front-end / checkout polish (2026-04-10)
+- ✅ `assets/css/woocommerce.css` ya hereda el sistema visual del child theme (tipografía, botones, formularios, notices, cards de producto).
+- ✅ Espaciado vertical sincronizado con Home vía `--dm-necesitas-pad-y` + padding interno `--dm-woo-box-pad` para carrito, checkout y mi cuenta.
+- ✅ `inc/woocommerce-checkout.php` fuerza al español los textos visibles clave de WooCommerce mediante filtro `gettext`.
+- ✅ `inc/newsletter-optin.php` renderiza el checkbox GDPR de newsletter en checkout con guard anti-duplicado.
+- ✅ Copy unificado en CTAs del drawer/popup: **“Seguir comprando”** y **“Finalizar compra”**.
+
 ---
 
 ## 4) Backlog inmediato 🔲
@@ -129,8 +136,8 @@ Todos en `wp-content/themes/daniela-child/`:
   Decidir si se agrega "Ir al curso" en la thank-you page de WooCommerce.
 
 ### Prioridad baja / futuro
-- [ ] **UX checkout** — reducir fricción en `/checkout/`: deshabilitar scripts innecesarios (Elementor, Slider Revolution, etc.) vía hooks en `functions.php`
-- [ ] **Sección "¿Qué necesitas?" en HOME** — grid de 4 tarjetas de orientación al usuario
+- [ ] **UX checkout — fase 2 (performance)** — la capa visual, la localización al español y el newsletter opt-in ya están implementados; pendiente auditar y deshabilitar scripts innecesarios (Elementor, Slider Revolution, etc.) vía hooks en `functions.php`
+- [ ] **Home “¿Qué necesitas?” — fase 2** — revisar copy, orden de slides y QA responsive del bloque/carousel ya implementado
 - [ ] **Email automation** — integración MailerLite post-compra
 - [ ] **Flush de rewrite rules** tras activar CPTs en entorno nuevo  
   `WP Admin → Ajustes → Enlaces permanentes → Guardar cambios` (o `wp rewrite flush` con WP-CLI)
@@ -191,6 +198,8 @@ wp-content/themes/daniela-child/
 │   ├── shortcodes-servicios.php    # Shortcodes para páginas de Servicios
 │   ├── email-tokens.php            # Extrae tokens CSS para emails
 │   ├── woocommerce-emails.php      # Personalización emails WooCommerce (CSS, asuntos, CTA)
+│   ├── woocommerce-checkout.php    # Redirects / UX del checkout + traducciones gettext
+│   ├── newsletter-optin.php        # Checkbox GDPR en checkout + integración MailerLite
 │   ├── cart-drawer.php             # Drawer del carrito; elimina botones WC nativos vía wp_loaded
 │   └── ...                         # Otros módulos (assets, header, checkout, etc.)
 ├── archive-dm_escuela.php          # Template archive /escuela/

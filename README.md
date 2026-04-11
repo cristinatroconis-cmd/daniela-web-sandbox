@@ -100,32 +100,31 @@ Cada cambio debe mejorar al menos uno de estos puntos:
 
 ---
 
-## Arquitectura actual de la HOME (dirección deseada)
+## Arquitectura actual de la HOME (implementada)
 
 HOME
 
-- Meet Dani (se mantiene igual)
-- ¿Qué necesitas? (nueva sección de orientación)
-  - PDF Handouts
-  - Cursos
-  - Talleres
-  - Programas
-- Reviews (se mantiene igual)
-- Newsletter (se mantiene igual)
+- Meet Dani
+- ¿Qué necesitas? (**bloque editorial + carousel propio**)
+- Reviews
+- Newsletter
 
 ---
 
-## Nueva sección: ¿Qué necesitas?
+## Sección “¿Qué necesitas?”
 
-Objetivo: guiar rápidamente al usuario al tipo de recurso que busca.
+Objetivo: orientar rápidamente al usuario hacia la oferta correcta.
 
-Se implementará como un **grid de 4 tarjetas con CTA**.
+Implementación actual:
+- CSS: `wp-content/themes/daniela-child/assets/css/home-necesitas.css`
+- JS: `wp-content/themes/daniela-child/assets/js/home-necesitas-carousel.js`
+- tokens de espaciado compartidos con WooCommerce (`--dm-necesitas-pad-y`)
 
-Cada tarjeta contendrá:
+Cada slide puede contener:
 - título
-- descripción corta
-- botón CTA
-- enlace a categoría WooCommerce
+- texto breve
+- CTA
+- enlace al destino correspondiente
 
 ---
 
@@ -137,6 +136,17 @@ Siempre que se agregue código:
 3. Mantener comentarios en el código
 4. Evitar duplicación de lógica
 5. Priorizar rendimiento
+
+---
+
+## Estado reciente — WooCommerce (2026-04-10)
+
+Cambios ya aplicados en el child theme:
+- `assets/css/woocommerce.css` hereda la estética del child theme (tipografía, botones, formularios, tarjetas y notices)
+- WooCommerce reutiliza el padding vertical de Home vía `--dm-necesitas-pad-y`
+- `inc/woocommerce-checkout.php` fuerza al español los textos visibles más importantes de WooCommerce
+- `inc/newsletter-optin.php` muestra el checkbox GDPR de newsletter en checkout sin duplicarlo
+- el cart drawer y el popup de add-to-cart usan el copy unificado **“Seguir comprando”** / **“Finalizar compra”**
 
 ---
 

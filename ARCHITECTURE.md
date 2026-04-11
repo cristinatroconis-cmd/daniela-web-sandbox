@@ -215,18 +215,19 @@ El usuario debe entender rápidamente qué comprar.
 
 # 5. Arquitectura de la HOME
 
-La home no debe ser un blog.
+La home no debe funcionar como blog.
 
 Debe funcionar como **página de orientación de producto**.
 
-Estructura:
-Meet Dani
+Estructura implementada:
+- Meet Dani
+- ¿Qué necesitas?
+- Reviews
+- Newsletter
 
-¿Qué necesitas?
-
-Reviews
-
-Newsletter
+La sección “¿Qué necesitas?” vive como bloque propio del child theme y se apoya en:
+- `assets/css/home-necesitas.css`
+- `assets/js/home-necesitas-carousel.js`
 
 ---
 
@@ -234,11 +235,13 @@ Newsletter
 
 Esta sección funciona como **sistema de orientación del usuario**.
 
-El visitante elige entre:
+El visitante puede dirigirse rápidamente a:
 
 - Recursos
 - Escuela (Cursos / Talleres / Programas)
 - Servicios (Sesiones / Paquetes / Membresías / Supervisiones)
+
+Además, sus tokens de espaciado (`--dm-necesitas-pad-y`) se reutilizan en WooCommerce para mantener continuidad visual entre Home y checkout.
 
 Esto reduce:
 
@@ -801,9 +804,9 @@ add_action( 'wp_loaded', function () {
 
 El footer del drawer tiene dos CTAs:
 1. `<button id="dm-cart-drawer-continue" class="dm-btn dm-btn--ghost">Seguir comprando</button>` — cierra el drawer, permanece en la página actual.
-2. `<a href="<?php echo esc_url( wc_get_checkout_url() ); ?>">Checkout</a>` — navega al checkout.
+2. `<a href="<?php echo esc_url( wc_get_checkout_url() ); ?>">Finalizar compra</a>` — navega al checkout.
 
-**Decisión UX:** se reemplazó el anterior enlace "Ver carrito" (que llevaba a `/carrito/`) por "Seguir comprando". El objetivo es reducir interrupciones en el funnel de compra: el usuario puede seguir añadiendo productos al carrito sin abandonar la página en la que está.
+**Decisión UX:** se reemplazó el anterior enlace "Ver carrito" (que llevaba a `/carrito/`) por "Seguir comprando", y el CTA final se normalizó a **"Finalizar compra"**. El objetivo es reducir interrupciones en el funnel de compra: el usuario puede seguir añadiendo productos al carrito sin abandonar la página en la que está.
 
 **JS** (`js/cart-drawer.js`): `$('#dm-cart-drawer-continue').on('click', closeDrawer)`.
 
@@ -846,3 +849,30 @@ $show_cta = $is_free || ( $product->is_purchasable() && $product->is_in_stock() 
 - Productos gratuitos: siempre muestran el CTA (precio = $0 → siempre disponible).
 - Productos de pago: solo muestran el CTA si son comprables **y** están en stock.
 - Productos no comprables y sin precio (ej. borradores, productos descontinuados): no renderizan botón.
+
+---
+
+# 24. Capa UX de WooCommerce (2026-04-10)
+
+## Archivos implicados
+
+| Archivo | Responsabilidad |
+|---|---|
+| `wp-content/themes/daniela-child/assets/css/woocommerce.css` | Hereda la estética del child theme en páginas WooCommerce (botones, formularios, tarjetas, notices, carrito, checkout y mi cuenta) |
+| `wp-content/themes/daniela-child/inc/woocommerce-checkout.php` | Traducción forzada al español de los textos visibles más comunes de WooCommerce (`gettext`) y lógica auxiliar del checkout |
+| `wp-content/themes/daniela-child/inc/newsletter-optin.php` | Checkbox GDPR de newsletter en checkout + persistencia del consentimiento |
+| `wp-content/themes/daniela-child/inc/cart-drawer.php` | Drawer lateral con CTAs “Seguir comprando” / “Finalizar compra” |
+
+## Decisiones implementadas
+
+- El CSS de WooCommerce reutiliza `--dm-necesitas-pad-y` (definido en Home) para mantener un espaciado vertical consistente entre Home, carrito y checkout.
+- Los contenedores de carrito / checkout / mi cuenta usan `--dm-woo-box-pad` para dar aire interno sin tocar el layout base del parent theme.
+- Los strings visibles más importantes (`Checkout`, `Place order`, `Billing details`, etc.) se fuerzan al español desde el child theme para evitar mezcla de idiomas en frontend y emails.
+- El opt-in de newsletter se renderiza en checkout con guard anti-duplicado (`static $rendered = false`) para asegurar visibilidad sin repetir el campo.
+
+## Regla de mantenimiento
+
+Cualquier ajuste futuro de la UX WooCommerce debe documentarse primero en:
+- `docs/project_status.md`
+- `docs/ARCHITECTURE_NOTES.md`
+- `docs/woocommerce-overrides.md`

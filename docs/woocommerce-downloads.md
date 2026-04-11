@@ -1,7 +1,7 @@
 # Flujo de Descargas — Guía de Referencia
 
 **Proyecto:** Daniela Montes Psicóloga  
-**Última actualización:** 2026-04-08
+**Última actualización:** 2026-04-10
 
 ---
 
@@ -15,6 +15,8 @@ El sitio tiene **dos flujos de descarga completamente separados e independientes
 | **Freebie tokenizado** | Productos gratuitos (precio = $0) | Token hex + tabla `dm_freebie_tokens` | `inc/freebie-download.php`, `inc/freebie-delivery.php` |
 
 Ninguno de los dos flujos interfiere con el otro. El flujo freebie **no se ejecuta en el proceso de compra normal** (checkout, pago, emails de WooCommerce).
+
+> **Nota 2026-04-10:** el checkout de productos de pago ya muestra el checkbox GDPR de newsletter vía `inc/newsletter-optin.php`. El flujo freebie reutiliza la misma infraestructura de consentimiento / suscripción; no se duplica lógica.
 
 ---
 
