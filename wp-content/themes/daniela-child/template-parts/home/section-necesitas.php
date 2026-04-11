@@ -63,6 +63,21 @@ $slides = [
 <section
 	class="dm-necesitas"
 	aria-labelledby="dm-necesitas-title">
+
+	<!-- Decoración de fondo — no afecta layout ni interacción -->
+	<img
+		class="dm-necesitas__decor dm-necesitas__decor--left"
+		src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/img/decor-dm/destellos-verde.svg' ); ?>"
+		alt=""
+		aria-hidden="true"
+		loading="lazy">
+	<img
+		class="dm-necesitas__decor dm-necesitas__decor--bottom"
+		src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/img/decor-dm/contorno-organico-verde.svg' ); ?>"
+		alt=""
+		aria-hidden="true"
+		loading="lazy">
+
 	<div class="dm-necesitas__inner">
 
 		<!-- ── Columna izquierda ───────────────────────────────────────── -->
