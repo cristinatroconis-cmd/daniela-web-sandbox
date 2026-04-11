@@ -40,6 +40,36 @@
 }
 
 /* ==========================================================================
+   Decoración de fondo (SVG absolutamente posicionados)
+   ========================================================================== */
+
+/* Base: los dos elementos comparten estas reglas */
+.dm-necesitas__decor {
+	position: absolute;
+	pointer-events: none;
+	user-select: none;
+	height: auto;
+	opacity: 0.55;
+}
+
+/* destellos-verde.svg → centro lateral izquierdo */
+.dm-necesitas__decor--left {
+	left: -60px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 190px;
+}
+
+/* contorno-organico-verde.svg → centro inferior */
+.dm-necesitas__decor--bottom {
+	bottom: -50px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 340px;
+	opacity: 0.45;
+}
+
+/* ==========================================================================
    Columna izquierda
    ========================================================================== */
 .dm-necesitas__left {
@@ -340,6 +370,16 @@
 	.dm-necesitas__image {
 		max-width: 100%;
 	}
+
+	.dm-necesitas__decor--left {
+		width: 130px;
+		left: -40px;
+	}
+
+	.dm-necesitas__decor--bottom {
+		width: 240px;
+		bottom: -35px;
+	}
 }
 
 @media (max-width: 480px) {
@@ -360,5 +400,15 @@
 	.dm-carousel__dots {
 		left: 12px;
 		bottom: 14px;
+	}
+
+	.dm-necesitas__decor--left {
+		width: 90px;
+		left: -28px;
+	}
+
+	.dm-necesitas__decor--bottom {
+		width: 180px;
+		bottom: -25px;
 	}
 }
