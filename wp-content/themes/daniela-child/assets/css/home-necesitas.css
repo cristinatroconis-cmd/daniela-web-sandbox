@@ -43,7 +43,6 @@
    Columna izquierda
    ========================================================================== */
 .dm-necesitas__left {
-	background-image: url("http://dani-backup.local/wp-content/uploads/2024/05/dani_estrella.png");
 	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
@@ -193,7 +192,7 @@
 
 .dm-carousel__slide-title {
 	margin: 0 0 10px;
-	font-family: Kollektif, var(--dm-font-sans, sans-serif);
+	font-family: IBM Plex Sans;
 	font-size: 40px;
 	/* para un título de 3 palabras, 2 líneas, max-width ~44ch */
 	;

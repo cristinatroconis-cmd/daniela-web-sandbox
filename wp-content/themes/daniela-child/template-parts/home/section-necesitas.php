@@ -54,7 +54,7 @@ $slides = [
 		'title'  => 'No sé bien qué necesito',
 		'text'   => 'Cuéntame que estás sintiendo y encuentra lo que mejor encaja.',
 		'url'    => '/temas/',
-		'bg'     => '#2cb5ae',
+		'bg'     => '#c97f72',
 		'image'  => 'http://dani-backup.local/wp-content/uploads/2023/08/dani_consultoria3.png', // pon aquí una URL si quieres fijar imagen desde código
 		'image_alt' => 'Icono de orientación',
 	],
