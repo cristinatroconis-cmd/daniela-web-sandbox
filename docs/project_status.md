@@ -124,6 +124,13 @@ Todos en `wp-content/themes/daniela-child/`:
 - [ ] **Sanitizar excerpt en el grid** (`dm_cpt_render_grid` en `inc/helpers-cpt.php`)  
   Algunos excerpts traen HTML/CTAs antiguos. Usar `wp_strip_all_tags()` antes de `wp_trim_words()`.
 
+- [ ] **Saneamiento canónico de Tutor/Tutor Pro (post-incidente)**  
+  Mantener Tutor funcionando como está por ahora, pero planificar ventana técnica para:
+  1. reemplazar `tutor` y `tutor-pro` por paquetes oficiales/verificados,
+  2. comparar checksums/archivos locales modificados,
+  3. retirar cualquier parche temporal de bootstrap si ya no es necesario,
+  4. validar QA completo (front, admin, checkout, cursos, lecciones, quizzes).
+
 ### Prioridad media
 - [ ] **Subitems hover en menú principal**  
   Agregar subitems en WP Admin → Apariencia → Menús:
