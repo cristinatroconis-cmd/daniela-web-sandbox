@@ -291,7 +291,7 @@ add_action('add_meta_boxes', function () {
 				style="width:100%;margin-top:4px;"
 				placeholder="/courses/tumenteencalma/" />
 		</p>
-	<?php
+		<?php
 		},
 		'dm_escuela',
 		'side',
@@ -325,6 +325,176 @@ add_action('save_post', function ($post_id) {
 	} else {
 		delete_post_meta($post_id, '_dm_tutor_course_url');
 	}
+});
+
+// =============================================================================
+// METABOX — Imagen Hero para Singles (dm_recurso, dm_escuela, dm_servicio)
+// =============================================================================
+
+add_action('add_meta_boxes', function () {
+	$post_types = ['dm_recurso', 'dm_escuela', 'dm_servicio'];
+	foreach ($post_types as $pt) {
+		add_meta_box(
+			'dm_single_hero_image',
+			__('Imagen Hero del single', 'daniela-child'),
+			function ($post) {
+				$value = (string) get_post_meta($post->ID, '_dm_single_hero_image_url', true);
+				wp_nonce_field('dm_single_hero_image_save', 'dm_single_hero_image_nonce');
+		?>
+			<p>
+				<label for="dm_single_hero_image_url_field">
+					<?php esc_html_e('URL de imagen vertical para el single (opcional):', 'daniela-child'); ?>
+				</label>
+				<input
+					type="url"
+					id="dm_single_hero_image_url_field"
+					name="dm_single_hero_image_url_field"
+					value="<?php echo esc_attr($value); ?>"
+					style="width:100%;margin-top:4px;"
+					placeholder="https://.../imagen-vertical.jpg" />
+			</p>
+			<p class="description" style="font-size:11px;">
+				<?php esc_html_e('Si se completa, esta imagen reemplaza la destacada solo en el template single del CPT.', 'daniela-child'); ?>
+			</p>
+	<?php
+			},
+			$pt,
+			'side',
+			'default'
+		);
+	}
+});
+
+add_action('save_post', function ($post_id) {
+	if (
+		! isset($_POST['dm_single_hero_image_nonce']) ||
+		! wp_verify_nonce(sanitize_key($_POST['dm_single_hero_image_nonce']), 'dm_single_hero_image_save')
+	) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (! current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	$cpt_types = ['dm_recurso', 'dm_escuela', 'dm_servicio'];
+	if (! in_array(get_post_type($post_id), $cpt_types, true)) {
+		return;
+	}
+
+	$url = isset($_POST['dm_single_hero_image_url_field'])
+		? esc_url_raw(trim((string) wp_unslash($_POST['dm_single_hero_image_url_field'])))
+		: '';
+
+	if ($url !== '') {
+		update_post_meta($post_id, '_dm_single_hero_image_url', $url);
+	} else {
+		delete_post_meta($post_id, '_dm_single_hero_image_url');
+	}
+});
+
+// =============================================================================
+// HELPERS — Escuela permalink puente hacia Tutor LMS
+// =============================================================================
+
+/**
+ * Devuelve la URL Tutor vinculada a un producto WooCommerce de Escuela.
+ *
+ * @param int $product_id Product ID.
+ * @return string
+ */
+function dm_get_tutor_url_for_escuela_product($product_id)
+{
+	$product_id = absint($product_id);
+	if ($product_id <= 0) {
+		return '';
+	}
+
+	$posts = get_posts([
+		'post_type'      => 'dm_escuela',
+		'post_status'    => 'publish',
+		'posts_per_page' => 1,
+		'fields'         => 'ids',
+		'meta_query'     => [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+			[
+				'key'   => '_dm_wc_product_id',
+				'value' => (string) $product_id,
+			],
+		],
+	]);
+
+	if (empty($posts)) {
+		return '';
+	}
+
+	$tutor_url = trim((string) get_post_meta((int) $posts[0], '_dm_tutor_course_url', true));
+	if ($tutor_url === '') {
+		return '';
+	}
+
+	if (preg_match('#^https?://#i', $tutor_url)) {
+		return esc_url_raw($tutor_url);
+	}
+
+	return esc_url_raw(home_url('/' . ltrim($tutor_url, '/')));
+}
+
+add_action('init', function () {
+	add_rewrite_rule(
+		'^escuela/curso/([^/]+)/?$',
+		'index.php?dm_escuela_curso=$matches[1]',
+		'top'
+	);
+});
+
+add_filter('query_vars', function ($vars) {
+	$vars[] = 'dm_escuela_curso';
+	return $vars;
+});
+
+add_filter('post_type_link', function ($permalink, $post) {
+	if (! $post instanceof WP_Post || 'product' !== $post->post_type) {
+		return $permalink;
+	}
+
+	if (! has_term(['cursos', 'talleres', 'programas'], 'product_cat', $post)) {
+		return $permalink;
+	}
+
+	$tutor_url = dm_get_tutor_url_for_escuela_product((int) $post->ID);
+	if ($tutor_url === '') {
+		return $permalink;
+	}
+
+	return home_url('/escuela/curso/' . $post->post_name . '/');
+}, 20, 2);
+
+add_action('template_redirect', function () {
+	$course_slug = get_query_var('dm_escuela_curso');
+	if (! $course_slug) {
+		return;
+	}
+
+	$product = get_page_by_path(sanitize_title((string) $course_slug), OBJECT, 'product');
+	if (! $product instanceof WP_Post) {
+		global $wp_query;
+		$wp_query->set_404();
+		status_header(404);
+		return;
+	}
+
+	$tutor_url = dm_get_tutor_url_for_escuela_product((int) $product->ID);
+	if ($tutor_url === '') {
+		wp_safe_redirect(get_permalink((int) $product->ID), 302);
+		exit;
+	}
+
+	wp_safe_redirect($tutor_url, 301);
+	exit;
 });
 
 // =============================================================================

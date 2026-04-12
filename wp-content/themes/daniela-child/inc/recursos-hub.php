@@ -13,8 +13,7 @@
  *   - topic: product_tag slug(s)   (?dm_topic=ansiedad)
  *
  * No gratis/pagos type filter — navigation is by topic only (per UX requirement).
- * Gratis CTA: "Recíbelo por email" via _dm_email_landing_url meta or freebie delivery endpoint.
- * Pagos CTA: "Comprar y descargar" → WooCommerce add-to-cart.
+ * CTA gratis/pagos: "Agregar al carrito" para continuar por checkout WooCommerce.
  *
  * Progressive enhancement: filters work via querystring (?dm_topic=ansiedad)
  * AND via JS (no full page reload) when JS is available.
@@ -184,8 +183,8 @@ function dm_recursos_shortcode($atts)
  * Render a single product card.
  *
  * CTA logic:
- *  - Price 0 (gratis): "Recíbelo por email" → _dm_email_landing_url meta or freebie endpoint.
- *  - Price > 0 (pago): "Comprar y descargar" → WooCommerce add-to-cart URL.
+ *  - Price 0 (gratis): "Agregar al carrito" → checkout (sin pago si el carrito es solo gratis).
+ *  - Price > 0 (pago): "Agregar al carrito" → checkout normal.
  *
  * @param WC_Product $product WooCommerce product object.
  */
@@ -196,13 +195,6 @@ function dm_recursos_render_card(WC_Product $product)
 	// Determine gratis/pago by price.
 	$price     = (float) $product->get_price();
 	$is_gratis = ($price <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
-
-	// Per-product custom email landing page URL (optional meta).
-	// Fallback: freebie delivery endpoint (handles email capture + download limit).
-	$email_url = get_post_meta($product_id, '_dm_email_landing_url', true);
-	if (empty($email_url)) {
-		$email_url = add_query_arg('product_id', $product_id, home_url('/recursos/recibir/'));
-	}
 
 	$product_url = get_permalink($product_id);
 	$add_to_cart = esc_url($product->add_to_cart_url());

@@ -951,14 +951,15 @@ input[type="reset"],
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	height: 100%;
 }
 
 .dm-single__thumbnail {
 	width: 100%;
+	height: clamp(460px, 72vh, 820px);
 	border-radius: var(--dm-radius);
 	overflow: hidden;
-	aspect-ratio: var(--dm-card-thumb-ratio);
-	/* 16 : 9 — matches cards */
+	aspect-ratio: auto;
 	background: var(--dm-card-thumb-bg);
 }
 
@@ -967,6 +968,53 @@ input[type="reset"],
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
+}
+
+.dm-checkout-freebie-note {
+	margin: 1rem 0 0.5rem;
+	padding: 0.95rem 1rem;
+	border: 1px solid var(--dm-color-border);
+	border-left: 4px solid var(--dm-color-primary);
+	border-radius: var(--dm-radius);
+	background: rgba(124, 107, 142, 0.06);
+	color: var(--dm-color-text);
+	font-size: 0.92rem;
+	line-height: 1.5;
+}
+
+/* Tutor LMS pages inherit the same decorative shell used by singles. */
+body.single-courses .site-main,
+body.single-course .site-main,
+body.single-tutor_course .site-main,
+body.single-courses .tutor-wrap,
+body.single-course .tutor-wrap,
+body.single-tutor_course .tutor-wrap,
+body.single-courses .tutor-course-single-content-wrapper,
+body.single-course .tutor-course-single-content-wrapper,
+body.single-tutor_course .tutor-course-single-content-wrapper {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding-left: 1.25rem;
+	padding-right: 1.25rem;
+}
+
+body.single-courses .tutor-course-single-content-wrapper,
+body.single-course .tutor-course-single-content-wrapper,
+body.single-tutor_course .tutor-course-single-content-wrapper,
+body.single-courses .tutor-course-details-page,
+body.single-course .tutor-course-details-page,
+body.single-tutor_course .tutor-course-details-page {
+	background: var(--dm-color-bg-card);
+	border: 1px solid var(--dm-color-border);
+	border-radius: var(--dm-radius);
+	box-shadow: var(--dm-shadow);
+	padding: clamp(1rem, 2.2vw, 2rem);
+}
+
+body.single-courses,
+body.single-course,
+body.single-tutor_course {
+	background: var(--dm-color-bg);
 }
 
 /* Right column: title, description, actions, footer */
@@ -1045,6 +1093,10 @@ input[type="reset"],
 	.dm-single__layout {
 		grid-template-columns: 1fr;
 		gap: 1.5rem;
+	}
+
+	.dm-single__thumbnail {
+		height: clamp(320px, 56vh, 560px);
 	}
 }
 

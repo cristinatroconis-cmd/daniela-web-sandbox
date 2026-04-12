@@ -17,13 +17,21 @@ while (have_posts()) :
 	<main id="main" class="site-main dm-single dm-single--escuela">
 
 		<article id="post-<?php the_ID(); ?>" <?php post_class('dm-single__article'); ?>>
+			<?php
+			$hero_image_url = trim((string) get_post_meta(get_the_ID(), '_dm_single_hero_image_url', true));
+			$has_hero_image = ($hero_image_url !== '') || has_post_thumbnail();
+			?>
 
-			<div class="dm-single__layout<?php echo has_post_thumbnail() ? '' : ' dm-single__layout--no-image'; ?>">
+			<div class="dm-single__layout<?php echo $has_hero_image ? '' : ' dm-single__layout--no-image'; ?>">
 
-				<?php if (has_post_thumbnail()) : ?>
+				<?php if ($has_hero_image) : ?>
 					<div class="dm-single__media">
 						<div class="dm-single__thumbnail">
-							<?php the_post_thumbnail('large'); ?>
+							<?php if ($hero_image_url !== '') : ?>
+								<img src="<?php echo esc_url($hero_image_url); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" loading="lazy" />
+							<?php else : ?>
+								<?php the_post_thumbnail('large'); ?>
+							<?php endif; ?>
 						</div>
 					</div>
 				<?php endif; ?>

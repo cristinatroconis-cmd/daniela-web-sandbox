@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Single template — dm_servicio (Servicios CPT).
  *
@@ -9,20 +10,28 @@
 
 get_header();
 
-while ( have_posts() ) :
+while (have_posts()) :
 	the_post();
-	?>
+?>
 
 	<main id="main" class="site-main dm-single dm-single--servicio">
 
-		<article id="post-<?php the_ID(); ?>" <?php post_class( 'dm-single__article' ); ?>>
+		<article id="post-<?php the_ID(); ?>" <?php post_class('dm-single__article'); ?>>
+			<?php
+			$hero_image_url = trim((string) get_post_meta(get_the_ID(), '_dm_single_hero_image_url', true));
+			$has_hero_image = ($hero_image_url !== '') || has_post_thumbnail();
+			?>
 
-			<div class="dm-single__layout<?php echo has_post_thumbnail() ? '' : ' dm-single__layout--no-image'; ?>">
+			<div class="dm-single__layout<?php echo $has_hero_image ? '' : ' dm-single__layout--no-image'; ?>">
 
-				<?php if ( has_post_thumbnail() ) : ?>
+				<?php if ($has_hero_image) : ?>
 					<div class="dm-single__media">
 						<div class="dm-single__thumbnail">
-							<?php the_post_thumbnail( 'large' ); ?>
+							<?php if ($hero_image_url !== '') : ?>
+								<img src="<?php echo esc_url($hero_image_url); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" loading="lazy" />
+							<?php else : ?>
+								<?php the_post_thumbnail('large'); ?>
+							<?php endif; ?>
 						</div>
 					</div>
 				<?php endif; ?>
@@ -32,12 +41,12 @@ while ( have_posts() ) :
 					<header class="dm-single__header">
 						<?php
 						// Tipo (sesiones / membresias).
-						$tipos = get_the_terms( get_the_ID(), 'dm_tipo_servicio' );
-						if ( $tipos && ! is_wp_error( $tipos ) ) :
-							?>
+						$tipos = get_the_terms(get_the_ID(), 'dm_tipo_servicio');
+						if ($tipos && ! is_wp_error($tipos)) :
+						?>
 							<div class="dm-single__type">
-								<?php foreach ( $tipos as $tipo ) : ?>
-									<span class="dm-chip dm-chip--sm"><?php echo esc_html( $tipo->name ); ?></span>
+								<?php foreach ($tipos as $tipo) : ?>
+									<span class="dm-chip dm-chip--sm"><?php echo esc_html($tipo->name); ?></span>
 								<?php endforeach; ?>
 							</div>
 						<?php endif; ?>
@@ -51,18 +60,19 @@ while ( have_posts() ) :
 
 					<?php
 					$cta = dm_cpt_render_cta();
-					if ( $cta ) :
+					if ($cta) :
 					?>
-					<div class="dm-single__actions">
-						<aside class="dm-single__cta">
-							<?php echo $cta; // phpcs:ignore WordPress.Security.EscapeOutput ?>
-						</aside>
-					</div>
+						<div class="dm-single__actions">
+							<aside class="dm-single__cta">
+								<?php echo $cta; // phpcs:ignore WordPress.Security.EscapeOutput 
+								?>
+							</aside>
+						</div>
 					<?php endif; ?>
 
 					<footer class="dm-single__footer">
-						<a href="<?php echo esc_url( get_post_type_archive_link( 'dm_servicio' ) ); ?>" class="dm-btn dm-btn--ghost">
-							&larr; <?php esc_html_e( 'Volver a Servicios', 'daniela-child' ); ?>
+						<a href="<?php echo esc_url(get_post_type_archive_link('dm_servicio')); ?>" class="dm-btn dm-btn--ghost">
+							&larr; <?php esc_html_e('Volver a Servicios', 'daniela-child'); ?>
 						</a>
 					</footer>
 
@@ -74,7 +84,7 @@ while ( have_posts() ) :
 
 	</main>
 
-	<?php
+<?php
 endwhile;
 
 get_footer();

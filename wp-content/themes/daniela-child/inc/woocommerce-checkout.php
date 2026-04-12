@@ -10,6 +10,71 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * True cuando el carrito contiene al menos un recurso gratuito.
+ *
+ * @return bool
+ */
+function dm_cart_has_free_resource_item()
+{
+    if (! function_exists('WC') || ! WC()->cart) {
+        return false;
+    }
+
+    foreach (WC()->cart->get_cart() as $item) {
+        $product = isset($item['data']) && $item['data'] instanceof WC_Product ? $item['data'] : null;
+        if (! $product) {
+            continue;
+        }
+
+        $price = (float) $product->get_price();
+        if ($price <= 0.0 && has_term(array('recursos-gratis'), 'product_cat', $product->get_id())) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * True cuando el carrito contiene al menos un producto de pago (> 0).
+ *
+ * @return bool
+ */
+function dm_cart_has_paid_item()
+{
+    if (! function_exists('WC') || ! WC()->cart) {
+        return false;
+    }
+
+    foreach (WC()->cart->get_cart() as $item) {
+        $product = isset($item['data']) && $item['data'] instanceof WC_Product ? $item['data'] : null;
+        if (! $product) {
+            continue;
+        }
+
+        if ((float) $product->get_price() > 0.0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * True cuando el carrito tiene productos y todos son gratuitos.
+ *
+ * @return bool
+ */
+function dm_cart_is_only_free_items()
+{
+    if (! function_exists('WC') || ! WC()->cart || WC()->cart->is_empty()) {
+        return false;
+    }
+
+    return ! dm_cart_has_paid_item();
+}
+
 // =============================================================================
 // SINGLE PRODUCT — "VOLVER" LINK
 // =============================================================================
@@ -66,6 +131,75 @@ add_action('template_redirect', function () {
         exit;
     }
 });
+
+/**
+ * Si todo el carrito es gratis, WooCommerce no debe solicitar pago.
+ */
+add_filter('woocommerce_cart_needs_payment', function ($needs_payment, $cart) {
+    if (! $cart instanceof WC_Cart) {
+        return $needs_payment;
+    }
+
+    if ($cart->is_empty()) {
+        return $needs_payment;
+    }
+
+    return dm_cart_is_only_free_items() ? false : $needs_payment;
+}, 20, 2);
+
+/**
+ * Completa automáticamente pedidos sin pago (solo productos gratis).
+ */
+add_action('woocommerce_checkout_order_processed', function ($order_id) {
+    $order = wc_get_order($order_id);
+    if (! $order instanceof WC_Order) {
+        return;
+    }
+
+    if ((float) $order->get_total() > 0.0) {
+        return;
+    }
+
+    $has_paid = false;
+    foreach ($order->get_items('line_item') as $item) {
+        $product = $item->get_product();
+        if ($product && (float) $product->get_price() > 0.0) {
+            $has_paid = true;
+            break;
+        }
+    }
+
+    if (! $has_paid && $order->has_status(array('pending', 'on-hold', 'processing'))) {
+        $order->update_status(
+            'completed',
+            __('Pedido gratuito completado automáticamente para enviar enlaces de descarga por correo.', 'daniela-child')
+        );
+    }
+}, 20);
+
+/**
+ * Mensaje UX en checkout para pedidos con recursos gratis.
+ */
+add_action('woocommerce_review_order_before_submit', function () {
+    if (! is_checkout() || ! function_exists('WC') || ! WC()->cart || WC()->cart->is_empty()) {
+        return;
+    }
+
+    $has_free = dm_cart_has_free_resource_item();
+    if (! $has_free) {
+        return;
+    }
+
+    $has_paid = dm_cart_has_paid_item();
+    $message  = $has_paid
+        ? __('Tus recursos PDF gratuitos llegarán por correo junto con la confirmación de tu compra.', 'daniela-child')
+        : __('Este pedido no requiere pago. Al finalizar, recibirás tus recursos PDF gratuitos por correo.', 'daniela-child');
+
+    echo '<div class="dm-checkout-freebie-note" role="status" aria-live="polite">';
+    echo '<strong>' . esc_html__('Entrega por correo:', 'daniela-child') . '</strong> ';
+    echo esc_html($message);
+    echo '</div>';
+}, 15);
 
 // =============================================================================
 // CART REDIRECT — Evitar redirección a /tienda/ y al carrito tras agregar.
