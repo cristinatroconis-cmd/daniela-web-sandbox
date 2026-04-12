@@ -27,6 +27,25 @@
 	color: var(--dm-necesitas-text);
 }
 
+.dm-necesitas__decor {
+	position: absolute;
+	pointer-events: none;
+	user-select: none;
+	height: auto;
+}
+
+/* destellos-verde.svg → centro lateral izquierdo */
+.dm-necesitas__decor--left {
+	top: 30%;
+	width: 250px;
+}
+
+/* contorno-organico-verde.svg → centro inferior */
+.dm-necesitas__decor--bottom {
+	left: 40%;
+	width: 340px;
+}
+
 .dm-necesitas__inner {
 	max-width: 1200px;
 	margin: 0 auto;
@@ -37,36 +56,6 @@
 	align-items: center;
 
 	min-height: var(--dm-necesitas-min-height);
-}
-
-/* ==========================================================================
-   Decoración de fondo (SVG absolutamente posicionados)
-   ========================================================================== */
-
-/* Base: los dos elementos comparten estas reglas */
-.dm-necesitas__decor {
-	position: absolute;
-	pointer-events: none;
-	user-select: none;
-	height: auto;
-	opacity: 0.55;
-}
-
-/* destellos-verde.svg → centro lateral izquierdo */
-.dm-necesitas__decor--left {
-	left: -60px;
-	top: 50%;
-	transform: translateY(-50%);
-	width: 190px;
-}
-
-/* contorno-organico-verde.svg → centro inferior */
-.dm-necesitas__decor--bottom {
-	bottom: -50px;
-	left: 50%;
-	transform: translateX(-50%);
-	width: 340px;
-	opacity: 0.45;
 }
 
 /* ==========================================================================
