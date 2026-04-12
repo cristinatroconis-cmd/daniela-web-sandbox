@@ -19,6 +19,7 @@ $title     = '¿Dónde estás parada hoy?';
 $lead      = 'Elige el camino que mejor encaja con lo que estás viviendo ahora mismo.';
 $image_url = '';      // pon aquí una URL si quieres fijar imagen desde código
 $autoplay  = 4000;    // ms
+$uploads_base_url = untrailingslashit(home_url('/wp-content/uploads/2023/08'));
 
 /* --- Slides (hardcode) -------------------------------------------------- */
 $slides = [
@@ -28,7 +29,7 @@ $slides = [
 		'text'   => 'PDFs, guías y registros para trabajar hoy mismo, a tu ritmo.',
 		'url'    => '/recursos/',
 		'bg'     => '#ead2ac',
-		'image'  => 'http://dani-backup.local/wp-content/uploads/2023/08/dani_consultoria6.png', // pon aquí una URL si quieres fijar imagen desde código
+		'image'  => $uploads_base_url . '/dani_consultoria6.png',
 		'image_alt' => 'Icono de recursos descargables',
 	],
 	[
@@ -37,7 +38,7 @@ $slides = [
 		'text'   => 'Formación online a tu ritmo o en vivo, en comunidad.',
 		'url'    => '/escuela/',
 		'bg'     => '#ad8fb7',
-		'image'  => 'http://dani-backup.local/wp-content/uploads/2023/08/dani_consultoria5.png', // pon aquí una URL si quieres fijar imagen desde código
+		'image'  => $uploads_base_url . '/dani_consultoria5.png',
 		'image_alt' => 'Icono de formación online',
 	],
 	[
@@ -46,7 +47,7 @@ $slides = [
 		'text'   => 'Te ofrezco mis servicios de terapia.',
 		'url'    => '/servicios/',
 		'bg'     => '#eaefbd',
-		'image'  => 'http://dani-backup.local/wp-content/uploads/2023/08/dani_consultoria4.png', // pon aquí una URL si quieres fijar imagen desde código
+		'image'  => $uploads_base_url . '/dani_consultoria4.png',
 		'image_alt' => 'Icono de acompañamiento profesional',
 	],
 	[
@@ -55,7 +56,7 @@ $slides = [
 		'text'   => 'Cuéntame que estás sintiendo y encuentra lo que mejor encaja.',
 		'url'    => '/temas/',
 		'bg'     => '#c97f72',
-		'image'  => 'http://dani-backup.local/wp-content/uploads/2023/08/dani_consultoria3.png', // pon aquí una URL si quieres fijar imagen desde código
+		'image'  => $uploads_base_url . '/dani_consultoria3.png',
 		'image_alt' => 'Icono de orientación',
 	],
 ];
