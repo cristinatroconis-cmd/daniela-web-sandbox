@@ -1,12 +1,46 @@
 <?php
+
 /**
  * Product helpers — query, card, grid, and cache invalidation.
  *
  * @package Daniela_Child
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
     exit;
+}
+
+/**
+ * Return a robust add-to-cart URL for products.
+ *
+ * WooCommerce can return the single permalink for non-purchasable products,
+ * which breaks the desired flow for free resources. For free items we force a
+ * canonical ?add-to-cart=<id> URL.
+ *
+ * @param WC_Product $product Product object.
+ * @return string
+ */
+function dm_get_add_to_cart_url($product)
+{
+    if (! $product instanceof WC_Product) {
+        return '';
+    }
+
+    $url       = (string) $product->add_to_cart_url();
+    $price_raw = $product->get_price();
+    $is_free   = ($price_raw !== '' && (float) $price_raw <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
+
+    if (! $is_free) {
+        return $url;
+    }
+
+    $product_permalink = (string) get_permalink($product->get_id());
+    if ($url && trailingslashit($url) !== trailingslashit($product_permalink)) {
+        return $url;
+    }
+
+    // Force cart add endpoint for free resources even when purchasable=false.
+    return add_query_arg('add-to-cart', $product->get_id(), wc_get_cart_url());
 }
 
 /**
@@ -18,7 +52,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @param int             $per_page   -1 for all, positive integer for limit.
  * @return WP_Query
  */
-function dm_get_products( $cat_slugs, $tag_slug = '', $per_page = -1 ) {
+function dm_get_products($cat_slugs, $tag_slug = '', $per_page = -1)
+{
     $tax_query = [
         'relation' => 'AND',
         [
@@ -29,22 +64,22 @@ function dm_get_products( $cat_slugs, $tag_slug = '', $per_page = -1 ) {
         ],
     ];
 
-    if ( $tag_slug ) {
+    if ($tag_slug) {
         $tax_query[] = [
             'taxonomy' => 'product_tag',
             'field'    => 'slug',
-            'terms'    => [ $tag_slug ],
+            'terms'    => [$tag_slug],
         ];
     }
 
-    return new WP_Query( [
+    return new WP_Query([
         'post_type'      => 'product',
         'post_status'    => 'publish',
         'posts_per_page' => $per_page,
         'tax_query'      => $tax_query,
         'orderby'        => 'title',
         'order'          => 'ASC',
-    ] );
+    ]);
 }
 
 /**
@@ -55,51 +90,53 @@ function dm_get_products( $cat_slugs, $tag_slug = '', $per_page = -1 ) {
  *                             show a contextual "Volver" link.
  * @return string
  */
-function dm_render_product_card( $product, $back_url = '' ) {
-    if ( ! $product ) {
+function dm_render_product_card($product, $back_url = '')
+{
+    if (! $product) {
         return '';
     }
 
     $permalink = $back_url
-        ? add_query_arg( 'dm_back', rawurlencode( $back_url ), $product->get_permalink() )
+        ? add_query_arg('dm_back', rawurlencode($back_url), $product->get_permalink())
         : $product->get_permalink();
 
     $title     = $product->get_name();
     $excerpt   = $product->get_short_description();
     $price_raw = $product->get_price(); // '' = sin precio configurado, '0' = gratis explícito
-    $is_free   = ( $price_raw !== '' && (float) $price_raw <= 0.0 ); // phpcs:ignore WordPress.PHP.StrictComparisons
+    $is_free   = ($price_raw !== '' && (float) $price_raw <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
 
     ob_start();
-    ?>
+?>
     <article class="dm-card">
 
-        <?php if ( $product->get_image_id() ) : ?>
-        <a href="<?php echo esc_url( $permalink ); ?>" class="dm-card__image-link" tabindex="-1" aria-hidden="true">
-            <div class="dm-card__thumb">
-                <?php echo $product->get_image( 'woocommerce_thumbnail' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
-            </div>
-        </a>
+        <?php if ($product->get_image_id()) : ?>
+            <a href="<?php echo esc_url($permalink); ?>" class="dm-card__image-link" tabindex="-1" aria-hidden="true">
+                <div class="dm-card__thumb">
+                    <?php echo $product->get_image('woocommerce_thumbnail'); // phpcs:ignore WordPress.Security.EscapeOutput 
+                    ?>
+                </div>
+            </a>
         <?php endif; ?>
 
         <div class="dm-card__body">
             <h3 class="dm-card__title">
-                <a href="<?php echo esc_url( $permalink ); ?>"><?php echo esc_html( $title ); ?></a>
+                <a href="<?php echo esc_url($permalink); ?>"><?php echo esc_html($title); ?></a>
             </h3>
 
-            <?php if ( $excerpt ) : ?>
+            <?php if ($excerpt) : ?>
                 <p class="dm-card__excerpt">
-                    <?php echo wp_kses_post( wp_trim_words( $excerpt, 20 ) ); ?>
+                    <?php echo wp_kses_post(wp_trim_words($excerpt, 20)); ?>
                 </p>
             <?php endif; ?>
 
             <div class="dm-card__meta">
-                <?php if ( $is_free ) : ?>
+                <?php if ($is_free) : ?>
                     <span class="dm-badge dm-badge--free">
-                        <?php esc_html_e( 'Gratis', 'daniela-child' ); ?>
+                        <?php esc_html_e('Gratis', 'daniela-child'); ?>
                     </span>
                 <?php else : ?>
                     <span class="dm-badge dm-badge--paid">
-                        <?php echo wp_kses_post( $product->get_price_html() ); ?>
+                        <?php echo wp_kses_post($product->get_price_html()); ?>
                     </span>
                 <?php endif; ?>
             </div>
@@ -110,21 +147,21 @@ function dm_render_product_card( $product, $back_url = '' ) {
             $btn_class = $is_free ? 'dm-btn dm-btn--secondary' : 'dm-btn dm-btn--primary';
             // Para productos de pago: respetar is_purchasable/in_stock.
             // Para productos gratis (precio = '0'): mostrar siempre el CTA.
-            $show_cta  = $is_free || ( $product->is_purchasable() && $product->is_in_stock() );
-            if ( $show_cta ) :
+            $show_cta  = $is_free || ($product->is_purchasable() && $product->is_in_stock());
+            if ($show_cta) :
             ?>
-            <a href="<?php echo esc_url( $product->add_to_cart_url() ); ?>"
-               data-product_id="<?php echo esc_attr( $product->get_id() ); ?>"
-               data-product_sku="<?php echo esc_attr( $product->get_sku() ); ?>"
-               data-quantity="1"
-               class="button add_to_cart_button ajax_add_to_cart <?php echo esc_attr( $btn_class ); ?>">
-                <?php esc_html_e( 'Agregar al carrito', 'daniela-child' ); ?>
-            </a>
+                <a href="<?php echo esc_url(dm_get_add_to_cart_url($product)); ?>"
+                    data-product_id="<?php echo esc_attr($product->get_id()); ?>"
+                    data-product_sku="<?php echo esc_attr($product->get_sku()); ?>"
+                    data-quantity="1"
+                    class="button add_to_cart_button ajax_add_to_cart <?php echo esc_attr($btn_class); ?>">
+                    <?php esc_html_e('Agregar al carrito', 'daniela-child'); ?>
+                </a>
             <?php endif; ?>
         </div>
 
     </article>
-    <?php
+<?php
     return ob_get_clean();
 }
 
@@ -135,19 +172,20 @@ function dm_render_product_card( $product, $back_url = '' ) {
  * @param string   $back_url URL to pass as ?dm_back= on each card.
  * @return string
  */
-function dm_render_product_grid( $query, $back_url = '' ) {
-    if ( ! $query->have_posts() ) {
+function dm_render_product_grid($query, $back_url = '')
+{
+    if (! $query->have_posts()) {
         return '<p class="dm-no-results">' .
-               esc_html__( 'No hay productos disponibles.', 'daniela-child' ) .
-               '</p>';
+            esc_html__('No hay productos disponibles.', 'daniela-child') .
+            '</p>';
     }
 
     $html = '<div class="dm-grid">';
-    while ( $query->have_posts() ) {
+    while ($query->have_posts()) {
         $query->the_post();
-        $product = wc_get_product( get_the_ID() );
-        if ( $product ) {
-            $html .= dm_render_product_card( $product, $back_url );
+        $product = wc_get_product(get_the_ID());
+        if ($product) {
+            $html .= dm_render_product_card($product, $back_url);
         }
     }
     wp_reset_postdata();
@@ -164,10 +202,10 @@ function dm_render_product_grid( $query, $back_url = '' ) {
  * Clear the cached temas chips whenever a product is created or updated,
  * so tag counts and visibility stay accurate.
  */
-add_action( 'save_post_product', function () {
-    delete_transient( 'dm_recursos_temas_tags' );
-} );
+add_action('save_post_product', function () {
+    delete_transient('dm_recursos_temas_tags');
+});
 
-add_action( 'woocommerce_update_product', function () {
-    delete_transient( 'dm_recursos_temas_tags' );
-} );
+add_action('woocommerce_update_product', function () {
+    delete_transient('dm_recursos_temas_tags');
+});

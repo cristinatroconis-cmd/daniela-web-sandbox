@@ -248,7 +248,9 @@ function dm_cpt_render_cta($post_id = null)
 
 	$label     = __('Agregar al carrito', 'daniela-child');
 	$btn_class = 'dm-btn dm-btn--primary';
-	$url       = esc_url($product->add_to_cart_url());
+	$url       = function_exists('dm_get_add_to_cart_url')
+		? dm_get_add_to_cart_url($product)
+		: (string) $product->add_to_cart_url();
 
 	ob_start();
 ?>

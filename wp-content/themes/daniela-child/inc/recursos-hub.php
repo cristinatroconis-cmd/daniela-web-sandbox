@@ -197,7 +197,9 @@ function dm_recursos_render_card(WC_Product $product)
 	$is_gratis = ($price <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
 
 	$product_url = get_permalink($product_id);
-	$add_to_cart = esc_url($product->add_to_cart_url());
+	$add_to_cart = function_exists('dm_get_add_to_cart_url')
+		? dm_get_add_to_cart_url($product)
+		: (string) $product->add_to_cart_url();
 	$thumbnail_id  = $product->get_image_id();
 	$thumbnail_url = $thumbnail_id
 		? wp_get_attachment_image_url($thumbnail_id, 'woocommerce_thumbnail')
