@@ -92,3 +92,8 @@ add_filter('pre_wp_mail', function ($pre, $atts) {
 add_filter('woocommerce_webhook_should_deliver', function ($should_deliver, $webhook, $arg) {
     return false;
 }, 10, 3);
+
+// Disable checkout payment gateways on non-production to avoid real charges.
+add_filter('woocommerce_available_payment_gateways', function ($gateways) {
+    return array();
+}, 100);
