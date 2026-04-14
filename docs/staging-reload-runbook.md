@@ -112,6 +112,33 @@ If sections render without expected backgrounds, spacing, or other Elementor sty
    - run `wp elementor flush_css`
 4. Re-request the page and confirm the CSS file is regenerated and publicly reachable.
 
+## 6.2) Temporary wp-login bypass policy (staging only)
+If a temporary login bypass is added directly to `wp-login.php` in staging for emergency access:
+1. Treat it as temporary and high risk.
+2. Keep a timestamped backup of original `wp-login.php` before editing.
+3. Do not deploy that edited `wp-login.php` to production.
+4. Before promoting code/files to production, restore the original core `wp-login.php`.
+5. Remove any temporary bypass token, helper endpoints, or emergency admin accounts.
+
+## 6.3) Production freeze policy (active)
+Status as of 2026-04-14 on production (`https://danielamontespsic.com`):
+- `WP_ENVIRONMENT_TYPE=production`
+- `DISALLOW_FILE_EDIT=true`
+- `DISALLOW_FILE_MODS=true`
+- `AUTOMATIC_UPDATER_DISABLED=true`
+- `WP_AUTO_UPDATE_CORE=false`
+
+Operational effect:
+1. No direct plugin/theme/core installs or updates in production admin.
+2. No file editing from production admin.
+3. All code/plugin/theme changes must be validated in staging first.
+4. Promotion to production is explicit and controlled (post-QA + backup).
+
+If a temporary production unlock is needed for emergency maintenance:
+1. Create production backup first.
+2. Apply temporary unlock only for the shortest possible window.
+3. Re-enable freeze constants immediately after maintenance.
+
 ## 7) Rollback
 If validation fails:
 1. Re-deploy previous staging files backup
@@ -126,4 +153,5 @@ If validation fails:
 - Search-replace commands executed: replaced dani-backup.local and danielamontespsic.com variants with https://v2vvroh9bv-staging.onrocket.site in the live staging DB
 - Guardrails verification result: PASS; `blog_public=0`, `DISABLE_WP_CRON=true`, `WP_ENVIRONMENT_TYPE=staging`, `pre_wp_mail` filter present, Woo webhook filter present, payment gateway filter present, `X-Robots-Tag` noindex headers present
 - QA checklist result: home HTML clean from local/prod domains on live staging response; noindex headers confirmed; Elementor CSS delivery restored after fixing `wp-content/uploads` permissions and flushing CSS; representative uploads assets return HTTP 200; checkout side effects reduced by blocked mail/webhooks/payments and disabled cron; Tutor quickfix not explicitly re-tested in browser
+- Temporary access note: emergency staging-only login bypass was added to `wp-login.php` and must be removed/restored before any production promotion.
 - Final status (DONE/BLOCKED): DONE

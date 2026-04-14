@@ -1,9 +1,9 @@
 # Daniela Montes Psicóloga — Project Status (Sandbox)
 
-**Última actualización:** 2026-04-10  
+**Última actualización:** 2026-04-14  
 **Repo:** `cristinatroconis-cmd/daniela-web-sandbox`  
 **Producción (referencia):** https://danielamontespsic.com/ (rocket.net)  
-**Modo de trabajo:** sandbox / aislado — NO tocar producción directo.
+**Modo de trabajo:** staging-first — cambios técnicos en staging y promoción controlada a producción.
 
 ---
 
@@ -216,3 +216,26 @@ wp-content/themes/daniela-child/
 ├── single-dm_recurso.php           # Template single /recursos/<slug>/
 └── single-dm_servicio.php          # Template single /servicios/<slug>/
 ```
+
+---
+
+## 8) Guardrails de producción (activo)
+
+Estado aplicado en producción (`https://danielamontespsic.com`) desde 2026-04-14:
+
+- `WP_ENVIRONMENT_TYPE=production`
+- `DISALLOW_FILE_EDIT=true`
+- `DISALLOW_FILE_MODS=true`
+- `AUTOMATIC_UPDATER_DISABLED=true`
+- `WP_AUTO_UPDATE_CORE=false`
+
+Implicaciones operativas:
+
+1. No instalar/actualizar/eliminar plugins o temas directamente en producción.
+2. No editar archivos desde el admin de producción.
+3. Todo cambio técnico (código/plugins/tema/config) se valida primero en staging.
+4. Solo se promueve a producción después de QA y backup.
+
+Nota de estabilidad post-restauración (2026-04-14):
+
+- Se normalizó acceso de admin en producción corrigiendo permisos de core (`wp-admin`, `wp-includes`) y detección SSL detrás de proxy en `wp-config.php`.
