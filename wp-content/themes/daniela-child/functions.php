@@ -44,7 +44,9 @@ require_once __DIR__ . '/inc/dm-products.php';
 require_once __DIR__ . '/inc/recursos-hub.php';
 require_once __DIR__ . '/inc/temas-page.php';
 require_once __DIR__ . '/inc/newsletter-optin.php';
-require_once __DIR__ . '/inc/freebie-download.php';
+// Legacy freebie email/token flow disabled.
+// Free resources must follow the standard WooCommerce cart + checkout flow.
+// require_once __DIR__ . '/inc/freebie-download.php';
 require_once __DIR__ . '/inc/cart-drawer.php';
 
 // WP-CLI + admin importer (loaded after WooCommerce is ready).

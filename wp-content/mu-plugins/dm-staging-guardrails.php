@@ -93,7 +93,5 @@ add_filter('woocommerce_webhook_should_deliver', function ($should_deliver, $web
     return false;
 }, 10, 3);
 
-// Disable checkout payment gateways on non-production to avoid real charges.
-add_filter('woocommerce_available_payment_gateways', function ($gateways) {
-    return array();
-}, 100);
+// Keep gateways available in non-production so they can run in test mode.
+// Stripe/other providers should be configured as TEST from plugin settings.

@@ -121,6 +121,10 @@ function dm_products_shortcode($atts)
  */
 function dm_products_render_card(WC_Product $product)
 {
+	$product_id    = $product->get_id();
+	$add_to_cart   = function_exists('dm_get_add_to_cart_url')
+		? dm_get_add_to_cart_url($product)
+		: (string) $product->add_to_cart_url();
 	$product_url   = get_permalink($product->get_id());
 	$thumbnail_id  = $product->get_image_id();
 	$thumbnail_url = $thumbnail_id
