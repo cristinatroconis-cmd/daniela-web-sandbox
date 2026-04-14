@@ -137,6 +137,12 @@ Todos en `wp-content/themes/daniela-child/`:
   - Escuela → Cursos (`/escuela/?tipo=cursos`) / Talleres / Programas
   - Recursos → Por tema (`/recursos/?tema=<slug>` con slugs de `dm_tema`)
   - Servicios → Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`)
+
+- [ ] **Definir estado final de plugins de login/pagos en producción (post-incidente)**
+  Validar en staging y luego decidir en producción:
+  1. si `wps-hide-login` y/o `loginpress` se reactivan sin romper acceso (`wp-login.php`, `/wp-admin`, redirects),
+  2. si `woocommerce-paypal-payments` se reactiva o se retira definitivamente,
+  3. si `dm-fix-order-received-key` (MU workaround) puede eliminarse tras QA de checkout/thank-you.
   
 - [ ] **Auditar gating de acceso** (Tutor vs Memberships/Subscriptions)  
   Confirmar quién controla el acceso post-compra y documentarlo.  
