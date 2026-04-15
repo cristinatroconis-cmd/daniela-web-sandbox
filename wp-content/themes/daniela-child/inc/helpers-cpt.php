@@ -224,7 +224,7 @@ function dm_cpt_get_linked_product($post_id = null)
  * @param int|null $post_id  ID del post CPT. Usa el global si es null.
  * @return string            HTML del botón o cadena vacía.
  */
-function dm_cpt_render_cta($post_id = null)
+function dm_cpt_render_cta($post_id = null, $args = [])
 {
 	$product = dm_cpt_get_linked_product($post_id);
 	if (! $product) {
@@ -246,8 +246,13 @@ function dm_cpt_render_cta($post_id = null)
 		return '';
 	}
 
-	$label     = __('Agregar al carrito', 'daniela-child');
-	$btn_class = 'dm-btn dm-btn--primary';
+	$args      = is_array($args) ? $args : [];
+	$label     = isset($args['label']) && trim((string) $args['label']) !== ''
+		? trim((string) $args['label'])
+		: __('Agregar al carrito', 'daniela-child');
+	$btn_class = isset($args['class']) && trim((string) $args['class']) !== ''
+		? trim((string) $args['class'])
+		: 'dm-btn dm-btn--primary';
 	$url       = function_exists('dm_get_add_to_cart_url')
 		? dm_get_add_to_cart_url($product)
 		: (string) $product->add_to_cart_url();
@@ -400,6 +405,395 @@ add_action('save_post', function ($post_id) {
 });
 
 // =============================================================================
+// ADMIN UI — Lista blanca de metaboxes por post type
+// =============================================================================
+
+/**
+ * Limita los metaboxes visibles en edicion para simplificar la interfaz.
+ *
+ * Product (Woo):
+ * - Product data
+ * - Memberships
+ * - Publish
+ * - Product categories
+ * - Product tags
+ * - Facebook Product Sync
+ *
+ * dm_recurso / dm_servicio:
+ * - Excerpt
+ * - Membership
+ * - Publish
+ * - Producto Woo relacionado
+ * - Featured image
+ * - Imagen hero del single
+ *
+ * dm_escuela:
+ * - Igual que arriba + URL Tutor.
+ */
+add_action('add_meta_boxes', 'dm_limit_metaboxes_for_editorial_flow', 999);
+
+function dm_limit_metaboxes_for_editorial_flow()
+{
+	global $wp_meta_boxes;
+
+	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+	if (! $screen || 'post' !== $screen->base) {
+		return;
+	}
+
+	$post_type = $screen->post_type;
+	if (! $post_type || ! isset($wp_meta_boxes[$post_type])) {
+		return;
+	}
+
+	$allowed = [
+		'product' => [
+			'submitdiv',
+			'woocommerce-product-data',
+			'wc-memberships-product-memberships-data',
+			'product_catdiv',
+			'tagsdiv-product_tag',
+			'facebook_metabox',
+		],
+		'dm_recurso' => [
+			'postexcerpt',
+			'wc-memberships-post-memberships-data',
+			'submitdiv',
+			'dm_wc_product',
+			'dm_editorial_sections',
+			'postimagediv',
+			'dm_single_hero_image',
+		],
+		'dm_servicio' => [
+			'postexcerpt',
+			'wc-memberships-post-memberships-data',
+			'submitdiv',
+			'dm_wc_product',
+			'dm_editorial_sections',
+			'postimagediv',
+			'dm_single_hero_image',
+		],
+		'dm_escuela' => [
+			'postexcerpt',
+			'wc-memberships-post-memberships-data',
+			'submitdiv',
+			'dm_wc_product',
+			'dm_editorial_sections',
+			'dm_tutor_course_url',
+			'postimagediv',
+			'dm_single_hero_image',
+		],
+	];
+
+	if (! isset($allowed[$post_type])) {
+		return;
+	}
+
+	$allowed_ids = $allowed[$post_type];
+	$contexts    = ['normal', 'advanced', 'side'];
+
+	foreach ($contexts as $context) {
+		if (! isset($wp_meta_boxes[$post_type][$context])) {
+			continue;
+		}
+
+		foreach ($wp_meta_boxes[$post_type][$context] as $priority_boxes) {
+			if (! is_array($priority_boxes)) {
+				continue;
+			}
+
+			foreach ($priority_boxes as $meta_id => $meta_box) {
+				if (in_array($meta_id, $allowed_ids, true)) {
+					continue;
+				}
+
+				remove_meta_box($meta_id, $post_type, $context);
+			}
+		}
+	}
+}
+
+/**
+ * Product: oculta el editor largo para mostrar solo los contenedores solicitados.
+ */
+add_action('admin_head-post-new.php', 'dm_hide_product_main_editor_box');
+add_action('admin_head-post.php', 'dm_hide_product_main_editor_box');
+
+function dm_hide_product_main_editor_box()
+{
+	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+	if (! $screen || 'product' !== $screen->post_type) {
+		return;
+	}
+
+	echo '<style>#postdivrich{display:none !important;}</style>';
+}
+
+// =============================================================================
+// METABOX — Contenido estructurado tipo landing para singles CPT
+// =============================================================================
+
+function dm_cpt_editorial_fields_config()
+{
+	return [
+		'_dm_editorial_hero_kicker'       => ['label' => __('Texto superior del hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Aprende a regular tu mente y tu cuerpo desde la raíz'],
+		'_dm_editorial_hero_intro'        => ['label' => __('Bajada del hero', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Deja de luchar con...'],
+		'_dm_editorial_hero_button_label' => ['label' => __('Texto botón hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Ver el curso'],
+		'_dm_editorial_fit_title'         => ['label' => __('Título sección “Es para ti si...”', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Es para ti si...'],
+		'_dm_editorial_fit_items'         => ['label' => __('Items sección “Es para ti si...” (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Sabes que tus pensamientos...\nVives en estado de alerta..."],
+		'_dm_editorial_learn_title'       => ['label' => __('Título sección “Qué vas a aprender”', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Qué vas a aprender'],
+		'_dm_editorial_learn_intro'       => ['label' => __('Texto corto sección aprendizaje', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'No es solo otro curso...'],
+		'_dm_editorial_learn_items'       => ['label' => __('Lista aprendizaje (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "A entender qué te pasa...\nA calmar tu cuerpo..."],
+		'_dm_editorial_learn_image'       => ['label' => __('Imagen sección aprendizaje (URL)', 'daniela-child'), 'type' => 'url', 'placeholder' => 'https://...'],
+		'_dm_editorial_learn_button_label' => ['label' => __('Texto botón sección aprendizaje', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Ver el curso'],
+		'_dm_editorial_diff_title'        => ['label' => __('Título sección “Qué hace diferente...”', 'daniela-child'), 'type' => 'text', 'placeholder' => '¿Qué hace diferente a este proceso?'],
+		'_dm_editorial_diff_items'        => ['label' => __('Lista diferenciadores (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Te explico solo lo necesario...\nDiseñado para pocos minutos..."],
+		'_dm_editorial_diff_image'        => ['label' => __('Imagen sección diferenciadores (URL)', 'daniela-child'), 'type' => 'url', 'placeholder' => 'https://...'],
+		'_dm_editorial_diff_button_label' => ['label' => __('Texto botón sección diferenciadores', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Quiero empezar'],
+		'_dm_editorial_include_title'     => ['label' => __('Título sección “Incluye”', 'daniela-child'), 'type' => 'text', 'placeholder' => '4 módulos'],
+		'_dm_editorial_include_items'     => ['label' => __('Lista “Incluye” (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Clases en video...\nRecursos descargables..."],
+		'_dm_editorial_final_title'       => ['label' => __('Título CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Si esto resonó contigo...'],
+		'_dm_editorial_final_text'        => ['label' => __('Texto CTA final', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Estás a un solo paso...'],
+		'_dm_editorial_final_button_label' => ['label' => __('Texto botón CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Quiero empezar'],
+	];
+}
+
+add_action('add_meta_boxes', 'dm_cpt_register_editorial_metabox');
+
+function dm_cpt_register_editorial_metabox()
+{
+	$post_types = ['dm_recurso', 'dm_escuela', 'dm_servicio'];
+	foreach ($post_types as $pt) {
+		add_meta_box(
+			'dm_editorial_sections',
+			__('Secciones del single tipo landing', 'daniela-child'),
+			'dm_cpt_editorial_metabox_html',
+			$pt,
+			'normal',
+			'high'
+		);
+	}
+}
+
+function dm_cpt_editorial_metabox_html($post)
+{
+	wp_nonce_field('dm_editorial_sections_save', 'dm_editorial_sections_nonce');
+	$fields = dm_cpt_editorial_fields_config();
+
+	echo '<p class="description" style="margin-bottom:12px;">';
+	echo esc_html__('Usa estos campos como un ACF ligero para construir los singles con secciones fijas y estilo consistente. En los listados, escribe un item por línea.', 'daniela-child');
+	echo '</p>';
+
+	foreach ($fields as $key => $field) {
+		$value = (string) get_post_meta($post->ID, $key, true);
+		echo '<p style="margin-bottom:14px;">';
+		echo '<label for="' . esc_attr($key) . '" style="font-weight:600;display:block;margin-bottom:4px;">' . esc_html($field['label']) . '</label>';
+		if ('textarea' === $field['type']) {
+			echo '<textarea id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" rows="4" style="width:100%;">' . esc_textarea($value) . '</textarea>';
+		} else {
+			echo '<input type="' . esc_attr($field['type']) . '" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder']) . '" style="width:100%;" />';
+		}
+		echo '</p>';
+	}
+}
+
+add_action('save_post', 'dm_cpt_save_editorial_metabox');
+
+function dm_cpt_save_editorial_metabox($post_id)
+{
+	if (
+		! isset($_POST['dm_editorial_sections_nonce']) ||
+		! wp_verify_nonce(sanitize_key($_POST['dm_editorial_sections_nonce']), 'dm_editorial_sections_save')
+	) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (! current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	$cpt_types = ['dm_recurso', 'dm_escuela', 'dm_servicio'];
+	if (! in_array(get_post_type($post_id), $cpt_types, true)) {
+		return;
+	}
+
+	foreach (dm_cpt_editorial_fields_config() as $key => $field) {
+		$raw = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : '';
+		$value = 'url' === $field['type'] ? esc_url_raw(trim((string) $raw)) : sanitize_textarea_field((string) $raw);
+		if ($value !== '') {
+			update_post_meta($post_id, $key, $value);
+		} else {
+			delete_post_meta($post_id, $key);
+		}
+	}
+}
+
+function dm_cpt_has_editorial_sections($post_id)
+{
+	$keys = array_keys(dm_cpt_editorial_fields_config());
+	foreach ($keys as $key) {
+		if (trim((string) get_post_meta($post_id, $key, true)) !== '') {
+			return true;
+		}
+	}
+	return false;
+}
+
+function dm_cpt_get_meta_lines($post_id, $key)
+{
+	$value = (string) get_post_meta($post_id, $key, true);
+	if ($value === '') {
+		return [];
+	}
+	$lines = preg_split('/\r\n|\r|\n/', $value);
+	$lines = array_map('trim', is_array($lines) ? $lines : []);
+	return array_values(array_filter($lines, static function ($line) {
+		return $line !== '';
+	}));
+}
+
+function dm_cpt_render_editorial_sections($post_id)
+{
+	$post_id = absint($post_id);
+	if ($post_id <= 0 || ! dm_cpt_has_editorial_sections($post_id)) {
+		return '';
+	}
+
+	$fit_title   = trim((string) get_post_meta($post_id, '_dm_editorial_fit_title', true));
+	$fit_items   = dm_cpt_get_meta_lines($post_id, '_dm_editorial_fit_items');
+	$learn_title = trim((string) get_post_meta($post_id, '_dm_editorial_learn_title', true));
+	$learn_intro = trim((string) get_post_meta($post_id, '_dm_editorial_learn_intro', true));
+	$learn_items = dm_cpt_get_meta_lines($post_id, '_dm_editorial_learn_items');
+	$learn_image = trim((string) get_post_meta($post_id, '_dm_editorial_learn_image', true));
+	$learn_cta   = trim((string) get_post_meta($post_id, '_dm_editorial_learn_button_label', true));
+	$diff_title  = trim((string) get_post_meta($post_id, '_dm_editorial_diff_title', true));
+	$diff_items  = dm_cpt_get_meta_lines($post_id, '_dm_editorial_diff_items');
+	$diff_image  = trim((string) get_post_meta($post_id, '_dm_editorial_diff_image', true));
+	$diff_cta    = trim((string) get_post_meta($post_id, '_dm_editorial_diff_button_label', true));
+	$inc_title   = trim((string) get_post_meta($post_id, '_dm_editorial_include_title', true));
+	$inc_items   = dm_cpt_get_meta_lines($post_id, '_dm_editorial_include_items');
+	$final_title = trim((string) get_post_meta($post_id, '_dm_editorial_final_title', true));
+	$final_text  = trim((string) get_post_meta($post_id, '_dm_editorial_final_text', true));
+	$final_cta   = trim((string) get_post_meta($post_id, '_dm_editorial_final_button_label', true));
+
+	ob_start();
+	?>
+	<div class="dm-editorial">
+		<?php if ($fit_title || ! empty($fit_items)) : ?>
+			<section class="dm-editorial__section dm-editorial__section--panel">
+				<div class="dm-editorial__panel dm-editorial__panel--beige">
+					<?php if ($fit_title) : ?>
+						<h2 class="dm-editorial__section-title"><?php echo esc_html($fit_title); ?></h2>
+					<?php endif; ?>
+					<?php if (! empty($fit_items)) : ?>
+						<ul class="dm-editorial__list dm-editorial__list--stars">
+							<?php foreach ($fit_items as $item) : ?>
+								<li><?php echo esc_html($item); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+				</div>
+			</section>
+		<?php endif; ?>
+
+		<?php if ($learn_title || $learn_intro || ! empty($learn_items) || $learn_image) : ?>
+			<section class="dm-editorial__section dm-editorial__section--split">
+				<div class="dm-editorial__grid">
+					<div class="dm-editorial__copy">
+						<?php if ($learn_title) : ?>
+							<h2 class="dm-editorial__section-title"><?php echo esc_html($learn_title); ?></h2>
+						<?php endif; ?>
+						<?php if ($learn_intro) : ?>
+							<p class="dm-editorial__lead"><?php echo nl2br(esc_html($learn_intro)); ?></p>
+						<?php endif; ?>
+						<?php if (! empty($learn_items)) : ?>
+							<ul class="dm-editorial__list">
+								<?php foreach ($learn_items as $item) : ?>
+									<li><?php echo esc_html($item); ?></li>
+								<?php endforeach; ?>
+							</ul>
+						<?php endif; ?>
+						<?php if ($learn_cta) : ?>
+							<div class="dm-editorial__cta-row"><?php echo dm_cpt_render_cta($post_id, ['label' => $learn_cta, 'class' => 'dm-btn dm-btn--primary']); // phpcs:ignore WordPress.Security.EscapeOutput 
+																?></div>
+						<?php endif; ?>
+					</div>
+					<?php if ($learn_image) : ?>
+						<div class="dm-editorial__figure"><img src="<?php echo esc_url($learn_image); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" loading="lazy" /></div>
+					<?php endif; ?>
+				</div>
+			</section>
+		<?php endif; ?>
+
+		<?php if ($diff_title || ! empty($diff_items) || $diff_image) : ?>
+			<section class="dm-editorial__section dm-editorial__section--split dm-editorial__section--alt">
+				<div class="dm-editorial__grid">
+					<?php if ($diff_image) : ?>
+						<div class="dm-editorial__figure"><img src="<?php echo esc_url($diff_image); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" loading="lazy" /></div>
+					<?php endif; ?>
+					<div class="dm-editorial__copy">
+						<?php if ($diff_title) : ?>
+							<h2 class="dm-editorial__section-title"><?php echo esc_html($diff_title); ?></h2>
+						<?php endif; ?>
+						<?php if (! empty($diff_items)) : ?>
+							<ul class="dm-editorial__list dm-editorial__list--checks">
+								<?php foreach ($diff_items as $item) : ?>
+									<li><?php echo esc_html($item); ?></li>
+								<?php endforeach; ?>
+							</ul>
+						<?php endif; ?>
+						<?php if ($diff_cta) : ?>
+							<div class="dm-editorial__cta-row"><?php echo dm_cpt_render_cta($post_id, ['label' => $diff_cta, 'class' => 'dm-btn dm-btn--primary']); // phpcs:ignore WordPress.Security.EscapeOutput 
+																?></div>
+						<?php endif; ?>
+					</div>
+				</div>
+			</section>
+		<?php endif; ?>
+
+		<?php if ($inc_title || ! empty($inc_items)) : ?>
+			<section class="dm-editorial__section dm-editorial__section--panel">
+				<div class="dm-editorial__panel dm-editorial__panel--soft">
+					<?php if ($inc_title) : ?>
+						<h2 class="dm-editorial__section-title"><?php echo esc_html($inc_title); ?></h2>
+					<?php endif; ?>
+					<?php if (! empty($inc_items)) : ?>
+						<ul class="dm-editorial__list dm-editorial__list--checks">
+							<?php foreach ($inc_items as $item) : ?>
+								<li><?php echo esc_html($item); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
+				</div>
+			</section>
+		<?php endif; ?>
+
+		<?php if ($final_title || $final_text || $final_cta) : ?>
+			<section class="dm-editorial__section dm-editorial__section--final">
+				<div class="dm-editorial__final">
+					<?php if ($final_title) : ?>
+						<h2 class="dm-editorial__final-title"><?php echo esc_html($final_title); ?></h2>
+					<?php endif; ?>
+					<?php if ($final_text) : ?>
+						<p class="dm-editorial__lead"><?php echo nl2br(esc_html($final_text)); ?></p>
+					<?php endif; ?>
+					<?php if ($final_cta) : ?>
+						<div class="dm-editorial__cta-row"><?php echo dm_cpt_render_cta($post_id, ['label' => $final_cta, 'class' => 'dm-btn dm-btn--primary']); // phpcs:ignore WordPress.Security.EscapeOutput 
+															?></div>
+					<?php endif; ?>
+				</div>
+			</section>
+		<?php endif; ?>
+	</div>
+<?php
+	return ob_get_clean();
+}
+
+// =============================================================================
 // HELPERS — Escuela permalink puente hacia Tutor LMS
 // =============================================================================
 
@@ -447,16 +841,56 @@ function dm_get_tutor_url_for_escuela_product($product_id)
 
 add_action('init', function () {
 	add_rewrite_rule(
-		'^escuela/curso/([^/]+)/?$',
-		'index.php?dm_escuela_curso=$matches[1]',
+		'^escuela/(curso|taller|programa)/([^/]+)/?$',
+		'index.php?dm_escuela_tipo=$matches[1]&dm_escuela_curso=$matches[2]',
 		'top'
 	);
 });
 
 add_filter('query_vars', function ($vars) {
+	$vars[] = 'dm_escuela_tipo';
 	$vars[] = 'dm_escuela_curso';
 	return $vars;
 });
+
+/**
+ * Devuelve el segmento de ruta editorial para un producto de Escuela.
+ *
+ * @param int $product_id Product ID.
+ * @return string         curso|taller|programa o cadena vacia si no aplica.
+ */
+function dm_get_escuela_route_segment_for_product($product_id)
+{
+	$product_id = absint($product_id);
+	if ($product_id <= 0) {
+		return '';
+	}
+
+	$map = [
+		'cursos'    => 'curso',
+		'talleres'  => 'taller',
+		'programas' => 'programa',
+	];
+
+	foreach ($map as $cat_slug => $route_segment) {
+		if (has_term($cat_slug, 'product_cat', $product_id)) {
+			return $route_segment;
+		}
+	}
+
+	return '';
+}
+
+/**
+ * Flush controlado para nuevas rutas de Escuela.
+ */
+add_action('init', function () {
+	$version = '2.0';
+	if (get_option('dm_escuela_route_rewrite_version') !== $version) {
+		flush_rewrite_rules();
+		update_option('dm_escuela_route_rewrite_version', $version);
+	}
+}, 999);
 
 add_filter('post_type_link', function ($permalink, $post) {
 	if (! $post instanceof WP_Post || 'product' !== $post->post_type) {
@@ -472,7 +906,12 @@ add_filter('post_type_link', function ($permalink, $post) {
 		return $permalink;
 	}
 
-	return home_url('/escuela/curso/' . $post->post_name . '/');
+	$route_segment = dm_get_escuela_route_segment_for_product((int) $post->ID);
+	if ($route_segment === '') {
+		return $permalink;
+	}
+
+	return home_url('/escuela/' . $route_segment . '/' . $post->post_name . '/');
 }, 20, 2);
 
 add_action('template_redirect', function () {
@@ -487,6 +926,13 @@ add_action('template_redirect', function () {
 		$wp_query->set_404();
 		status_header(404);
 		return;
+	}
+
+	$requested_segment = sanitize_title((string) get_query_var('dm_escuela_tipo'));
+	$canonical_segment = dm_get_escuela_route_segment_for_product((int) $product->ID);
+	if ($canonical_segment !== '' && $requested_segment !== $canonical_segment) {
+		wp_safe_redirect(home_url('/escuela/' . $canonical_segment . '/' . $product->post_name . '/'), 301);
+		exit;
 	}
 
 	$tutor_url = dm_get_tutor_url_for_escuela_product((int) $product->ID);
@@ -537,7 +983,7 @@ function dm_cpt_render_taxonomy_chips($taxonomy, $param = 'tipo', $base_url = ''
 	}
 
 	ob_start();
-	?>
+?>
 	<nav class="dm-chips" aria-label="<?php esc_attr_e('Filtrar', 'daniela-child'); ?>">
 		<a
 			href="<?php echo esc_url($base_url); ?>"

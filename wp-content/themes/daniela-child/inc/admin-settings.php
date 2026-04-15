@@ -214,7 +214,7 @@ if (! class_exists('DM_Settings_Page')) :
 					),
 					array(
 						'title'    => __('Tag: resource-buyer', 'daniela-child'),
-						'desc'     => __('ID de grupo para compradores de recursos (gratis/pagos).', 'daniela-child'),
+						'desc'     => __('ID de grupo para compradores de recursos.', 'daniela-child'),
 						'id'       => 'dm_mailerlite_tag_resource_buyer',
 						'type'     => 'text',
 						'css'      => 'width:200px;',

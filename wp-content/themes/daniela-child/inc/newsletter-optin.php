@@ -235,8 +235,8 @@ function dm_newsletter_api_subscribe($email, $first_name, $last_name, $api_key, 
  *
  * Checks product categories to assign:
  *   - 'buyer' (always)
- *   - 'resource-buyer' (if order has productos from recursos-gratis or recursos-pagos)
- *   - 'course-buyer'   (if order has productos from cursos or talleres)
+ *   - 'resource-buyer' (if order has products from recursos)
+ *   - 'course-buyer'   (if order has products from cursos or talleres)
  *
  * Tag group IDs are read from DM settings (can be left empty).
  *
@@ -261,7 +261,7 @@ function dm_newsletter_derive_tags(WC_Order $order)
 	foreach ($order->get_items() as $item) {
 		$product_id = $item->get_product_id();
 
-		if (has_term(array('recursos-gratis', 'recursos-pagos'), 'product_cat', $product_id)) {
+		if (has_term(array('recursos'), 'product_cat', $product_id)) {
 			$has_resource = true;
 		}
 

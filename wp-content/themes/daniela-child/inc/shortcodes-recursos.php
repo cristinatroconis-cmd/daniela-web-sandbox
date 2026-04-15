@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Shortcodes — Recursos (child pages and hub).
  *
@@ -7,65 +8,65 @@
  * @package Daniela_Child
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
     exit;
 }
 
 /**
  * [dm_recursos_gratis]
- * Lists all published products in the recursos-gratis category.
- * Place this shortcode on the /recursos/gratis/ page.
+ * Legacy alias: lists all published products in the recursos category.
+ * Place this shortcode on the /recursos/ page.
  */
-add_shortcode( 'dm_recursos_gratis', function () {
-    if ( ! function_exists( 'WC' ) ) {
+add_shortcode('dm_recursos_gratis', function () {
+    if (! function_exists('WC')) {
         return '';
     }
-    $back_url = home_url( '/recursos/gratis/' );
-    $query    = dm_get_products( 'recursos-gratis' );
-    return dm_render_product_grid( $query, $back_url );
-} );
+    $back_url = home_url('/recursos/');
+    $query    = dm_get_products('recursos');
+    return dm_render_product_grid($query, $back_url);
+});
 
 /**
  * [dm_recursos_pagos]
- * Lists all published products in the recursos-pagos category.
- * Place this shortcode on the /recursos/pagos/ page.
+ * Legacy alias: lists all published products in the recursos category.
+ * Place this shortcode on the /recursos/ page.
  */
-add_shortcode( 'dm_recursos_pagos', function () {
-    if ( ! function_exists( 'WC' ) ) {
+add_shortcode('dm_recursos_pagos', function () {
+    if (! function_exists('WC')) {
         return '';
     }
-    $back_url = home_url( '/recursos/pagos/' );
-    $query    = dm_get_products( 'recursos-pagos' );
-    return dm_render_product_grid( $query, $back_url );
-} );
+    $back_url = home_url('/recursos/');
+    $query    = dm_get_products('recursos');
+    return dm_render_product_grid($query, $back_url);
+});
 
 /**
  * [dm_recursos_temas]
  * Shows a chips (pill) navigation filtered by WooCommerce product_tag.
  *
  * Rules:
- * - Only shows tags that have ≥1 product in recursos-gratis OR recursos-pagos.
+ * - Only shows tags that have ≥1 published product in recursos.
  * - Chips order: count of qualifying products desc, then alphabetical.
  * - Non-JS fallback: ?tema=<slug> (querystring).
  * - Active chip reflected in URL.
  *
  * Place this shortcode on the /recursos/temas/ page.
  */
-add_shortcode( 'dm_recursos_temas', function () {
-    if ( ! function_exists( 'WC' ) ) {
+add_shortcode('dm_recursos_temas', function () {
+    if (! function_exists('WC')) {
         return '';
     }
 
-    $current_page = home_url( '/recursos/temas/' );
-    $active_slug  = isset( $_GET['tema'] ) // phpcs:ignore WordPress.Security.NonceVerification
-        ? sanitize_title( wp_unslash( $_GET['tema'] ) ) // phpcs:ignore WordPress.Security.NonceVerification
+    $current_page = home_url('/recursos/temas/');
+    $active_slug  = isset($_GET['tema']) // phpcs:ignore WordPress.Security.NonceVerification
+        ? sanitize_title(wp_unslash($_GET['tema'])) // phpcs:ignore WordPress.Security.NonceVerification
         : '';
 
     // Build chips list via a single SQL query cached in a transient (1 hour).
     $transient_key = 'dm_recursos_temas_tags';
-    $recursos_tags = get_transient( $transient_key );
+    $recursos_tags = get_transient($transient_key);
 
-    if ( false === $recursos_tags ) {
+    if (false === $recursos_tags) {
         global $wpdb;
 
         // phpcs:disable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
@@ -80,7 +81,7 @@ add_shortcode( 'dm_recursos_temas', function () {
                     AND tt_cat.taxonomy = 'product_cat'
              INNER JOIN {$wpdb->terms} t_cat
                      ON tt_cat.term_id = t_cat.term_id
-                    AND t_cat.slug IN (%s, %s)
+                    AND t_cat.slug = %s
              INNER JOIN {$wpdb->term_relationships} tr_tag
                      ON p.ID = tr_tag.object_id
              INNER JOIN {$wpdb->term_taxonomy} tt_tag
@@ -92,79 +93,70 @@ add_shortcode( 'dm_recursos_temas', function () {
                AND p.post_status = 'publish'
              GROUP BY t.term_id, t.name, t.slug
              ORDER BY recursos_count DESC, t.name ASC",
-            'recursos-gratis',
-            'recursos-pagos'
+            'recursos'
         );
-        $recursos_tags = $wpdb->get_results( $sql );
+        $recursos_tags = $wpdb->get_results($sql);
         // phpcs:enable WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
 
-        if ( ! is_array( $recursos_tags ) ) {
+        if (! is_array($recursos_tags)) {
             $recursos_tags = [];
         }
 
-        set_transient( $transient_key, $recursos_tags, HOUR_IN_SECONDS );
+        set_transient($transient_key, $recursos_tags, HOUR_IN_SECONDS);
     }
 
     $back_url = $active_slug
-        ? add_query_arg( 'tema', $active_slug, $current_page )
+        ? add_query_arg('tema', $active_slug, $current_page)
         : $current_page;
 
     ob_start();
 
-    if ( ! empty( $recursos_tags ) ) : ?>
-        <nav class="dm-chips" aria-label="<?php esc_attr_e( 'Filtrar por tema', 'daniela-child' ); ?>">
-            <a href="<?php echo esc_url( $current_page ); ?>"
-               class="dm-chip<?php echo $active_slug === '' ? ' dm-chip--active' : ''; ?>"
-               <?php echo $active_slug === '' ? 'aria-current="true"' : ''; ?>>
-                <?php esc_html_e( 'Todos', 'daniela-child' ); ?>
+    if (! empty($recursos_tags)) : ?>
+        <nav class="dm-chips" aria-label="<?php esc_attr_e('Filtrar por tema', 'daniela-child'); ?>">
+            <a href="<?php echo esc_url($current_page); ?>"
+                class="dm-chip<?php echo $active_slug === '' ? ' dm-chip--active' : ''; ?>"
+                <?php echo $active_slug === '' ? 'aria-current="true"' : ''; ?>>
+                <?php esc_html_e('Todos', 'daniela-child'); ?>
             </a>
-            <?php foreach ( $recursos_tags as $tag ) : ?>
-                <a href="<?php echo esc_url( add_query_arg( 'tema', $tag->slug, $current_page ) ); ?>"
-                   class="dm-chip<?php echo $active_slug === $tag->slug ? ' dm-chip--active' : ''; ?>"
-                   <?php echo $active_slug === $tag->slug ? 'aria-current="true"' : ''; ?>>
-                    <?php echo esc_html( $tag->name ); ?>
+            <?php foreach ($recursos_tags as $tag) : ?>
+                <a href="<?php echo esc_url(add_query_arg('tema', $tag->slug, $current_page)); ?>"
+                    class="dm-chip<?php echo $active_slug === $tag->slug ? ' dm-chip--active' : ''; ?>"
+                    <?php echo $active_slug === $tag->slug ? 'aria-current="true"' : ''; ?>>
+                    <?php echo esc_html($tag->name); ?>
                     <span class="dm-chip__count">(<?php echo (int) $tag->recursos_count; ?>)</span>
                 </a>
             <?php endforeach; ?>
         </nav>
-    <?php endif;
+<?php endif;
 
-    $query = dm_get_products( [ 'recursos-gratis', 'recursos-pagos' ], $active_slug );
-    echo dm_render_product_grid( $query, $back_url ); // phpcs:ignore WordPress.Security.EscapeOutput
+    $query = dm_get_products(['recursos'], $active_slug);
+    echo dm_render_product_grid($query, $back_url); // phpcs:ignore WordPress.Security.EscapeOutput
 
     return ob_get_clean();
-} );
+});
 
 /**
  * [dm_recursos_home]
- * Hub shortcode for /recursos/ — shows two blocks:
- *   1. Gratis (products in the "recursos-gratis" category)
- *   2. Pagos  (products in the "recursos-pagos" category)
+ * Hub shortcode for /recursos/ — shows the resources catalog block.
  *
  * Cards link back to /recursos/ so the "Volver" button returns to the hub.
  *
  * Place this shortcode on the /recursos/ page.
  */
-add_shortcode( 'dm_recursos_home', function () {
-    if ( ! function_exists( 'WC' ) ) {
+add_shortcode('dm_recursos_home', function () {
+    if (! function_exists('WC')) {
         return '';
     }
 
-    $back_url = home_url( '/recursos/' );
+    $back_url = home_url('/recursos/');
 
     ob_start();
 
     echo '<section class="dm-hub-section">';
-    echo '<h2 class="dm-hub-section__title">' . esc_html__( 'Gratis', 'daniela-child' ) . '</h2>';
-    $gratis_query = dm_get_products( 'recursos-gratis' );
-    echo dm_render_product_grid( $gratis_query, $back_url ); // phpcs:ignore WordPress.Security.EscapeOutput
-    echo '</section>';
-
-    echo '<section class="dm-hub-section">';
-    echo '<h2 class="dm-hub-section__title">' . esc_html__( 'Pagos', 'daniela-child' ) . '</h2>';
-    $pagos_query = dm_get_products( 'recursos-pagos' );
-    echo dm_render_product_grid( $pagos_query, $back_url ); // phpcs:ignore WordPress.Security.EscapeOutput
+    echo '<h2 class="dm-hub-section__title">' . esc_html__('Recursos', 'daniela-child') . '</h2>';
+    $recursos_query = dm_get_products('recursos');
+    echo dm_render_product_grid($recursos_query, $back_url); // phpcs:ignore WordPress.Security.EscapeOutput
     echo '</section>';
 
     return ob_get_clean();
-} );
+});

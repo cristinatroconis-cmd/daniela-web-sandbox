@@ -28,7 +28,7 @@ function dm_cart_has_free_resource_item()
         }
 
         $price = (float) $product->get_price();
-        if ($price <= 0.0 && has_term(array('recursos-gratis'), 'product_cat', $product->get_id())) {
+        if ($price <= 0.0 && has_term(array('recursos'), 'product_cat', $product->get_id())) {
             return true;
         }
     }
