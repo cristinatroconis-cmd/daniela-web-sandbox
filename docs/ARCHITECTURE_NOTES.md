@@ -96,6 +96,17 @@ Una sola "fuente de verdad" para gating:
 - ✅ CTAs unificados: **"Seguir comprando"** (cierra drawer, permanece en página actual) + **"Finalizar compra"** (checkout).
 - **Referencia:** `ARCHITECTURE.md` §22.
 
+### 3.9b Reglas CTA aprobadas (2026-04-16) — siguiente ajuste UX
+
+- **Catálogo:** CTA principal = **"Agregar al carrito"**; CTA secundario = **"Ver detalles"**.
+- **Freebies en catálogo:** mantener badge **"Gratis"** y no modificar el copy del botón; la explicación de "sin pago" vive en single/drawer/checkout.
+- **Single editorial:** CTA principal = **"Agregar al carrito"**; CTA secundario = solo regreso contextual tipo **"Volver a categoría / subcategoría / tag"**.
+- **Copy público precompra:** no usar **"Ver curso"**; ese acceso externo queda reservado al momento posterior a la compra.
+- **Producto ya en carrito:** el clic debe dejar al usuario en la misma página, reabrir el drawer y mostrar un notice breve tipo **"Ya está en tu carrito"**.
+- **Duplicados:** bloqueados para todos los productos en este stage.
+- **Guard UX:** no debe aparecer **"Ver carrito"** pegado al CTA del bloque ni mostrarse errores/redirects raros de WooCommerce.
+- **Estado no disponible / no comprable:** el CTA desaparece.
+
 ### 3.10 WooCommerce front-end / checkout polish (2026-04-10)
 
 - ✅ `assets/css/woocommerce.css` hereda tokens del child theme y reutiliza `--dm-necesitas-pad-y` para dar continuidad visual entre Home y WooCommerce.
@@ -193,7 +204,7 @@ Antes de tocar cualquier grid o tarjeta, responde estas preguntas:
 - [ ] **¿Estás por cambiar el layout (columnas, espaciado)?** → Edita solo `style.css`. Verifica que el cambio no rompe las 3 secciones de archive (escuela, recursos, servicios).
 - [ ] **¿Estás por agregar un CTA nuevo?** → Actualiza `dm_cpt_render_cta()` en `inc/helpers-cpt.php`. No pongas HTML de botón directamente en un template.
 - [ ] **¿Estás por agregar un nuevo CPT?** → Llama a `dm_cpt_render_grid()` en el template archive. No copies el loop de tarjetas.
-- [ ] **¿El texto del CTA secundario es neutro?** → Usa "Ver detalles" por defecto. Excepción documentada: "Ver curso" en `/escuela/` cuando existe `_dm_tutor_course_url`.
+- [ ] **¿El texto del CTA secundario es neutro?** → Usa "Ver detalles" por defecto en catálogo. No usar "Ver curso" como CTA público precompra.
 - [ ] **¿Actualizaste `ARCHITECTURE.md` sección 18?** → Si tomaste una nueva decisión sobre el sistema de UI, documéntala ahí.
 
 ---

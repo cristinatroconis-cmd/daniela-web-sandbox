@@ -2,12 +2,8 @@
  * Cart Drawer — Off-canvas mini-cart (right side).
  *
  * Opens the slide-in drawer when a product is added to cart via AJAX.
- * Works with WooCommerce fragments (wc-cart-fragments) which automatically
- * refresh the .widget_shopping_cart_content element in the drawer.
- *
- * Replaces add-to-cart-popup.js — do not enqueue both simultaneously.
- *
- * Requires: jQuery, wc-add-to-cart, wc-cart-fragments.
+ * Works with WooCommerce fragments and also intercepts repeated clicks for
+ * products already in the cart so the user stays on the same page.
  */
 ( function ( $ ) {
 	'use strict';
@@ -16,24 +12,68 @@
 	var $overlay = null;
 	var $close   = null;
 	var isOpen   = false;
+	var noticeTimer = null;
+	var drawerConfig = ( typeof window.dmCartDrawer !== 'undefined' && window.dmCartDrawer ) ? window.dmCartDrawer : {};
+	var inCartIds = {};
+	var alreadyInCartMessage = drawerConfig.alreadyInCartMessage || 'Ya está en tu carrito';
 
-	/**
-	 * Remove WooCommerce's injected "View cart" link, but ONLY inside DM cards.
-	 *
-	 * WooCommerce (wc-add-to-cart.js) appends:
-	 *   <a class="added_to_cart wc-forward">View cart</a>
-	 * after successful AJAX add-to-cart.
-	 *
-	 * We keep AJAX behavior (needed for the drawer + no redirects) and simply
-	 * remove that extra link to keep card UI clean.
-	 */
-	function dmCardsRemoveViewCartLink() {
-		$( '.dm-card a.added_to_cart.wc-forward' ).remove();
+	( drawerConfig.inCartIds || [] ).forEach( function ( productId ) {
+		inCartIds[ String( productId ) ] = true;
+	} );
+
+	function markProductInCart( productId, isInCart ) {
+		if ( ! productId ) {
+			return;
+		}
+
+		if ( isInCart ) {
+			inCartIds[ String( productId ) ] = true;
+		} else {
+			delete inCartIds[ String( productId ) ];
+		}
 	}
 
-	/**
-	 * Cache DOM references and bind close triggers.
-	 */
+	function syncInCartIdsFromDrawer() {
+		var nextState = {};
+		$( '#dm-cart-drawer .remove[data-product_id]' ).each( function () {
+			var productId = String( $( this ).data( 'product_id' ) || '' );
+			if ( productId ) {
+				nextState[ productId ] = true;
+			}
+		} );
+
+		inCartIds = nextState;
+	}
+
+	function dmCardsRemoveViewCartLink() {
+		$( '.dm-card a.added_to_cart.wc-forward, .dm-cta a.added_to_cart.wc-forward, .dm-single__actions a.added_to_cart.wc-forward, .dm-recurso-card__cta a.added_to_cart.wc-forward, .dm-product-card a.added_to_cart.wc-forward' ).remove();
+	}
+
+	function showDrawerNotice( message ) {
+		var $body = $drawer.find( '.dm-cart-drawer__body' );
+		var $notice;
+
+		if ( ! $body.length || ! message ) {
+			return;
+		}
+
+		$notice = $body.find( '.dm-cart-drawer__notice' );
+		if ( ! $notice.length ) {
+			$notice = $( '<div class="dm-cart-drawer__notice" aria-live="polite"></div>' );
+			$body.prepend( $notice );
+		}
+
+		$notice.stop( true, true ).text( message ).fadeIn( 150 );
+
+		if ( noticeTimer ) {
+			window.clearTimeout( noticeTimer );
+		}
+
+		noticeTimer = window.setTimeout( function () {
+			$notice.fadeOut( 180 );
+		}, 2200 );
+	}
+
 	function init() {
 		$drawer  = $( '#dm-cart-drawer' );
 		$overlay = $( '#dm-cart-drawer-overlay' );
@@ -45,8 +85,6 @@
 
 		$overlay.on( 'click', closeDrawer );
 		$close.on( 'click', closeDrawer );
-
-		// "Seguir comprando" button — closes drawer, stays on current page.
 		$( '#dm-cart-drawer-continue' ).on( 'click', closeDrawer );
 
 		$( document ).on( 'keydown', function ( e ) {
@@ -56,9 +94,6 @@
 		} );
 	}
 
-	/**
-	 * Slide the drawer in from the right.
-	 */
 	function openDrawer() {
 		if ( ! $drawer || ! $drawer.length ) {
 			return;
@@ -66,15 +101,10 @@
 
 		isOpen = true;
 		$drawer.removeAttr( 'hidden' );
-
-		// Trigger reflow so the CSS transition fires.
-		// eslint-disable-next-line no-unused-expressions
 		$drawer[0].offsetHeight;
-
 		$drawer.addClass( 'is-open' );
 		$( 'body' ).addClass( 'dm-cart-drawer-open' );
 
-		// Move focus to close button for keyboard/screen-reader users.
 		setTimeout( function () {
 			if ( $close && $close.length ) {
 				$close.trigger( 'focus' );
@@ -82,9 +112,6 @@
 		}, 310 );
 	}
 
-	/**
-	 * Slide the drawer out and restore focus.
-	 */
 	function closeDrawer() {
 		if ( ! $drawer || ! $drawer.length ) {
 			return;
@@ -94,7 +121,6 @@
 		$drawer.removeClass( 'is-open' );
 		$( 'body' ).removeClass( 'dm-cart-drawer-open' );
 
-		// Re-add [hidden] after the CSS transition completes (~350 ms).
 		setTimeout( function () {
 			if ( ! isOpen ) {
 				$drawer.attr( 'hidden', '' );
@@ -102,25 +128,40 @@
 		}, 360 );
 	}
 
-	// When WooCommerce AJAX add-to-cart succeeds:
-	// - open the drawer
-	// - remove the injected "View cart" link inside DM cards
-	$( document.body ).on( 'added_to_cart', function () {
+	$( document ).on( 'click', '.dm-cta .add_to_cart_button, .dm-card .add_to_cart_button, .dm-recurso-card .add_to_cart_button, .dm-product-card .add_to_cart_button', function ( e ) {
+		var productId = String( $( this ).data( 'product_id' ) || '' );
+
+		if ( productId && inCartIds[ productId ] ) {
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			openDrawer();
+			showDrawerNotice( alreadyInCartMessage );
+			window.setTimeout( dmCardsRemoveViewCartLink, 0 );
+		}
+	} );
+
+	$( document.body ).on( 'added_to_cart', function ( event, fragments, cartHash, $button ) {
 		openDrawer();
 
-		// Woo sometimes inserts the link after the event fires; remove on next tick.
+		if ( $button && $button.length ) {
+			markProductInCart( $button.data( 'product_id' ), true );
+		}
+
 		window.setTimeout( dmCardsRemoveViewCartLink, 0 );
 	} );
 
-	// If fragments are refreshed, the link could reappear in updated markup.
+	$( document ).on( 'click', '#dm-cart-drawer .remove[data-product_id]', function () {
+		markProductInCart( $( this ).data( 'product_id' ), false );
+	} );
+
 	$( document.body ).on( 'wc_fragments_loaded wc_fragments_refreshed', function () {
+		syncInCartIdsFromDrawer();
 		dmCardsRemoveViewCartLink();
 	} );
 
 	$( document ).ready( function () {
 		init();
-
-		// Clean any existing injected links on initial load.
+		syncInCartIdsFromDrawer();
 		dmCardsRemoveViewCartLink();
 	} );
 

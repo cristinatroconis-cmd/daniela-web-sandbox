@@ -20,14 +20,14 @@ Text Domain: daniela-child
 	   ====================================================================== */
 	--dm-brand-primary: #7c6b8e;
 	--dm-brand-primary-dark: #5e4f6c;
-	--dm-brand-accent: #e8a598;
-	--dm-brand-accent-dark: #c97f72;
+	--dm-brand-accent: #56b6ae;
+	--dm-brand-accent-dark: #4fa39c;
+	--dm-brand-surface-soft: #e7dbc5;
 	--dm-brand-text: #2d2d2d;
 	--dm-brand-text-muted: #6b6b6b;
-	--dm-brand-bg: #faf9f7;
+	--dm-brand-bg: #fdfdfd00;
 	--dm-brand-bg-card: #ffffff;
-	--dm-brand-border: #e5e0d8;
-
+	--dm-brand-border: #fdfdfd00;
 	/* Tipografias nombradas (manuales) */
 	--dm-brand-font-heading-family: Kollektif, sans-serif;
 	--dm-brand-font-heading-weight: 700;
@@ -57,6 +57,7 @@ Text Domain: daniela-child
 	--dm-color-primary-dark: var(--dm-brand-primary-dark);
 	--dm-color-accent: var(--dm-brand-accent);
 	--dm-color-accent-dark: var(--dm-brand-accent-dark);
+	--dm-color-surface-soft: var(--dm-brand-surface-soft);
 	--dm-color-text: var(--dm-brand-text);
 	--dm-color-text-muted: var(--dm-brand-text-muted);
 	--dm-color-bg: var(--dm-brand-bg);
@@ -905,7 +906,7 @@ input[type="reset"],
 
 .dm-archive__content {
 	max-width: 1200px;
-	margin: 0 auto;
+	margin: 0;
 	padding: 0 1.5rem 3rem;
 }
 
@@ -920,10 +921,14 @@ input[type="reset"],
 	background: var(--dm-color-bg);
 	min-height: calc(100vh - 120px);
 	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
 	align-items: center;
 }
 
 .dm-single__article {
+	display: flex;
+	justify-content: space-around;
 	width: 100%;
 	max-width: 1200px;
 	margin: 0 auto;
@@ -936,14 +941,31 @@ input[type="reset"],
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	gap: 3rem;
 	align-items: center;
-	justify-content: center;
+	justify-content: space-evenly;
 }
 
 /* No-image fallback: single centred column */
 .dm-single__layout--no-image {
 	grid-template-columns: minmax(0, 1fr);
-	max-width: 720px;
-	margin: 0 auto;
+	gap: 3rem;
+	max-width: min(100%, 960px);
+	margin: 0;
+}
+
+.dm-single__layout--no-image .dm-single__body {
+	max-width: min(100%, 960px);
+	width: 100%;
+	max-width: 100%;
+	align-items: center;
+	justify-content: space-evenly;
+}
+
+.dm-single__layout--no-image .dm-single__header,
+.dm-single__layout--no-image .dm-single__content,
+.dm-single__layout--no-image .dm-single__actions,
+.dm-single__layout--no-image .dm-single__footer,
+.dm-single__layout--no-image .dm-editorial {
+	width: 100%;
 }
 
 /* Left column: image */
@@ -993,7 +1015,7 @@ body.single-courses .tutor-course-single-content-wrapper,
 body.single-course .tutor-course-single-content-wrapper,
 body.single-tutor_course .tutor-course-single-content-wrapper {
 	max-width: 1200px;
-	margin: 0 auto;
+	margin: 0;
 	padding-left: 1.25rem;
 	padding-right: 1.25rem;
 }
@@ -1057,6 +1079,24 @@ body.single-tutor_course {
 	margin-bottom: 0;
 }
 
+.dm-single__layout--no-image .dm-single__content> :first-child,
+.dm-single__layout--no-image .dm-editorial> :first-child {
+	margin-top: 0;
+}
+
+.dm-single__layout--no-image .dm-single__content> :last-child,
+.dm-single__layout--no-image .dm-editorial> :last-child {
+	margin-bottom: 0;
+}
+
+.dm-single__layout--no-image .dm-single__content .elementor,
+.dm-single__layout--no-image .dm-single__content .elementor-section,
+.dm-single__layout--no-image .dm-single__content .elementor-container,
+.dm-single__layout--no-image .dm-single__content .e-con,
+.dm-single__layout--no-image .dm-single__content .e-parent {
+	max-width: 100%;
+}
+
 /* CTAs side by side */
 .dm-single__actions {
 	display: flex;
@@ -1101,7 +1141,7 @@ body.single-tutor_course {
 /* Structured editorial sections inside singles */
 .dm-editorial {
 	display: grid;
-	gap: 1.25rem;
+	gap: 3rem;
 	margin-top: 1rem;
 }
 
@@ -1114,12 +1154,15 @@ body.single-tutor_course {
 	padding: clamp(1rem, 2vw, 1.5rem);
 	border-radius: var(--dm-radius);
 	border: 1px solid var(--dm-color-border);
-	box-shadow: var(--dm-shadow);
 }
 
 .dm-editorial__panel--beige,
 .dm-editorial__final {
-	background: #f6efe7;
+	background: var(--dm-color-surface-soft);
+}
+
+.dm-editorial__final {
+	text-align: center;
 }
 
 .dm-editorial__panel--soft {
@@ -1129,8 +1172,12 @@ body.single-tutor_course {
 .dm-editorial__grid {
 	display: grid;
 	grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-	gap: 1.25rem;
+	gap: 3rem;
 	align-items: center;
+}
+
+.dm-editorial__grid--single {
+	grid-template-columns: 1fr;
 }
 
 .dm-editorial__copy {
@@ -1147,6 +1194,22 @@ body.single-tutor_course {
 	color: var(--dm-color-text);
 }
 
+.dm-editorial__title-media {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	margin: 0 0 0.85rem;
+}
+
+.dm-editorial__title-media img {
+	display: block;
+	width: min(100%, 760px);
+	height: auto;
+	margin: 0 auto;
+	object-fit: contain;
+}
+
 .dm-editorial__lead {
 	margin: 0;
 	font-size: 0.98rem;
@@ -1156,24 +1219,66 @@ body.single-tutor_course {
 
 .dm-editorial__list {
 	margin: 0;
-	padding-left: 1.2rem;
+	padding: 0;
+	list-style: none;
 	display: grid;
 	gap: 0.55rem;
 	color: var(--dm-color-text);
 }
 
-.dm-editorial__list li::marker {
+.dm-editorial__list li {
+	position: relative;
+	padding-left: 1.75rem;
+}
+
+.dm-editorial__list li::before {
+	position: absolute;
+	left: 0;
+	top: 0.1rem;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.dm-editorial__list--stars li::before {
+	content: '★';
 	color: var(--dm-color-primary);
+}
+
+.dm-editorial__list--checks li::before {
+	content: '✓';
+	color: var(--dm-color-accent);
 }
 
 .dm-editorial__figure img {
 	display: block;
 	width: 100%;
 	height: auto;
-	border-radius: var(--dm-radius);
-	border: 1px solid var(--dm-color-border);
-	box-shadow: var(--dm-shadow);
 	object-fit: cover;
+}
+
+.dm-single__media--inline {
+	width: 100%;
+	height: auto;
+}
+
+.dm-single__thumbnail--inline {
+	width: 100%;
+	height: auto;
+	max-height: none;
+	background: transparent;
+}
+
+.dm-single__thumbnail--inline img {
+	display: block;
+	width: 100%;
+	height: auto;
+	max-height: min(72vh, 760px);
+	object-fit: cover;
+	border-radius: var(--dm-radius);
+}
+
+.dm-editorial__figure--hero {
+	align-self: stretch;
 }
 
 .dm-editorial__cta-row {
@@ -1298,6 +1403,18 @@ body.single-tutor_course {
 	-webkit-overflow-scrolling: touch;
 }
 
+.dm-cart-drawer__notice {
+	display: none;
+	margin-bottom: 0.85rem;
+	padding: 0.75rem 0.9rem;
+	border-radius: var(--dm-radius);
+	background: rgba(86, 182, 174, 0.12);
+	border: 1px solid rgba(86, 182, 174, 0.28);
+	color: var(--dm-color-text);
+	font-size: 0.9rem;
+	line-height: 1.45;
+}
+
 /* Footer with action buttons */
 .dm-cart-drawer__footer {
 	display: flex;
@@ -1328,6 +1445,14 @@ body.dm-cart-drawer-open {
    The wp_loaded hook in cart-drawer.php removes them server-side, but this rule
    catches any edge-case where a plugin re-registers those hooks. */
 #dm-cart-drawer .woocommerce-mini-cart__buttons {
+	display: none !important;
+}
+
+.dm-cta .added_to_cart.wc-forward,
+.dm-single__actions .added_to_cart.wc-forward,
+.dm-card .added_to_cart.wc-forward,
+.dm-recurso-card .added_to_cart.wc-forward,
+.dm-product-card .added_to_cart.wc-forward {
 	display: none !important;
 }
 

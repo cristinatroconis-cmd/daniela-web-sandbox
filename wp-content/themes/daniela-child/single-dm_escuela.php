@@ -20,29 +20,19 @@ while (have_posts()) :
 			<?php
 			$post_id               = get_the_ID();
 			$hero_image_url        = trim((string) get_post_meta($post_id, '_dm_single_hero_image_url', true));
-			$has_hero_image        = ($hero_image_url !== '') || has_post_thumbnail();
+			if ($hero_image_url === '' && function_exists('dm_cpt_get_catalog_image_url')) {
+				$hero_image_url = dm_cpt_get_catalog_image_url($post_id, 'large');
+			}
 			$hero_kicker           = trim((string) get_post_meta($post_id, '_dm_editorial_hero_kicker', true));
 			$hero_intro            = trim((string) get_post_meta($post_id, '_dm_editorial_hero_intro', true));
 			$hero_button_label     = trim((string) get_post_meta($post_id, '_dm_editorial_hero_button_label', true));
 			$has_editorial_content = function_exists('dm_cpt_has_editorial_sections') ? dm_cpt_has_editorial_sections($post_id) : false;
-			$editorial_sections    = function_exists('dm_cpt_render_editorial_sections') ? dm_cpt_render_editorial_sections($post_id) : '';
+			$editorial_sections    = function_exists('dm_cpt_render_editorial_sections') ? dm_cpt_render_editorial_sections($post_id, $hero_image_url) : '';
 			$hero_cta              = $hero_button_label !== '' ? dm_cpt_render_cta($post_id, ['label' => $hero_button_label]) : '';
 			$fallback_cta          = ! $has_editorial_content && ! $hero_cta ? dm_cpt_render_cta($post_id) : '';
 			?>
 
-			<div class="dm-single__layout<?php echo $has_hero_image ? '' : ' dm-single__layout--no-image'; ?>">
-
-				<?php if ($has_hero_image) : ?>
-					<div class="dm-single__media">
-						<div class="dm-single__thumbnail">
-							<?php if ($hero_image_url !== '') : ?>
-								<img src="<?php echo esc_url($hero_image_url); ?>" alt="<?php echo esc_attr(get_the_title()); ?>" loading="lazy" />
-							<?php else : ?>
-								<?php the_post_thumbnail('large'); ?>
-							<?php endif; ?>
-						</div>
-					</div>
-				<?php endif; ?>
+			<div class="dm-single__layout dm-single__layout--no-image">
 
 				<div class="dm-single__body">
 
@@ -83,7 +73,7 @@ while (have_posts()) :
 					</header>
 
 					<div class="dm-single__content entry-content">
-						<?php if (trim((string) get_the_content()) !== '') : ?>
+						<?php if (! $has_editorial_content && trim((string) get_the_content()) !== '') : ?>
 							<?php the_content(); ?>
 						<?php endif; ?>
 						<?php if ($editorial_sections) : ?>
@@ -91,22 +81,6 @@ while (have_posts()) :
 							?>
 						<?php endif; ?>
 					</div>
-
-					<?php if ($hero_cta || $fallback_cta) : ?>
-						<div class="dm-single__actions">
-							<?php if ($hero_cta) : ?>
-								<aside class="dm-single__cta">
-									<?php echo $hero_cta; // phpcs:ignore WordPress.Security.EscapeOutput 
-									?>
-								</aside>
-							<?php elseif ($fallback_cta) : ?>
-								<aside class="dm-single__cta">
-									<?php echo $fallback_cta; // phpcs:ignore WordPress.Security.EscapeOutput 
-									?>
-								</aside>
-							<?php endif; ?>
-						</div>
-					<?php endif; ?>
 
 					<footer class="dm-single__footer">
 						<a href="<?php echo esc_url(get_post_type_archive_link('dm_escuela')); ?>" class="dm-btn dm-btn--ghost">

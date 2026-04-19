@@ -85,6 +85,24 @@ add_action('wp_enqueue_scripts', function () {
 		true
 	);
 
+	$in_cart_ids = array();
+	if (WC()->cart && ! WC()->cart->is_empty()) {
+		foreach (WC()->cart->get_cart() as $cart_item) {
+			if (! empty($cart_item['product_id'])) {
+				$in_cart_ids[] = (int) $cart_item['product_id'];
+			}
+		}
+	}
+
+	wp_localize_script(
+		'dm-cart-drawer',
+		'dmCartDrawer',
+		array(
+			'inCartIds'            => array_values(array_unique($in_cart_ids)),
+			'alreadyInCartMessage' => __('Ya está en tu carrito', 'daniela-child'),
+		)
+	);
+
 	wp_enqueue_script('woocommerce');
 	wp_enqueue_script('wc-add-to-cart');
 	wp_enqueue_script('wc-cart-fragments');

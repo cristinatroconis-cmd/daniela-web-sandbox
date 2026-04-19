@@ -131,10 +131,9 @@ function dm_products_render_card(WC_Product $product)
 		? wp_get_attachment_image_url($thumbnail_id, 'woocommerce_thumbnail')
 		: wc_placeholder_img_src('woocommerce_thumbnail');
 
-	$excerpt = $product->get_short_description();
-	if (empty($excerpt)) {
-		$excerpt = wp_trim_words($product->get_description(), 15);
-	}
+	$excerpt = function_exists('dm_get_product_catalog_excerpt')
+		? dm_get_product_catalog_excerpt($product)
+		: trim(wp_strip_all_tags((string) get_post_field('post_excerpt', $product_id)));
 
 	$price_html = $product->get_price_html();
 ?>

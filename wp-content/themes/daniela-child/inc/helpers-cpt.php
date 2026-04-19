@@ -14,6 +14,104 @@ if (! defined('ABSPATH')) {
 }
 
 // =============================================================================
+// ADMIN UI — Selector de medios para metaboxes de imagen
+// =============================================================================
+
+add_action('admin_enqueue_scripts', 'dm_admin_enqueue_media_for_metaboxes');
+
+function dm_admin_enqueue_media_for_metaboxes()
+{
+	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+	if (! $screen || ! in_array($screen->post_type, ['dm_recurso', 'dm_escuela', 'dm_servicio', 'product'], true)) {
+		return;
+	}
+
+	wp_enqueue_media();
+}
+
+add_action('admin_print_footer_scripts-post.php', 'dm_admin_print_media_picker_script');
+add_action('admin_print_footer_scripts-post-new.php', 'dm_admin_print_media_picker_script');
+
+function dm_admin_print_media_picker_script()
+{
+	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+	if (! $screen || ! in_array($screen->post_type, ['dm_recurso', 'dm_escuela', 'dm_servicio', 'product'], true)) {
+		return;
+	}
+?>
+	<script>
+		document.addEventListener('click', function(event) {
+			var selectButton = event.target.closest('.dm-media-field__select');
+			var removeButton = event.target.closest('.dm-media-field__remove');
+
+			if (selectButton) {
+				event.preventDefault();
+				var wrapper = selectButton.closest('.dm-media-field');
+				if (!wrapper || typeof wp === 'undefined' || !wp.media) {
+					return;
+				}
+
+				var input = wrapper.querySelector('.dm-media-field__input');
+				var preview = wrapper.querySelector('.dm-media-field__preview');
+				var frame = wp.media({
+					title: 'Selecciona una imagen',
+					button: {
+						text: 'Usar esta imagen'
+					},
+					multiple: false
+				});
+
+				frame.on('select', function() {
+					var attachment = frame.state().get('selection').first().toJSON();
+					if (input) {
+						input.value = attachment.url || '';
+					}
+					if (preview) {
+						preview.innerHTML = attachment.url ? '<img src="' + attachment.url + '" alt="" style="max-width:100%;height:auto;border-radius:6px;display:block;" />' : '';
+					}
+				});
+
+				frame.open();
+			}
+
+			if (removeButton) {
+				event.preventDefault();
+				var removeWrapper = removeButton.closest('.dm-media-field');
+				if (!removeWrapper) {
+					return;
+				}
+				var removeInput = removeWrapper.querySelector('.dm-media-field__input');
+				var removePreview = removeWrapper.querySelector('.dm-media-field__preview');
+				if (removeInput) {
+					removeInput.value = '';
+				}
+				if (removePreview) {
+					removePreview.innerHTML = '';
+				}
+			}
+		});
+	</script>
+<?php
+}
+
+function dm_render_media_picker_field($field_id, $value = '', $help = '')
+{
+	$value = trim((string) $value);
+	echo '<div class="dm-media-field">';
+	echo '<input type="text" class="dm-media-field__input" id="' . esc_attr($field_id) . '" name="' . esc_attr($field_id) . '" value="' . esc_attr($value) . '" style="width:100%;margin-bottom:8px;" readonly />';
+	echo '<p><button type="button" class="button dm-media-field__select">' . esc_html__('Seleccionar imagen', 'daniela-child') . '</button> <button type="button" class="button-link-delete dm-media-field__remove">' . esc_html__('Quitar imagen', 'daniela-child') . '</button></p>';
+	echo '<div class="dm-media-field__preview" style="margin-top:8px;">';
+	if ($value !== '') {
+		echo '<img src="' . esc_url($value) . '" alt="" style="max-width:100%;height:auto;border-radius:6px;display:block;" />';
+	}
+	echo '</div>';
+	if ($help !== '') {
+		echo '<p class="description" style="margin-top:6px;">' . esc_html($help) . '</p>';
+	}
+	echo '</div>';
+}
+
+// =============================================================================
 // METABOX — Vinculación con producto WooCommerce
 // =============================================================================
 
@@ -207,6 +305,71 @@ function dm_cpt_get_linked_product($post_id = null)
 	}
 
 	return wc_get_product($wc_product_id) ?: null;
+}
+
+function dm_cpt_get_catalog_excerpt($post_id)
+{
+	$product = dm_cpt_get_linked_product($post_id);
+	if ($product instanceof WC_Product) {
+		$excerpt = trim(wp_strip_all_tags((string) $product->get_short_description()));
+		if ($excerpt !== '') {
+			return $excerpt;
+		}
+	}
+
+	return trim(wp_strip_all_tags((string) get_the_excerpt($post_id)));
+}
+
+function dm_cpt_get_catalog_image_html($post_id, $size = 'woocommerce_thumbnail')
+{
+	$product = dm_cpt_get_linked_product($post_id);
+	if ($product instanceof WC_Product && $product->get_image_id()) {
+		return wp_get_attachment_image($product->get_image_id(), $size, false, ['loading' => 'lazy']);
+	}
+
+	if (has_post_thumbnail($post_id)) {
+		return get_the_post_thumbnail($post_id, $size, ['loading' => 'lazy']);
+	}
+
+	return '';
+}
+
+function dm_cpt_get_catalog_image_url($post_id, $size = 'large')
+{
+	$product = dm_cpt_get_linked_product($post_id);
+	if ($product instanceof WC_Product && $product->get_image_id()) {
+		$image_url = wp_get_attachment_image_url($product->get_image_id(), $size);
+		if ($image_url) {
+			return (string) $image_url;
+		}
+	}
+
+	if (has_post_thumbnail($post_id)) {
+		$image_url = get_the_post_thumbnail_url($post_id, $size);
+		if ($image_url) {
+			return (string) $image_url;
+		}
+	}
+
+	return '';
+}
+
+function dm_cpt_render_editorial_heading($title = '', $image_url = '', $variant = 'section')
+{
+	$title     = trim((string) $title);
+	$image_url = trim((string) $image_url);
+	$class     = 'final' === $variant ? 'dm-editorial__final-title' : 'dm-editorial__section-title';
+
+	if ($image_url !== '') {
+		$alt = $title !== '' ? $title : __('Título de sección', 'daniela-child');
+		return '<div class="dm-editorial__title-media dm-editorial__title-media--' . esc_attr($variant) . '"><img src="' . esc_url($image_url) . '" alt="' . esc_attr($alt) . '" loading="lazy" /></div>';
+	}
+
+	if ($title === '') {
+		return '';
+	}
+
+	return '<h2 class="' . esc_attr($class) . '">' . esc_html($title) . '</h2>';
 }
 
 /**
@@ -454,34 +617,27 @@ function dm_limit_metaboxes_for_editorial_flow()
 			'product_catdiv',
 			'tagsdiv-product_tag',
 			'facebook_metabox',
+			'postexcerpt',
+			'postimagediv',
 		],
 		'dm_recurso' => [
-			'postexcerpt',
 			'wc-memberships-post-memberships-data',
 			'submitdiv',
 			'dm_wc_product',
 			'dm_editorial_sections',
-			'postimagediv',
-			'dm_single_hero_image',
 		],
 		'dm_servicio' => [
-			'postexcerpt',
 			'wc-memberships-post-memberships-data',
 			'submitdiv',
 			'dm_wc_product',
 			'dm_editorial_sections',
-			'postimagediv',
-			'dm_single_hero_image',
 		],
 		'dm_escuela' => [
-			'postexcerpt',
 			'wc-memberships-post-memberships-data',
 			'submitdiv',
 			'dm_wc_product',
 			'dm_editorial_sections',
 			'dm_tutor_course_url',
-			'postimagediv',
-			'dm_single_hero_image',
 		],
 	];
 
@@ -514,19 +670,168 @@ function dm_limit_metaboxes_for_editorial_flow()
 }
 
 /**
- * Product: oculta el editor largo para mostrar solo los contenedores solicitados.
+ * Ajusta la UI de edición para productos y CPTs editoriales.
  */
-add_action('admin_head-post-new.php', 'dm_hide_product_main_editor_box');
-add_action('admin_head-post.php', 'dm_hide_product_main_editor_box');
+add_action('init', 'dm_cleanup_editorial_cpt_supports', 20);
+add_action('init', 'dm_enable_product_excerpt_support', 21);
+add_action('admin_head-post-new.php', 'dm_adjust_editorial_admin_boxes');
+add_action('admin_head-post.php', 'dm_adjust_editorial_admin_boxes');
+add_action('admin_footer-post-new.php', 'dm_reorder_product_catalog_metaboxes');
+add_action('admin_footer-post.php', 'dm_reorder_product_catalog_metaboxes');
+add_action('add_meta_boxes_product', 'dm_customize_product_catalog_metaboxes', 30);
+add_filter('default_hidden_meta_boxes', 'dm_force_editorial_metabox_visibility', 10, 2);
+add_filter('hidden_meta_boxes', 'dm_force_editorial_metabox_visibility', 10, 2);
 
-function dm_hide_product_main_editor_box()
+function dm_cleanup_editorial_cpt_supports()
+{
+	foreach (['dm_recurso', 'dm_escuela', 'dm_servicio'] as $post_type) {
+		remove_post_type_support($post_type, 'editor');
+		remove_post_type_support($post_type, 'excerpt');
+	}
+}
+
+function dm_enable_product_excerpt_support()
+{
+	add_post_type_support('product', 'excerpt');
+}
+
+function dm_adjust_editorial_admin_boxes()
+{
+	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
+	if (! $screen || empty($screen->post_type)) {
+		return;
+	}
+
+	if ('product' === $screen->post_type) {
+		echo '<style>#postdivrich{display:none !important;}</style>';
+		return;
+	}
+
+	if (in_array($screen->post_type, ['dm_recurso', 'dm_escuela', 'dm_servicio'], true)) {
+		echo '<style>#postdivrich,#postexcerpt{display:none !important;}</style>';
+	}
+}
+
+function dm_force_editorial_metabox_visibility($hidden, $screen)
+{
+	if (! $screen || empty($screen->post_type)) {
+		return $hidden;
+	}
+
+	if ('product' === $screen->post_type) {
+		$hidden = array_diff((array) $hidden, ['postimagediv', 'postexcerpt', 'dm_product_catalog_excerpt']);
+	}
+
+	if (in_array($screen->post_type, ['dm_recurso', 'dm_escuela', 'dm_servicio'], true)) {
+		$hidden = array_unique(array_merge((array) $hidden, ['postexcerpt']));
+	}
+
+	return array_values($hidden);
+}
+
+function dm_customize_product_catalog_metaboxes()
+{
+	add_post_type_support('product', 'excerpt');
+
+	remove_meta_box('postimagediv', 'product', 'side');
+	remove_meta_box('postimagediv', 'product', 'normal');
+	add_meta_box(
+		'postimagediv',
+		__('Imagen que se muestra en el catálogo', 'daniela-child'),
+		'post_thumbnail_meta_box',
+		'product',
+		'normal',
+		'high'
+	);
+
+	remove_meta_box('postexcerpt', 'product', 'normal');
+	remove_meta_box('postexcerpt', 'product', 'advanced');
+	add_meta_box(
+		'dm_product_catalog_excerpt',
+		__('Excerpt que se muestra en el catálogo', 'daniela-child'),
+		'dm_render_product_catalog_excerpt_metabox',
+		'product',
+		'normal',
+		'core'
+	);
+}
+
+function dm_render_product_catalog_excerpt_metabox($post)
+{
+	wp_nonce_field('dm_product_catalog_excerpt_save', 'dm_product_catalog_excerpt_nonce');
+	$value = (string) get_post_field('post_excerpt', $post->ID, 'edit');
+
+	echo '<textarea id="dm_product_catalog_excerpt_field" name="dm_product_catalog_excerpt" rows="5" style="width:100%;">' . esc_textarea($value) . '</textarea>';
+	echo '<p class="description" style="margin-top:8px;">' . esc_html__('Este texto se usa en las tarjetas de catálogo y archives del sitio.', 'daniela-child') . '</p>';
+}
+
+add_action('save_post_product', 'dm_save_product_catalog_excerpt', 20, 2);
+
+function dm_save_product_catalog_excerpt($post_id, $post)
+{
+	if (! $post || 'product' !== $post->post_type) {
+		return;
+	}
+
+	if (
+		! isset($_POST['dm_product_catalog_excerpt_nonce']) ||
+		! wp_verify_nonce(sanitize_key($_POST['dm_product_catalog_excerpt_nonce']), 'dm_product_catalog_excerpt_save')
+	) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (! current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	$excerpt = isset($_POST['dm_product_catalog_excerpt'])
+		? sanitize_textarea_field(wp_unslash($_POST['dm_product_catalog_excerpt']))
+		: '';
+
+	remove_action('save_post_product', 'dm_save_product_catalog_excerpt', 20);
+	wp_update_post([
+		'ID'           => $post_id,
+		'post_excerpt' => $excerpt,
+	]);
+	add_action('save_post_product', 'dm_save_product_catalog_excerpt', 20, 2);
+}
+
+function dm_reorder_product_catalog_metaboxes()
 {
 	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
 	if (! $screen || 'product' !== $screen->post_type) {
 		return;
 	}
+	?>
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			var normalSortables = document.getElementById('normal-sortables');
+			if (!normalSortables) {
+				return;
+			}
 
-	echo '<style>#postdivrich{display:none !important;}</style>';
+			var imageBox = document.getElementById('postimagediv');
+			var excerptBox = document.getElementById('dm_product_catalog_excerpt');
+			var membershipsBox = document.getElementById('wc-memberships-product-memberships-data');
+
+			if (imageBox) {
+				normalSortables.insertBefore(imageBox, normalSortables.firstChild);
+			}
+
+			if (excerptBox && membershipsBox && membershipsBox.parentNode === normalSortables) {
+				normalSortables.insertBefore(excerptBox, membershipsBox);
+			}
+
+			if (imageBox && excerptBox && imageBox.nextSibling !== excerptBox) {
+				normalSortables.insertBefore(excerptBox, imageBox.nextSibling);
+			}
+		});
+	</script>
+<?php
 }
 
 // =============================================================================
@@ -536,25 +841,31 @@ function dm_hide_product_main_editor_box()
 function dm_cpt_editorial_fields_config()
 {
 	return [
-		'_dm_editorial_hero_kicker'       => ['label' => __('Texto superior del hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Aprende a regular tu mente y tu cuerpo desde la raíz'],
-		'_dm_editorial_hero_intro'        => ['label' => __('Bajada del hero', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Deja de luchar con...'],
-		'_dm_editorial_hero_button_label' => ['label' => __('Texto botón hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Ver el curso'],
-		'_dm_editorial_fit_title'         => ['label' => __('Título sección “Es para ti si...”', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Es para ti si...'],
-		'_dm_editorial_fit_items'         => ['label' => __('Items sección “Es para ti si...” (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Sabes que tus pensamientos...\nVives en estado de alerta..."],
-		'_dm_editorial_learn_title'       => ['label' => __('Título sección “Qué vas a aprender”', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Qué vas a aprender'],
-		'_dm_editorial_learn_intro'       => ['label' => __('Texto corto sección aprendizaje', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'No es solo otro curso...'],
-		'_dm_editorial_learn_items'       => ['label' => __('Lista aprendizaje (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "A entender qué te pasa...\nA calmar tu cuerpo..."],
-		'_dm_editorial_learn_image'       => ['label' => __('Imagen sección aprendizaje (URL)', 'daniela-child'), 'type' => 'url', 'placeholder' => 'https://...'],
-		'_dm_editorial_learn_button_label' => ['label' => __('Texto botón sección aprendizaje', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Ver el curso'],
-		'_dm_editorial_diff_title'        => ['label' => __('Título sección “Qué hace diferente...”', 'daniela-child'), 'type' => 'text', 'placeholder' => '¿Qué hace diferente a este proceso?'],
-		'_dm_editorial_diff_items'        => ['label' => __('Lista diferenciadores (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Te explico solo lo necesario...\nDiseñado para pocos minutos..."],
-		'_dm_editorial_diff_image'        => ['label' => __('Imagen sección diferenciadores (URL)', 'daniela-child'), 'type' => 'url', 'placeholder' => 'https://...'],
-		'_dm_editorial_diff_button_label' => ['label' => __('Texto botón sección diferenciadores', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Quiero empezar'],
-		'_dm_editorial_include_title'     => ['label' => __('Título sección “Incluye”', 'daniela-child'), 'type' => 'text', 'placeholder' => '4 módulos'],
-		'_dm_editorial_include_items'     => ['label' => __('Lista “Incluye” (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Clases en video...\nRecursos descargables..."],
-		'_dm_editorial_final_title'       => ['label' => __('Título CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Si esto resonó contigo...'],
-		'_dm_editorial_final_text'        => ['label' => __('Texto CTA final', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Estás a un solo paso...'],
-		'_dm_editorial_final_button_label' => ['label' => __('Texto botón CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Quiero empezar'],
+		'_dm_single_hero_image_url'        => ['label' => __('Imagen hero del single', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona una imagen desde medios. Si la dejas vacía, se usará la imagen del producto o el fallback disponible.', 'daniela-child')],
+		'_dm_editorial_hero_kicker'        => ['label' => __('Texto superior del hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Aprende a regular tu mente y tu cuerpo desde la raíz'],
+		'_dm_editorial_hero_intro'         => ['label' => __('Bajada del hero', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Deja de luchar con...'],
+		'_dm_editorial_hero_button_label'  => ['label' => __('Texto botón hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito'],
+		'_dm_editorial_fit_title'          => ['label' => __('Título sección “Es para ti si...”', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Es para ti si...'],
+		'_dm_editorial_fit_title_image'    => ['label' => __('Imagen título sección “Es para ti si...”', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend. Si la dejas vacía, se usa el título de texto.', 'daniela-child')],
+		'_dm_editorial_fit_items'          => ['label' => __('Items sección “Es para ti si...” (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Sabes que tus pensamientos...\nVives en estado de alerta..."],
+		'_dm_editorial_learn_title'        => ['label' => __('Título sección “Qué vas a aprender”', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Qué vas a aprender'],
+		'_dm_editorial_learn_title_image'  => ['label' => __('Imagen título sección aprendizaje', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
+		'_dm_editorial_learn_intro'        => ['label' => __('Texto corto sección aprendizaje', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'No es solo otro curso...'],
+		'_dm_editorial_learn_items'        => ['label' => __('Lista aprendizaje (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "A entender qué te pasa...\nA calmar tu cuerpo..."],
+		'_dm_editorial_learn_image'        => ['label' => __('Imagen sección aprendizaje', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona la imagen desde la biblioteca de medios.', 'daniela-child')],
+		'_dm_editorial_learn_button_label' => ['label' => __('Texto botón sección aprendizaje', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito'],
+		'_dm_editorial_diff_title'         => ['label' => __('Título sección “Qué hace diferente...”', 'daniela-child'), 'type' => 'text', 'placeholder' => '¿Qué hace diferente a este proceso?'],
+		'_dm_editorial_diff_title_image'   => ['label' => __('Imagen título sección diferenciadores', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
+		'_dm_editorial_diff_items'         => ['label' => __('Lista diferenciadores (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Te explico solo lo necesario...\nDiseñado para pocos minutos..."],
+		'_dm_editorial_diff_image'         => ['label' => __('Imagen sección diferenciadores', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona la imagen desde la biblioteca de medios.', 'daniela-child')],
+		'_dm_editorial_diff_button_label'  => ['label' => __('Texto botón sección diferenciadores', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito'],
+		'_dm_editorial_include_title'      => ['label' => __('Título sección “Incluye”', 'daniela-child'), 'type' => 'text', 'placeholder' => '4 módulos'],
+		'_dm_editorial_include_title_image' => ['label' => __('Imagen título sección “Incluye”', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
+		'_dm_editorial_include_items'      => ['label' => __('Lista “Incluye” (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Clases en video...\nRecursos descargables..."],
+		'_dm_editorial_final_title'        => ['label' => __('Título CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Si esto resonó contigo...'],
+		'_dm_editorial_final_title_image'  => ['label' => __('Imagen título CTA final', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
+		'_dm_editorial_final_text'         => ['label' => __('Texto CTA final', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Estás a un solo paso...'],
+		'_dm_editorial_final_button_label' => ['label' => __('Texto botón CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito'],
 	];
 }
 
@@ -582,18 +893,25 @@ function dm_cpt_editorial_metabox_html($post)
 
 	echo '<p class="description" style="margin-bottom:12px;">';
 	echo esc_html__('Usa estos campos como un ACF ligero para construir los singles con secciones fijas y estilo consistente. En los listados, escribe un item por línea.', 'daniela-child');
+	echo ' ';
+	echo esc_html__('Todos los bloques son opcionales: si dejas una sección vacía, no se mostrará en el single.', 'daniela-child');
 	echo '</p>';
 
 	foreach ($fields as $key => $field) {
 		$value = (string) get_post_meta($post->ID, $key, true);
-		echo '<p style="margin-bottom:14px;">';
+		echo '<div style="margin-bottom:14px;">';
 		echo '<label for="' . esc_attr($key) . '" style="font-weight:600;display:block;margin-bottom:4px;">' . esc_html($field['label']) . '</label>';
 		if ('textarea' === $field['type']) {
 			echo '<textarea id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" rows="4" style="width:100%;">' . esc_textarea($value) . '</textarea>';
+		} elseif ('media' === $field['type']) {
+			dm_render_media_picker_field($key, $value, isset($field['help']) ? (string) $field['help'] : '');
 		} else {
-			echo '<input type="' . esc_attr($field['type']) . '" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr($field['placeholder']) . '" style="width:100%;" />';
+			echo '<input type="' . esc_attr($field['type']) . '" id="' . esc_attr($key) . '" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '" placeholder="' . esc_attr(isset($field['placeholder']) ? $field['placeholder'] : '') . '" style="width:100%;" />';
+			if (! empty($field['help'])) {
+				echo '<span class="description" style="display:block;margin-top:4px;">' . esc_html($field['help']) . '</span>';
+			}
 		}
-		echo '</p>';
+		echo '</div>';
 	}
 }
 
@@ -623,7 +941,20 @@ function dm_cpt_save_editorial_metabox($post_id)
 
 	foreach (dm_cpt_editorial_fields_config() as $key => $field) {
 		$raw = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : '';
-		$value = 'url' === $field['type'] ? esc_url_raw(trim((string) $raw)) : sanitize_textarea_field((string) $raw);
+
+		switch ($field['type']) {
+			case 'textarea':
+				$value = sanitize_textarea_field((string) $raw);
+				break;
+			case 'media':
+			case 'url':
+				$value = esc_url_raw(trim((string) $raw));
+				break;
+			default:
+				$value = sanitize_text_field((string) $raw);
+				break;
+		}
+
 		if ($value !== '') {
 			update_post_meta($post_id, $key, $value);
 		} else {
@@ -634,7 +965,7 @@ function dm_cpt_save_editorial_metabox($post_id)
 
 function dm_cpt_has_editorial_sections($post_id)
 {
-	$keys = array_keys(dm_cpt_editorial_fields_config());
+	$keys = array_diff(array_keys(dm_cpt_editorial_fields_config()), ['_dm_single_hero_image_url']);
 	foreach ($keys as $key) {
 		if (trim((string) get_post_meta($post_id, $key, true)) !== '') {
 			return true;
@@ -656,57 +987,81 @@ function dm_cpt_get_meta_lines($post_id, $key)
 	}));
 }
 
-function dm_cpt_render_editorial_sections($post_id)
+function dm_cpt_render_editorial_sections($post_id, $hero_image_url = '')
 {
-	$post_id = absint($post_id);
-	if ($post_id <= 0 || ! dm_cpt_has_editorial_sections($post_id)) {
+	$post_id         = absint($post_id);
+	$hero_image_url  = trim((string) $hero_image_url);
+	$has_hero_media  = ($hero_image_url !== '') || has_post_thumbnail($post_id);
+	if ($post_id <= 0 || (! dm_cpt_has_editorial_sections($post_id) && ! $has_hero_media)) {
 		return '';
 	}
 
-	$fit_title   = trim((string) get_post_meta($post_id, '_dm_editorial_fit_title', true));
-	$fit_items   = dm_cpt_get_meta_lines($post_id, '_dm_editorial_fit_items');
-	$learn_title = trim((string) get_post_meta($post_id, '_dm_editorial_learn_title', true));
-	$learn_intro = trim((string) get_post_meta($post_id, '_dm_editorial_learn_intro', true));
-	$learn_items = dm_cpt_get_meta_lines($post_id, '_dm_editorial_learn_items');
-	$learn_image = trim((string) get_post_meta($post_id, '_dm_editorial_learn_image', true));
-	$learn_cta   = trim((string) get_post_meta($post_id, '_dm_editorial_learn_button_label', true));
-	$diff_title  = trim((string) get_post_meta($post_id, '_dm_editorial_diff_title', true));
-	$diff_items  = dm_cpt_get_meta_lines($post_id, '_dm_editorial_diff_items');
-	$diff_image  = trim((string) get_post_meta($post_id, '_dm_editorial_diff_image', true));
-	$diff_cta    = trim((string) get_post_meta($post_id, '_dm_editorial_diff_button_label', true));
-	$inc_title   = trim((string) get_post_meta($post_id, '_dm_editorial_include_title', true));
-	$inc_items   = dm_cpt_get_meta_lines($post_id, '_dm_editorial_include_items');
-	$final_title = trim((string) get_post_meta($post_id, '_dm_editorial_final_title', true));
-	$final_text  = trim((string) get_post_meta($post_id, '_dm_editorial_final_text', true));
-	$final_cta   = trim((string) get_post_meta($post_id, '_dm_editorial_final_button_label', true));
+	$fit_title       = trim((string) get_post_meta($post_id, '_dm_editorial_fit_title', true));
+	$fit_title_image = trim((string) get_post_meta($post_id, '_dm_editorial_fit_title_image', true));
+	$fit_items       = dm_cpt_get_meta_lines($post_id, '_dm_editorial_fit_items');
+	$fit_has_copy    = ($fit_title !== '') || ($fit_title_image !== '') || ! empty($fit_items);
+	$learn_title     = trim((string) get_post_meta($post_id, '_dm_editorial_learn_title', true));
+	$learn_title_image = trim((string) get_post_meta($post_id, '_dm_editorial_learn_title_image', true));
+	$learn_intro     = trim((string) get_post_meta($post_id, '_dm_editorial_learn_intro', true));
+	$learn_items     = dm_cpt_get_meta_lines($post_id, '_dm_editorial_learn_items');
+	$learn_image     = trim((string) get_post_meta($post_id, '_dm_editorial_learn_image', true));
+	$learn_cta       = trim((string) get_post_meta($post_id, '_dm_editorial_learn_button_label', true));
+	$diff_title      = trim((string) get_post_meta($post_id, '_dm_editorial_diff_title', true));
+	$diff_title_image = trim((string) get_post_meta($post_id, '_dm_editorial_diff_title_image', true));
+	$diff_items      = dm_cpt_get_meta_lines($post_id, '_dm_editorial_diff_items');
+	$diff_image      = trim((string) get_post_meta($post_id, '_dm_editorial_diff_image', true));
+	$diff_cta        = trim((string) get_post_meta($post_id, '_dm_editorial_diff_button_label', true));
+	$inc_title       = trim((string) get_post_meta($post_id, '_dm_editorial_include_title', true));
+	$inc_title_image = trim((string) get_post_meta($post_id, '_dm_editorial_include_title_image', true));
+	$inc_items       = dm_cpt_get_meta_lines($post_id, '_dm_editorial_include_items');
+	$final_title     = trim((string) get_post_meta($post_id, '_dm_editorial_final_title', true));
+	$final_title_image = trim((string) get_post_meta($post_id, '_dm_editorial_final_title_image', true));
+	$final_text      = trim((string) get_post_meta($post_id, '_dm_editorial_final_text', true));
+	$final_cta       = trim((string) get_post_meta($post_id, '_dm_editorial_final_button_label', true));
 
 	ob_start();
-	?>
+?>
 	<div class="dm-editorial">
-		<?php if ($fit_title || ! empty($fit_items)) : ?>
+		<?php if ($fit_has_copy || $has_hero_media) : ?>
 			<section class="dm-editorial__section dm-editorial__section--panel">
 				<div class="dm-editorial__panel dm-editorial__panel--beige">
-					<?php if ($fit_title) : ?>
-						<h2 class="dm-editorial__section-title"><?php echo esc_html($fit_title); ?></h2>
-					<?php endif; ?>
-					<?php if (! empty($fit_items)) : ?>
-						<ul class="dm-editorial__list dm-editorial__list--stars">
-							<?php foreach ($fit_items as $item) : ?>
-								<li><?php echo esc_html($item); ?></li>
-							<?php endforeach; ?>
-						</ul>
-					<?php endif; ?>
+					<div class="dm-editorial__grid<?php echo ($has_hero_media && $fit_has_copy) ? '' : ' dm-editorial__grid--single'; ?>">
+						<div class="dm-editorial__copy">
+							<?php echo dm_cpt_render_editorial_heading($fit_title, $fit_title_image, 'section'); // phpcs:ignore WordPress.Security.EscapeOutput 
+							?>
+							<?php if (! empty($fit_items)) : ?>
+								<ul class="dm-editorial__list dm-editorial__list--stars">
+									<?php foreach ($fit_items as $item) : ?>
+										<li><?php echo esc_html($item); ?></li>
+									<?php endforeach; ?>
+								</ul>
+							<?php endif; ?>
+						</div>
+						<?php if ($has_hero_media) : ?>
+							<div class="dm-editorial__figure dm-editorial__figure--hero">
+								<div class="dm-single__media dm-single__media--inline">
+									<div class="dm-single__thumbnail dm-single__thumbnail--inline">
+										<?php if ($hero_image_url !== '') : ?>
+											<img src="<?php echo esc_url($hero_image_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" loading="lazy" />
+										<?php else : ?>
+											<?php echo get_the_post_thumbnail($post_id, 'large'); // phpcs:ignore WordPress.Security.EscapeOutput 
+											?>
+										<?php endif; ?>
+									</div>
+								</div>
+							</div>
+						<?php endif; ?>
+					</div>
 				</div>
 			</section>
 		<?php endif; ?>
 
-		<?php if ($learn_title || $learn_intro || ! empty($learn_items) || $learn_image) : ?>
+		<?php if ($learn_title || $learn_title_image || $learn_intro || ! empty($learn_items) || $learn_image) : ?>
 			<section class="dm-editorial__section dm-editorial__section--split">
 				<div class="dm-editorial__grid">
 					<div class="dm-editorial__copy">
-						<?php if ($learn_title) : ?>
-							<h2 class="dm-editorial__section-title"><?php echo esc_html($learn_title); ?></h2>
-						<?php endif; ?>
+						<?php echo dm_cpt_render_editorial_heading($learn_title, $learn_title_image, 'section'); // phpcs:ignore WordPress.Security.EscapeOutput 
+						?>
 						<?php if ($learn_intro) : ?>
 							<p class="dm-editorial__lead"><?php echo nl2br(esc_html($learn_intro)); ?></p>
 						<?php endif; ?>
@@ -729,16 +1084,15 @@ function dm_cpt_render_editorial_sections($post_id)
 			</section>
 		<?php endif; ?>
 
-		<?php if ($diff_title || ! empty($diff_items) || $diff_image) : ?>
+		<?php if ($diff_title || $diff_title_image || ! empty($diff_items) || $diff_image) : ?>
 			<section class="dm-editorial__section dm-editorial__section--split dm-editorial__section--alt">
 				<div class="dm-editorial__grid">
 					<?php if ($diff_image) : ?>
 						<div class="dm-editorial__figure"><img src="<?php echo esc_url($diff_image); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" loading="lazy" /></div>
 					<?php endif; ?>
 					<div class="dm-editorial__copy">
-						<?php if ($diff_title) : ?>
-							<h2 class="dm-editorial__section-title"><?php echo esc_html($diff_title); ?></h2>
-						<?php endif; ?>
+						<?php echo dm_cpt_render_editorial_heading($diff_title, $diff_title_image, 'section'); // phpcs:ignore WordPress.Security.EscapeOutput 
+						?>
 						<?php if (! empty($diff_items)) : ?>
 							<ul class="dm-editorial__list dm-editorial__list--checks">
 								<?php foreach ($diff_items as $item) : ?>
@@ -755,12 +1109,11 @@ function dm_cpt_render_editorial_sections($post_id)
 			</section>
 		<?php endif; ?>
 
-		<?php if ($inc_title || ! empty($inc_items)) : ?>
+		<?php if ($inc_title || $inc_title_image || ! empty($inc_items)) : ?>
 			<section class="dm-editorial__section dm-editorial__section--panel">
 				<div class="dm-editorial__panel dm-editorial__panel--soft">
-					<?php if ($inc_title) : ?>
-						<h2 class="dm-editorial__section-title"><?php echo esc_html($inc_title); ?></h2>
-					<?php endif; ?>
+					<?php echo dm_cpt_render_editorial_heading($inc_title, $inc_title_image, 'section'); // phpcs:ignore WordPress.Security.EscapeOutput 
+					?>
 					<?php if (! empty($inc_items)) : ?>
 						<ul class="dm-editorial__list dm-editorial__list--checks">
 							<?php foreach ($inc_items as $item) : ?>
@@ -772,12 +1125,11 @@ function dm_cpt_render_editorial_sections($post_id)
 			</section>
 		<?php endif; ?>
 
-		<?php if ($final_title || $final_text || $final_cta) : ?>
+		<?php if ($final_title || $final_title_image || $final_text || $final_cta) : ?>
 			<section class="dm-editorial__section dm-editorial__section--final">
 				<div class="dm-editorial__final">
-					<?php if ($final_title) : ?>
-						<h2 class="dm-editorial__final-title"><?php echo esc_html($final_title); ?></h2>
-					<?php endif; ?>
+					<?php echo dm_cpt_render_editorial_heading($final_title, $final_title_image, 'final'); // phpcs:ignore WordPress.Security.EscapeOutput 
+					?>
 					<?php if ($final_text) : ?>
 						<p class="dm-editorial__lead"><?php echo nl2br(esc_html($final_text)); ?></p>
 					<?php endif; ?>
@@ -1069,8 +1421,8 @@ function dm_cpt_render_grid($query)
 		$post_id   = get_the_ID();
 		$permalink = get_permalink();
 		$title     = get_the_title();
-		$excerpt   = get_the_excerpt();
-		$thumb_id  = get_post_thumbnail_id();
+		$excerpt   = dm_cpt_get_catalog_excerpt($post_id);
+		$thumb_html = dm_cpt_get_catalog_image_html($post_id, 'woocommerce_thumbnail');
 
 		// Para dm_escuela: enlazar imagen/título al curso Tutor si existe.
 		$tutor_url = '';
@@ -1094,10 +1446,10 @@ function dm_cpt_render_grid($query)
 
 		$html .= '<article class="dm-card">';
 
-		if ($thumb_id) {
+		if ($thumb_html) {
 			$html .= '<a href="' . esc_url($card_link) . '" class="dm-card__image-link" tabindex="-1" aria-hidden="true">';
 			$html .= '<div class="dm-card__thumb">';
-			$html .= get_the_post_thumbnail($post_id, 'woocommerce_thumbnail');
+			$html .= $thumb_html; // phpcs:ignore WordPress.Security.EscapeOutput
 			$html .= '</div>';
 			$html .= '</a>';
 		}

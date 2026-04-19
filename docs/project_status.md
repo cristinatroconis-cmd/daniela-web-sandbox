@@ -95,7 +95,10 @@ Todos en `wp-content/themes/daniela-child/`:
 - ✅ Archives CPT (escuela, recursos, servicios) → `.dm-grid` + `.dm-card` via `dm_cpt_render_grid()`.
 - ✅ Grids de producto WooCommerce → `.dm-products-grid` via `inc/dm-products.php`.
 - ✅ Estilos centralizados en `style.css`; PHP renderers no llevan layout inline.
-- ✅ CTA neutro: "Ver detalles" (excepción: "Ver curso" en `/escuela/` con `_dm_tutor_course_url`).
+- ✅ CTA público neutro en catálogo: "Ver detalles".
+- ✅ CTA público primario de compra: "Agregar al carrito".
+- ✅ Regla de freebies: el badge "Gratis" comunica el estado en catálogo; la aclaración de que no pagará vive en single, drawer o checkout.
+- 🟡 Regla UX aprobada para siguiente ajuste: si el producto ya está en el carrito, el clic debe reabrir el drawer y mostrar "Ya está en tu carrito", sin duplicados ni botón "Ver carrito" junto al CTA del bloque.
 - ✅ Regla: 3 columnas en desktop (≥1024px), responsivo en tablet/mobile.
 - ✅ **Thumb unificado 16:9** — todas las card-thumbs (CPT grids + recurso hub + product grids) usan `aspect-ratio: 16/9` (`--dm-card-thumb-ratio`) con `object-fit: cover`, alineado con el hero del carousel de la Home.
 - ✅ **Cuerpo y footer flex** — `.dm-card__body` usa flex-column con `flex-grow` en el excerpt para que el footer de CTAs quede siempre al fondo; las cards no "saltan" de altura por diferencias en imagen o descripción.

@@ -83,6 +83,26 @@ function dm_get_products($cat_slugs, $tag_slug = '', $per_page = -1)
 }
 
 /**
+ * Return the catalog/archive excerpt coming from the WP admin excerpt metabox.
+ *
+ * @param WC_Product $product Product object.
+ * @return string
+ */
+function dm_get_product_catalog_excerpt($product)
+{
+    if (! $product instanceof WC_Product) {
+        return '';
+    }
+
+    $excerpt = trim(wp_strip_all_tags((string) get_post_field('post_excerpt', $product->get_id())));
+    if ($excerpt !== '') {
+        return $excerpt;
+    }
+
+    return trim(wp_strip_all_tags((string) $product->get_short_description()));
+}
+
+/**
  * Render a single product card HTML.
  *
  * @param WC_Product $product  The product to render.
@@ -101,7 +121,7 @@ function dm_render_product_card($product, $back_url = '')
         : $product->get_permalink();
 
     $title     = $product->get_name();
-    $excerpt   = $product->get_short_description();
+    $excerpt   = dm_get_product_catalog_excerpt($product);
     $price_raw = $product->get_price(); // '' = sin precio configurado, '0' = gratis explícito
     $is_free   = ($price_raw !== '' && (float) $price_raw <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
 

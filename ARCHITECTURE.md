@@ -532,9 +532,14 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
 
 ## Regla de consistencia: copy / CTAs
 
-- CTA secundario neutro: **"Ver detalles"** (no usar copy específico de sección como "Ver curso" en contextos genéricos).
-  - Excepción documentada: el grid de `/escuela/` muestra **"Ver curso"** como primer CTA cuando existe `_dm_tutor_course_url`, porque el contexto es explícitamente un curso en Tutor LMS. Fuera de ese contexto específico, usar "Ver detalles".
-- CTA primario de compra: **"Agregar al carrito"** (texto unificado; generado por `dm_cpt_render_cta()`).
+- CTA primario público de compra: **"Agregar al carrito"** (texto unificado en catálogo y singles editoriales, tanto para productos gratis como de pago).
+- CTA secundario público de catálogo: **"Ver detalles"**. Este es el único copy secundario permitido en cards/listados.
+- En catálogo, los freebies se diferencian visualmente con badge **"Gratis"**; no se recarga el botón con copy extra.
+- La aclaración de que un recurso no requiere pago debe vivir como microcopy en single, drawer o checkout, no en el CTA principal de la card.
+- En singles editoriales, el CTA secundario **no** es "Ver detalles": debe ser un regreso contextual tipo **"Volver a categoría / subcategoría / tag"**, y usarse con moderación como apoyo de navegación.
+- **No usar "Ver curso" como CTA público precompra.** El acceso externo tipo **"Iniciar curso"** solo debe aparecer después de la compra (por ejemplo, en thank-you page, cuenta del usuario o acceso ya autorizado).
+- Si el producto no está disponible, no es comprable o no aplica al flujo, el CTA debe desaparecer (sin mostrar botones rotos o estados ambiguos).
+- Si el producto ya está en el carrito, el usuario debe permanecer en la misma página, reabrir el drawer y ver un notice breve tipo **"Ya está en tu carrito"**. No se permiten duplicados en este stage.
 - No inventar textos nuevos por sección sin actualizar este documento.
 
 ## Archivos relevantes
@@ -558,11 +563,13 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
 # 17. Consideraciones UX
 
 ## Evitar CTAs duplicados
-- En las tarjetas de `/escuela/`: se muestran máximo dos botones en el footer:
-  1. "Ver curso" (solo si `_dm_tutor_course_url` tiene valor) — abre Tutor en nueva pestaña.
-  2. "Agregar al carrito" (solo si hay `_dm_wc_product_id` vinculado) — WooCommerce.
-- Si ninguno de los dos existe, el footer de la tarjeta no se renderiza (no aparece vacío).
-- En singles (`/escuela/<slug>/`): solo se muestra el CTA de WooCommerce.
+- En cards de catálogo, el footer debe mostrar **máximo dos acciones**:
+  1. **"Agregar al carrito"** — acción principal.
+  2. **"Ver detalles"** — acción secundaria opcional.
+- En singles editoriales, la acción principal sigue siendo **"Agregar al carrito"** y la secundaria, cuando exista, debe ser solo un enlace contextual de regreso (**"Volver a ..."**).
+- Si el producto ya está en el carrito, **no** debe inyectarse un nuevo botón **"Ver carrito"** junto al CTA del bloque. El clic debe actuar como reentrada limpia al drawer, con notice breve y sin duplicar la compra.
+- Los accesos externos tipo **"Iniciar curso"** quedan reservados al contexto post-compra; no forman parte del CTA público previo a la compra.
+- Si ningún CTA aplica, el footer de la tarjeta no se renderiza (no aparece vacío).
 
 ## Excerpt limpio
 - **Problema detectado:** algunos excerpts de posts CPT traen HTML/CTAs de versiones antiguas.

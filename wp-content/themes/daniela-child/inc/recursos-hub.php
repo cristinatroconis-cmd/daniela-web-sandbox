@@ -208,11 +208,10 @@ function dm_recursos_render_card(WC_Product $product)
 	// Price (only for pagos)
 	$price_html = $is_gratis ? '' : $product->get_price_html();
 
-	// Excerpt
-	$excerpt = $product->get_short_description();
-	if (empty($excerpt)) {
-		$excerpt = wp_trim_words($product->get_description(), 15);
-	}
+	// Excerpt del metabox de resumen en WP Admin.
+	$excerpt = function_exists('dm_get_product_catalog_excerpt')
+		? dm_get_product_catalog_excerpt($product)
+		: trim(wp_strip_all_tags((string) get_post_field('post_excerpt', $product_id)));
 
 	// Topic tags (product_tag terms) for display
 	$topic_tags = get_the_terms($product_id, 'product_tag');
