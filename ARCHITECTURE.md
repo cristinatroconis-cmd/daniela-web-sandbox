@@ -169,8 +169,6 @@ Categorías principales y subcategorías:
 
 ```
 Recursos
-├── recursos-gratis
-└── recursos-pagos
 
 Escuela
 ├── cursos
@@ -578,7 +576,7 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
 - Afecta al archivo: `wp-content/themes/daniela-child/inc/helpers-cpt.php` → función `dm_cpt_render_grid()`.
 
 ## Botones consistentes
-- Clase `dm-btn dm-btn--ghost` → "Ver curso" (acción secundaria / linkout).
+- Clase `dm-btn dm-btn--ghost` → "Ver detalles" (acción secundaria / linkout).
 - Clase `dm-btn dm-btn--primary` → "Agregar al carrito" (producto de pago).
 - Clase `dm-btn dm-btn--secondary` → "Agregar al carrito" (producto gratis).
 - No mezclar estilos entre secciones (Recursos, Escuela, Servicios usan el mismo sistema).

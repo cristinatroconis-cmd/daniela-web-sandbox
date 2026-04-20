@@ -22,7 +22,7 @@ add_action('admin_enqueue_scripts', 'dm_admin_enqueue_media_for_metaboxes');
 function dm_admin_enqueue_media_for_metaboxes()
 {
 	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
-	if (! $screen || ! in_array($screen->post_type, ['dm_recurso', 'dm_escuela', 'dm_servicio', 'product'], true)) {
+	if (! $screen || ! in_array($screen->post_type, ['dm_recurso', 'dm_escuela', 'dm_servicio', 'product', 'page'], true)) {
 		return;
 	}
 
@@ -35,7 +35,7 @@ add_action('admin_print_footer_scripts-post-new.php', 'dm_admin_print_media_pick
 function dm_admin_print_media_picker_script()
 {
 	$screen = function_exists('get_current_screen') ? get_current_screen() : null;
-	if (! $screen || ! in_array($screen->post_type, ['dm_recurso', 'dm_escuela', 'dm_servicio', 'product'], true)) {
+	if (! $screen || ! in_array($screen->post_type, ['dm_recurso', 'dm_escuela', 'dm_servicio', 'product', 'page'], true)) {
 		return;
 	}
 ?>

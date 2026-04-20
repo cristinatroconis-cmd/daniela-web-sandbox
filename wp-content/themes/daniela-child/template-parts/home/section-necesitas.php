@@ -13,52 +13,105 @@ if (! defined('ABSPATH')) {
 	exit;
 }
 
-/* --- Contenido fijo (ya no depende del Customizer) ---------------------- */
-$kicker    = '';
-$title     = '¿Dónde estás parada hoy?';
-$lead      = 'Elige el camino que mejor encaja con lo que estás viviendo ahora mismo.';
-$image_url = '';      // pon aquí una URL si quieres fijar imagen desde código
-$autoplay  = 4000;    // ms
+/* --- Contenido editable desde admin con fallback seguro ----------------- */
+$left_defaults = [
+	'kicker' => '',
+	'title'  => '¿Dónde estás parada hoy?',
+	'lead'   => 'Elige el camino que mejor encaja con lo que estás viviendo ahora mismo.',
+	'note'   => '',
+];
+
+$left_content = function_exists('dm_home_necesitas_get_front_content')
+	? dm_home_necesitas_get_front_content()
+	: $left_defaults;
+
+$kicker      = (string) ($left_content['kicker'] ?? '');
+$title       = (string) ($left_content['title'] ?? $left_defaults['title']);
+$title_image = (string) ($left_content['title_image'] ?? '');
+$lead        = (string) ($left_content['lead'] ?? $left_defaults['lead']);
+$note        = (string) ($left_content['note'] ?? '');
+$image_url   = (string) ($left_content['image'] ?? '');
+$autoplay    = 4000;
 $uploads_base_url = untrailingslashit(home_url('/wp-content/uploads/2023/08'));
 
-/* --- Slides (hardcode) -------------------------------------------------- */
+/* --- Slides (editable por página destino + fallback hardcode) ---------- */
 $slides = [
-	[
-		'kicker' => '',
-		'title'  => 'Quiero herramientas prácticas',
-		'text'   => 'PDFs, guías y registros para trabajar hoy mismo, a tu ritmo.',
-		'url'    => '/recursos/',
-		'bg'     => '#ead2ac',
-		'image'  => $uploads_base_url . '/dani_consultoria6.png',
-		'image_alt' => 'Icono de recursos descargables',
-	],
-	[
-		'kicker' => '',
-		'title'  => 'Quiero aprender de forma guiada',
-		'text'   => 'Formación online a tu ritmo o en vivo, en comunidad.',
-		'url'    => '/escuela/',
-		'bg'     => '#ad8fb7',
-		'image'  => $uploads_base_url . '/dani_consultoria5.png',
-		'image_alt' => 'Icono de formación online',
-	],
-	[
-		'kicker' => '',
-		'title'  => 'Quiero acompañamiento profesional',
-		'text'   => 'Te ofrezco mis servicios de terapia.',
-		'url'    => '/servicios/',
-		'bg'     => '#eaefbd',
-		'image'  => $uploads_base_url . '/dani_consultoria4.png',
-		'image_alt' => 'Icono de acompañamiento profesional',
-	],
-	[
-		'kicker' => '',
-		'title'  => 'No sé bien qué necesito',
-		'text'   => 'Cuéntame que estás sintiendo y encuentra lo que mejor encaja.',
-		'url'    => '/temas/',
-		'bg'     => '#c97f72',
-		'image'  => $uploads_base_url . '/dani_consultoria3.png',
-		'image_alt' => 'Icono de orientación',
-	],
+	function_exists('dm_home_necesitas_get_card_content')
+		? dm_home_necesitas_get_card_content('recursos', [
+			'kicker' => '',
+			'title'  => 'Quiero herramientas prácticas',
+			'text'   => 'PDFs, guías y registros para trabajar hoy mismo, a tu ritmo.',
+			'url'    => '/recursos/',
+			'bg'     => '#ead2ac',
+			'image'  => $uploads_base_url . '/dani_consultoria6.png',
+			'image_alt' => 'Icono de recursos descargables',
+		])
+		: [
+			'kicker' => '',
+			'title'  => 'Quiero herramientas prácticas',
+			'text'   => 'PDFs, guías y registros para trabajar hoy mismo, a tu ritmo.',
+			'url'    => '/recursos/',
+			'bg'     => '#ead2ac',
+			'image'  => $uploads_base_url . '/dani_consultoria6.png',
+			'image_alt' => 'Icono de recursos descargables',
+		],
+	function_exists('dm_home_necesitas_get_card_content')
+		? dm_home_necesitas_get_card_content('escuela', [
+			'kicker' => '',
+			'title'  => 'Quiero aprender de forma guiada',
+			'text'   => 'Formación online a tu ritmo o en vivo, en comunidad.',
+			'url'    => '/escuela/',
+			'bg'     => '#ad8fb7',
+			'image'  => $uploads_base_url . '/dani_consultoria5.png',
+			'image_alt' => 'Icono de formación online',
+		])
+		: [
+			'kicker' => '',
+			'title'  => 'Quiero aprender de forma guiada',
+			'text'   => 'Formación online a tu ritmo o en vivo, en comunidad.',
+			'url'    => '/escuela/',
+			'bg'     => '#ad8fb7',
+			'image'  => $uploads_base_url . '/dani_consultoria5.png',
+			'image_alt' => 'Icono de formación online',
+		],
+	function_exists('dm_home_necesitas_get_card_content')
+		? dm_home_necesitas_get_card_content('servicios', [
+			'kicker' => '',
+			'title'  => 'Quiero acompañamiento profesional',
+			'text'   => 'Te ofrezco mis servicios de terapia.',
+			'url'    => '/servicios/',
+			'bg'     => '#eaefbd',
+			'image'  => $uploads_base_url . '/dani_consultoria4.png',
+			'image_alt' => 'Icono de acompañamiento profesional',
+		])
+		: [
+			'kicker' => '',
+			'title'  => 'Quiero acompañamiento profesional',
+			'text'   => 'Te ofrezco mis servicios de terapia.',
+			'url'    => '/servicios/',
+			'bg'     => '#eaefbd',
+			'image'  => $uploads_base_url . '/dani_consultoria4.png',
+			'image_alt' => 'Icono de acompañamiento profesional',
+		],
+	function_exists('dm_home_necesitas_get_card_content')
+		? dm_home_necesitas_get_card_content('temas', [
+			'kicker' => '',
+			'title'  => 'No sé bien qué necesito',
+			'text'   => 'Cuéntame qué estás sintiendo y encuentra lo que mejor encaja.',
+			'url'    => '/temas/',
+			'bg'     => '#c97f72',
+			'image'  => $uploads_base_url . '/dani_consultoria3.png',
+			'image_alt' => 'Icono de orientación',
+		])
+		: [
+			'kicker' => '',
+			'title'  => 'No sé bien qué necesito',
+			'text'   => 'Cuéntame qué estás sintiendo y encuentra lo que mejor encaja.',
+			'url'    => '/temas/',
+			'bg'     => '#c97f72',
+			'image'  => $uploads_base_url . '/dani_consultoria3.png',
+			'image_alt' => 'Icono de orientación',
+		],
 ];
 ?>
 <section
@@ -84,17 +137,36 @@ $slides = [
 		<!-- ── Columna izquierda ───────────────────────────────────────── -->
 		<div class="dm-necesitas__left">
 
-			<?php if ($kicker) : ?>
-				<p class="dm-necesitas__kicker"><?php echo esc_html($kicker); ?></p>
-			<?php endif; ?>
+			<div class="dm-necesitas__copy">
+				<?php if ($kicker) : ?>
+					<p class="dm-necesitas__kicker"><?php echo esc_html($kicker); ?></p>
+				<?php endif; ?>
 
-			<h2 id="dm-necesitas-title" class="dm-necesitas__title">
-				<?php echo esc_html($title); ?>
-			</h2>
+				<?php if ($title_image !== '' && function_exists('dm_cpt_render_editorial_heading')) : ?>
+					<div class="dm-necesitas__title-wrap dm-necesitas__title-wrap--media">
+						<?php echo dm_cpt_render_editorial_heading($title, $title_image, 'section'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped 
+						?>
+						<h2 id="dm-necesitas-title" class="screen-reader-text"><?php echo esc_html($title); ?></h2>
+					</div>
+				<?php elseif ($title_image !== '') : ?>
+					<div class="dm-necesitas__title-wrap dm-necesitas__title-wrap--media">
+						<img class="dm-necesitas__title-image" src="<?php echo esc_url($title_image); ?>" alt="<?php echo esc_attr($title); ?>" loading="lazy" />
+						<h2 id="dm-necesitas-title" class="screen-reader-text"><?php echo esc_html($title); ?></h2>
+					</div>
+				<?php else : ?>
+					<h2 id="dm-necesitas-title" class="dm-necesitas__title">
+						<?php echo esc_html($title); ?>
+					</h2>
+				<?php endif; ?>
 
-			<?php if ($lead) : ?>
-				<p class="dm-necesitas__lead"><?php echo esc_html($lead); ?></p>
-			<?php endif; ?>
+				<?php if ($lead) : ?>
+					<div class="dm-necesitas__lead"><?php echo wpautop(esc_html($lead)); ?></div>
+				<?php endif; ?>
+
+				<?php if ($note) : ?>
+					<div class="dm-necesitas__note"><?php echo wpautop(esc_html($note)); ?></div>
+				<?php endif; ?>
+			</div>
 
 			<?php if ($image_url) : ?>
 				<img
@@ -117,7 +189,10 @@ $slides = [
 				<div class="dm-carousel__track">
 
 					<?php foreach ($slides as $i => $slide) :
-						$slide_url    = ! empty($slide['url']) ? esc_url(home_url($slide['url'])) : '#';
+						$raw_slide_url = isset($slide['url']) ? (string) $slide['url'] : '';
+						$slide_url     = $raw_slide_url !== ''
+							? esc_url(preg_match('#^https?://#', $raw_slide_url) ? $raw_slide_url : home_url($raw_slide_url))
+							: '#';
 						$slide_bg     = ! empty($slide['bg']) ? esc_attr($slide['bg']) : '#f4f0eb';
 						$slide_image  = ! empty($slide['image']) ? esc_url($slide['image']) : '';
 						$slide_image_alt = isset($slide['image_alt']) ? esc_attr($slide['image_alt']) : '';
