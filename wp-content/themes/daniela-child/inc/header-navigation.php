@@ -39,7 +39,7 @@ function dm_render_header_login_item()
         '<li class="%1$s"><a href="%2$s"><span>%3$s</span></a></li>',
         esc_attr(implode(' ', $classes)),
         esc_url(dm_header_login_target_url()),
-        esc_html__('Iniciar sesin', 'daniela-child')
+        esc_html__('Iniciar sesion', 'daniela-child')
     );
 }
 
