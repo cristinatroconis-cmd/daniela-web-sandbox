@@ -1,6 +1,6 @@
 # Daniela Montes Psicóloga — Project Status (Sandbox)
 
-**Última actualización:** 2026-04-14  
+**Última actualización:** 2026-04-20  
 **Repo:** `cristinatroconis-cmd/daniela-web-sandbox`  
 **Producción (referencia):** https://danielamontespsic.com/ (rocket.net)  
 **Modo de trabajo:** staging-first — cambios técnicos en staging y promoción controlada a producción.
@@ -119,6 +119,35 @@ Todos en `wp-content/themes/daniela-child/`:
 - ✅ `inc/newsletter-optin.php` renderiza el checkbox GDPR de newsletter en checkout con guard anti-duplicado.
 - ✅ Copy unificado en CTAs del drawer/popup: **“Seguir comprando”** y **“Finalizar compra”**.
 
+### 3.10 Navegación principal en staging (2026-04-20)
+- ✅ Se confirmó que el header principal visible sale del menú asignado en WordPress (DB-driven), no de un archivo hardcodeado del child theme.
+- ✅ Se sincronizó en staging la estructura base del menú desde el estado más nuevo de LocalWP.
+- ✅ Se eliminaron dos items duplicados directamente en la base de datos de staging y luego se verificó el resultado en frontend.
+- ✅ Producción quedó intacta; el ajuste fue solo en staging.
+- Estado visible validado en staging tras la limpieza: **Inicio / Recursos / Escuela / Servicios / Sobre Mi / Blog / Newsletter / [Acceso]**.
+- Dirección UX aprobada para la siguiente jerarquía del menú: `Recursos` sin hijos; `Escuela` con dropdown por tipos; `Servicios` con dropdown por tipos; `Sobre Mi` agrupando `Blog` y `Newsletter` como hijos.
+
+### 3.11 Home “¿Qué necesitas?” — stretch/alineación interna (2026-04-20)
+- ✅ `.dm-necesitas__left` ya estira a la misma altura del contenedor padre usando layout flex con `align-items: stretch` en la grilla y `height: 100%`/`min-height` consistentes.
+- ✅ `.dm-necesitas__copy` ahora ocupa verticalmente su columna (`flex: 1 1 auto`, `align-self: stretch`, `height: 100%`).
+- ✅ El contenido interno de `.dm-necesitas__copy` se distribuye con `justify-content: space-between`, de modo que los bloques queden espaciados de forma pareja dentro del panel izquierdo.
+- ✅ Ajuste verificado en staging.
+
+### 3.12 Reglas de imágenes por contenedor (2026-04-20)
+- ✅ Regla operativa: no reutilizar una sola imagen para todos los contextos; cada bloque tiene su proporción ideal.
+- ✅ `dm-card__thumb` y hero del carousel Home: imagen horizontal en `16:9`.
+- ✅ `dm-single__thumbnail` / `dm-single__thumbnail--inline`: ideal imagen propia vertical del single; si falta, el sistema prioriza imagen destacada del CPT y luego imagen del producto como fallback seguro.
+- ✅ `dm-editorial__title-media--section`: caja fija `462x100`; la imagen interna entra completa con `object-fit: contain`.
+- ✅ Recomendación para cliente:
+  - Catálogo/card: `1600x900 px` o `1280x720 px`.
+  - Single/hero: `1200x1500 px` o proporción vertical cercana a `4:5`.
+  - Título de sección editorial: `462x100 px` o `924x200 px` para retina.
+- ✅ Buenas prácticas de carga:
+  - evitar usar la misma imagen horizontal de catálogo como hero principal del single;
+  - dejar aire interno si la imagen lleva texto o logo;
+  - usar `jpg` para fotos y `png` solo cuando haga falta transparencia;
+  - mantener pesos moderados (idealmente `<300 KB` para títulos y `<500 KB` para imágenes grandes).
+
 ---
 
 ## 4) Backlog inmediato 🔲
@@ -135,11 +164,13 @@ Todos en `wp-content/themes/daniela-child/`:
   4. validar QA completo (front, admin, checkout, cursos, lecciones, quizzes).
 
 ### Prioridad media
-- [ ] **Subitems hover en menú principal**  
-  Agregar subitems en WP Admin → Apariencia → Menús:
-  - Escuela → Cursos (`/escuela/?tipo=cursos`) / Talleres / Programas
-  - Recursos → Por tema (`/recursos/?tema=<slug>` con slugs de `dm_tema`)
-  - Servicios → Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`)
+- [ ] **QA final de navegación principal en staging (desktop + mobile)**  
+  Confirmar después de la iteración de jerarquía que:
+  - `Recursos` siga sin dropdown.
+  - `Escuela` abra `Cursos / Talleres / Programas` por hover/tap.
+  - `Servicios` abra `Sesiones / Paquetes / Membresías / Supervisiones` por hover/tap.
+  - `Sobre Mi` agrupe `Blog / Newsletter` como hijos sin duplicarlos arriba.
+  - El drawer/menu mobile conserve el mismo árbol sin items repetidos.
 
 - [ ] **Definir estado final de plugins de login/pagos en producción (post-incidente)**
   Validar en staging y luego decidir en producción:

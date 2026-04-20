@@ -19,15 +19,14 @@ while (have_posts()) :
 		<article id="post-<?php the_ID(); ?>" <?php post_class('dm-single__article'); ?>>
 			<?php
 			$post_id               = get_the_ID();
-			$hero_image_url        = trim((string) get_post_meta($post_id, '_dm_single_hero_image_url', true));
-			if ($hero_image_url === '' && function_exists('dm_cpt_get_catalog_image_url')) {
-				$hero_image_url = dm_cpt_get_catalog_image_url($post_id, 'large');
-			}
+			$hero_image            = function_exists('dm_cpt_get_single_hero_image') ? dm_cpt_get_single_hero_image($post_id, 'large') : ['url' => '', 'source' => ''];
+			$hero_image_url        = isset($hero_image['url']) ? (string) $hero_image['url'] : '';
+			$hero_image_source     = isset($hero_image['source']) ? (string) $hero_image['source'] : '';
 			$hero_kicker           = trim((string) get_post_meta($post_id, '_dm_editorial_hero_kicker', true));
 			$hero_intro            = trim((string) get_post_meta($post_id, '_dm_editorial_hero_intro', true));
 			$hero_button_label     = trim((string) get_post_meta($post_id, '_dm_editorial_hero_button_label', true));
 			$has_editorial_content = function_exists('dm_cpt_has_editorial_sections') ? dm_cpt_has_editorial_sections($post_id) : false;
-			$editorial_sections    = function_exists('dm_cpt_render_editorial_sections') ? dm_cpt_render_editorial_sections($post_id, $hero_image_url) : '';
+			$editorial_sections    = function_exists('dm_cpt_render_editorial_sections') ? dm_cpt_render_editorial_sections($post_id, $hero_image_url, $hero_image_source) : '';
 			$hero_cta              = $hero_button_label !== '' ? dm_cpt_render_cta($post_id, ['label' => $hero_button_label]) : '';
 			$fallback_cta          = ! $has_editorial_content && ! $hero_cta ? dm_cpt_render_cta($post_id) : '';
 			?>

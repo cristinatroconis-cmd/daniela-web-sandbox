@@ -1,6 +1,6 @@
 # Architecture Notes — Daniela Montes Psicóloga (Sandbox)
 
-**Última actualización:** 2026-04-10  
+**Última actualización:** 2026-04-20  
 Este documento complementa `ARCHITECTURE.md` (no lo reemplaza).  
 Aquí queda el "qué está implementado", el "por qué" de las decisiones y el backlog inmediato.
 
@@ -115,6 +115,76 @@ Una sola "fuente de verdad" para gating:
 - ✅ `inc/newsletter-optin.php` renderiza el opt-in GDPR en checkout con guard anti-duplicado (`static $rendered`).
 - ✅ Checkout / carrito / mi cuenta usan padding interno consistente mediante `--dm-woo-box-pad`.
 
+### 3.11 Navegación principal en staging (2026-04-20)
+
+- ✅ El menú principal visible se confirmó como **DB-driven**: depende del menú de WordPress asignado a `primary`, no de un template hardcodeado del child theme.
+- ✅ La limpieza en staging eliminó únicamente dos registros duplicados del menú y luego se verificó el header en frontend.
+- ✅ Producción no fue tocada en esta iteración.
+
+#### Estado visible validado tras la limpieza
+
+```text
+Inicio
+Recursos
+Escuela
+Servicios
+Sobre Mi
+Blog
+Newsletter
+[Acceso]
+```
+
+#### Dirección aprobada para la siguiente jerarquía del menú
+
+- `Recursos` queda sin hijos por ahora.
+- `Escuela` debe desplegar `Cursos`, `Talleres` y `Programas` usando las URLs públicas con `?tipo=`.
+- `Servicios` debe desplegar `Sesiones`, `Paquetes`, `Membresías` y `Supervisiones` usando las URLs públicas con `?tipo=`.
+- `Sobre Mi` debe agrupar `Blog` y `Newsletter` como hijos.
+
+### 3.12 Home “¿Qué necesitas?” — regla de stretch vertical (2026-04-20)
+
+- ✅ El panel izquierdo debe estirarse a la altura completa del contenedor de sección; la grilla usa `align-items: stretch` y la columna izquierda conserva `min-height`/`height: 100%`.
+- ✅ `.dm-necesitas__copy` es el contenedor elástico interno del panel izquierdo: usa `flex: 1 1 auto`, `align-self: stretch` y `height: 100%`.
+- ✅ La distribución vertical de sus hijos se resuelve con `justify-content: space-between`; esto evita que el copy quede “pegado” arriba cuando el panel izquierdo tiene más altura disponible.
+- ✅ La fuente única de estos estilos sigue siendo `assets/css/home-necesitas.css`.
+
+### 3.13 Regla de imágenes por contexto (2026-04-20)
+
+- ✅ El sistema ya no asume que una sola imagen sirve para card, single y títulos editoriales.
+- ✅ Cada contenedor tiene una proporción objetivo y una expectativa de asset distinta.
+
+#### Contrato por contenedor
+
+- `dm-card__thumb` y hero del carousel Home:
+  - objetivo visual: imagen horizontal.
+  - proporción recomendada: `16:9`.
+  - comportamiento CSS: la caja manda el ratio; la imagen rellena el área de catálogo.
+
+- `dm-single__thumbnail` / `dm-single__thumbnail--inline`:
+  - objetivo visual: hero editorial del single, preferentemente vertical.
+  - proporción recomendada: vertical cercana a `4:5`.
+  - prioridad de fuente: `single hero meta` → `featured image del CPT` → `imagen del producto`.
+  - si el single cae a la imagen del producto (pensada para catálogo), el render aplica fallback seguro para evitar recortes agresivos dentro de una caja distinta.
+
+- `dm-editorial__title-media--section`:
+  - caja fija: `462x100`.
+  - la imagen interior debe verse completa.
+  - comportamiento CSS: `object-fit: contain`, centrada, sin recorte.
+
+#### Regla práctica para cliente
+
+- Catálogo/card: subir imagen horizontal `1600x900 px` o `1280x720 px`.
+- Single/hero: subir imagen propia vertical `1200x1500 px` o similar.
+- Título de sección editorial: exportar `462x100 px` o `924x200 px` para pantallas retina.
+
+#### Buenas prácticas operativas
+
+- No reutilizar por defecto la misma imagen horizontal del catálogo como hero principal del single.
+- Si la imagen lleva texto, lettering o logo, dejar aire interno y no pegar contenido a los bordes.
+- Usar `jpg` para fotografía y `png` solo cuando se necesite transparencia.
+- Evitar assets extremos (panorámicas muy largas o verticales demasiado angostas).
+- Mantener archivos livianos cuando sea posible para no penalizar la Home ni los singles.
+
 ---
 
 ## 3b) Servicios (`/servicios/`) — Filtro por Woo Categories (Ruta A, estricto)
@@ -224,15 +294,15 @@ Antes de tocar cualquier grid o tarjeta, responde estas preguntas:
   ```
 - Afecta solo el render del grid; el contenido guardado en DB no cambia.
 
-### 4.2 Menú principal — subitems hover
-- **Pendiente:** agregar subitems al menú para Escuela, Recursos y Servicios.
-  - Escuela → Cursos / Talleres / Programas
-  - Recursos → Por tema (usar slugs de `dm_tema` que existan)
-  - Servicios → Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`)
-- **Cómo:** WP Admin → Apariencia → Menús (no requiere código nuevo; solo configurar los items de menú con URLs correctas).
-- **URLs a usar:**
+### 4.2 Menú principal — QA de jerarquía hover/tap
+- **Pendiente:** validar visualmente en staging la jerarquía final del menú después de la iteración en WP Admin.
+  - `Recursos` sin hijos.
+  - `Escuela` → Cursos / Talleres / Programas.
+  - `Servicios` → Sesiones / Paquetes / Membresías / Supervisiones.
+  - `Sobre Mi` → Blog / Newsletter.
+- **Cómo:** revisar en desktop (hover) y mobile (tap/drawer) que no reaparezcan duplicados ni queden hijos fuera del árbol correcto.
+- **URLs públicas a usar:**
   - `/escuela/?tipo=cursos`, `/escuela/?tipo=talleres`, `/escuela/?tipo=programas`
-  - `/recursos/?tema=<slug>` (slugs de `dm_tema`, ej. `/recursos/?tema=ansiedad`)
   - `/servicios/?tipo=sesiones`, `/servicios/?tipo=paquetes`, `/servicios/?tipo=membresias`, `/servicios/?tipo=supervisiones`
 
 ### 4.3 Optimización checkout

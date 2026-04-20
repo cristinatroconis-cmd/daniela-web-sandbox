@@ -354,6 +354,51 @@ function dm_cpt_get_catalog_image_url($post_id, $size = 'large')
 	return '';
 }
 
+function dm_cpt_get_single_hero_image($post_id, $size = 'large')
+{
+	$post_id = absint($post_id);
+	if ($post_id <= 0) {
+		return [
+			'url'    => '',
+			'source' => '',
+		];
+	}
+
+	$hero_image_url = trim((string) get_post_meta($post_id, '_dm_single_hero_image_url', true));
+	if ($hero_image_url !== '') {
+		return [
+			'url'    => $hero_image_url,
+			'source' => 'single-meta',
+		];
+	}
+
+	if (has_post_thumbnail($post_id)) {
+		$image_url = get_the_post_thumbnail_url($post_id, $size);
+		if ($image_url) {
+			return [
+				'url'    => (string) $image_url,
+				'source' => 'post-thumbnail',
+			];
+		}
+	}
+
+	$product = dm_cpt_get_linked_product($post_id);
+	if ($product instanceof WC_Product && $product->get_image_id()) {
+		$image_url = wp_get_attachment_image_url($product->get_image_id(), $size);
+		if ($image_url) {
+			return [
+				'url'    => (string) $image_url,
+				'source' => 'product-image',
+			];
+		}
+	}
+
+	return [
+		'url'    => '',
+		'source' => '',
+	];
+}
+
 function dm_cpt_render_editorial_heading($title = '', $image_url = '', $variant = 'section')
 {
 	$title     = trim((string) $title);
@@ -987,10 +1032,11 @@ function dm_cpt_get_meta_lines($post_id, $key)
 	}));
 }
 
-function dm_cpt_render_editorial_sections($post_id, $hero_image_url = '')
+function dm_cpt_render_editorial_sections($post_id, $hero_image_url = '', $hero_image_source = '')
 {
 	$post_id         = absint($post_id);
 	$hero_image_url  = trim((string) $hero_image_url);
+	$hero_image_source = trim((string) $hero_image_source);
 	$has_hero_media  = ($hero_image_url !== '') || has_post_thumbnail($post_id);
 	if ($post_id <= 0 || (! dm_cpt_has_editorial_sections($post_id) && ! $has_hero_media)) {
 		return '';
@@ -1040,7 +1086,7 @@ function dm_cpt_render_editorial_sections($post_id, $hero_image_url = '')
 						<?php if ($has_hero_media) : ?>
 							<div class="dm-editorial__figure dm-editorial__figure--hero">
 								<div class="dm-single__media dm-single__media--inline">
-									<div class="dm-single__thumbnail dm-single__thumbnail--inline">
+									<div class="dm-single__thumbnail dm-single__thumbnail--inline<?php echo 'product-image' === $hero_image_source ? ' dm-single__thumbnail--catalog-fallback' : ''; ?>">
 										<?php if ($hero_image_url !== '') : ?>
 											<img src="<?php echo esc_url($hero_image_url); ?>" alt="<?php echo esc_attr(get_the_title($post_id)); ?>" loading="lazy" />
 										<?php else : ?>
