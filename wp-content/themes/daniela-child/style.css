@@ -182,6 +182,46 @@ input[type="reset"],
 	border-radius: var(--dm-btn-radius);
 }
 
+.site-header-cart {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.site-header-cart .dm-header-login>a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.35rem 0.9rem;
+	border: 1.5px solid transparent;
+	border-radius: 2rem;
+	color: inherit;
+	font: inherit;
+	line-height: 1.2;
+	text-decoration: none;
+	transition: border-color var(--dm-transition), color var(--dm-transition), background var(--dm-transition);
+}
+
+.site-header-cart .dm-header-login.current-menu-item>a,
+.site-header-cart .dm-header-login>a:hover,
+.site-header-cart .dm-header-login>a:focus-visible {
+	border-color: var(--dm-color-primary);
+	color: var(--dm-color-primary);
+	outline: none;
+}
+
+.site-header-cart .dm-header-cart-item .cart-click {
+	display: flex;
+	align-items: center;
+}
+
+.site-header-cart .dm-header-cart-item .cart-contents {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+}
+
 /* Ensure dm-card uses the correct thumb wrapper (image link) for ratio */
 .dm-card__image-link {
 	display: block;
