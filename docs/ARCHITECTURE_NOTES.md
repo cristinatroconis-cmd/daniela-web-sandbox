@@ -1,6 +1,6 @@
 # Architecture Notes — Daniela Montes Psicóloga (Sandbox)
 
-**Última actualización:** 2026-04-20  
+**Última actualización:** 2026-04-21  
 Este documento complementa `ARCHITECTURE.md` (no lo reemplaza).  
 Aquí queda el "qué está implementado", el "por qué" de las decisiones y el backlog inmediato.
 
@@ -11,6 +11,8 @@ Aquí queda el "qué está implementado", el "por qué" de las decisiones y el b
 - **WooCommerce** = motor de compra (checkout, productos, categorías).
 - **CPTs `dm_escuela`, `dm_recurso`, `dm_servicio`** = capa editorial/UX/SEO.
 - Integración Tutor = **solo linkout** (`_dm_tutor_course_url`); el child theme no llama a APIs de Tutor.
+
+> Si buscas el diccionario oficial de términos, está justo abajo en esta misma nota.
 
 ---
 
@@ -23,6 +25,18 @@ Aquí queda el "qué está implementado", el "por qué" de las decisiones y el b
 | CPTs (`dm_escuela`, `dm_recurso`, `dm_servicio`) | WordPress nativo | Landing editorial, SEO, UX, CTAs, chips de filtro |
 | WooCommerce | WooCommerce | Pagos, checkout, productos, categorías (fuente de verdad clasificación) |
 | Memberships/Subscriptions | Woo plugins | Gating comercial (no se duplica en el child theme) |
+
+### Diccionario oficial
+| Término | Definición oficial |
+|---|---|
+| Tema | Concepto de negocio/editorial como ansiedad, autoestima o relaciones. |
+| `product_tag` | Fuente de verdad primaria para clasificar productos Woo por tema. |
+| `dm_tema` | Espejo editorial sincronizado para CPTs; no se usa como fuente primaria de navegación pública. |
+| Chip | Componente visual clicable que representa un filtro o acceso rápido. |
+| Hub | Pantalla de entrada o navegación; no implica por sí sola un listado de resultados. |
+| Archive/listado | Pantalla que muestra resultados filtrados o agrupados. |
+| Producto | Objeto comercial WooCommerce que compra, descarga o agenda el usuario. |
+| CPT editorial | Pieza SEO/UX/contenido (`dm_recurso`, `dm_escuela`, `dm_servicio`) vinculada opcionalmente a un producto. |
 
 ### Regla de oro
 Una sola "fuente de verdad" para gating:
@@ -58,20 +72,20 @@ Una sola "fuente de verdad" para gating:
 | `dm_escuela` | `/escuela/` | Categorías WooCommerce: cursos / talleres / programas (Ruta A) |
 | `dm_recurso` | `/recursos/` | Taxonomía `dm_tema` (temas transversales) — sin categorizar por precio |
 | `dm_servicio` | `/servicios/` | Categorías WooCommerce: sesiones / paquetes / membresias / supervisiones (Ruta A, **estricto**) |
+| `dm_temas` | `/temas/` | Agrupa productos por `product_tag` |
 
 ### Metaboxes implementados
 
 | Meta key | CPT | Comportamiento |
 |---|---|---|
 | `_dm_wc_product_id` | `dm_recurso`, `dm_escuela`, `dm_servicio` | Vincula al producto WC; el CTA usa `add_to_cart_url()` + precio |
-| `_dm_tutor_course_url` | `dm_escuela` | Path del curso Tutor; imagen y título de tarjeta enlazan a Tutor; botón "Ver curso" |
+| `_dm_tutor_course_url` | `dm_escuela` | Puente técnico hacia Tutor para productos de Escuela; no gobierna el CTA público "Ver detalles" del catálogo |
 
 ### Comportamiento del grid `/escuela/` (`dm_cpt_render_grid`)
-- Imagen y título de tarjeta enlazan al curso Tutor si `_dm_tutor_course_url` está presente; si no, al single CPT.
-- Footer de tarjeta muestra hasta 2 CTAs:
-  1. **"Ver curso"** — solo si existe `_dm_tutor_course_url`; abre en nueva pestaña (`target="_blank" rel="noopener"`).
-  2. **"Agregar al carrito"** — solo si existe `_dm_wc_product_id`; incluye precio si el producto es de pago.
-- Si ningún CTA aplica, el footer no se renderiza.
+- Imagen, título y CTA **"Ver detalles"** apuntan siempre al single editorial propio.
+- La tarjeta muestra el precio del producto vinculado cuando aplica y los temas del producto como texto informativo no clickeable.
+- El CTA comercial es **"Agregar al carrito"** cuando existe `_dm_wc_product_id` y el producto es comprable.
+- `_dm_tutor_course_url` sigue existiendo como puente técnico para la capa Escuela/Tutor, pero no debe dirigir el CTA público del catálogo.
 
 ### Filtro/chips de `/escuela/` — Ruta A
 - Función: `dm_escuela_render_woo_chips()` en `inc/helpers-cpt.php`.
@@ -120,6 +134,23 @@ Una sola "fuente de verdad" para gating:
 - ✅ El menú principal visible se confirmó como **DB-driven**: depende del menú de WordPress asignado a `primary`, no de un template hardcodeado del child theme.
 - ✅ La limpieza en staging eliminó únicamente dos registros duplicados del menú y luego se verificó el header en frontend.
 - ✅ Producción no fue tocada en esta iteración.
+- ✅ El item `nav-menu-item-9366` puede reutilizarse fuera del menú primario, pero debe conservar su destino original resolviéndolo desde el propio `nav_menu_item` y no hardcodeando la URL.
+- ✅ Regla de interacción: cualquier trigger de carrito en el header debe abrir siempre el drawer del child theme (`#dm-cart-drawer`); no se admite fallback al drawer nativo de Shoptimizer ni a drawers de plugins.
+- ✅ Regla de estilo en `header-4`: el bloque custom `Iniciar sesion` debe resolverse visualmente desde el child theme con selectores específicos del layout real (`body.header-4 #page .col-full-nav .site-header-cart.menu ...`), porque Kirki y el parent reescriben tipografía/color del header.
+- ✅ Regla de debugging en staging: si el HTML servido no refleja el deploy pero el archivo remoto sí cambió, comprobar primero edge cache de Rocket/Cloudflare con una querystring única antes de reabrir código.
+
+### 3.11b Gate de agenda / waitlist (2026-04-21)
+
+- ✅ Se implementó un gate central para productos de sesiones usando la categoría WooCommerce `product_cat=sesiones` como fuente de verdad inicial.
+- ✅ Si la agenda está cerrada:
+  - el producto deja de ser comprable;
+  - los CTAs pasan a **Unirme a la lista de espera**;
+  - el destino único es la URL configurada de Google Forms;
+  - intentos directos de `add-to-cart` se bloquean o redirigen.
+- ✅ Si la agenda está abierta:
+  - se restaura el flujo normal de compra/agendado sin cambiar templates uno por uno.
+- ✅ Los ajustes viven en `WP Admin > Ajustes > Generales` para evitar cambios de código cuando la terapeuta abra o cierre agenda.
+- ✅ La implementación se apoya en un módulo central del child theme y no en parches aislados por template.
 
 #### Estado visible validado tras la limpieza
 
@@ -147,6 +178,8 @@ Newsletter
 - ✅ `.dm-necesitas__copy` es el contenedor elástico interno del panel izquierdo: usa `flex: 1 1 auto`, `align-self: stretch` y `height: 100%`.
 - ✅ La distribución vertical de sus hijos se resuelve con `justify-content: space-between`; esto evita que el copy quede “pegado” arriba cuando el panel izquierdo tiene más altura disponible.
 - ✅ La fuente única de estos estilos sigue siendo `assets/css/home-necesitas.css`.
+- ✅ El `dm-carousel` de esta sección comparte el mismo patrón de hover premium que `.dm-card`: elevación del contenedor (`box-shadow` + `translateY`) y zoom suave de la imagen hero.
+- ✅ La implementación de ese hover también vive en `assets/css/home-necesitas.css`; no duplicarlo en `style.css`.
 
 ### 3.13 Regla de imágenes por contexto (2026-04-20)
 

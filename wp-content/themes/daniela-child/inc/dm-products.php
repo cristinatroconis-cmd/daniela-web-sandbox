@@ -122,9 +122,23 @@ function dm_products_shortcode($atts)
 function dm_products_render_card(WC_Product $product)
 {
 	$product_id    = $product->get_id();
-	$add_to_cart   = function_exists('dm_get_add_to_cart_url')
-		? dm_get_add_to_cart_url($product)
-		: (string) $product->add_to_cart_url();
+	$cta           = function_exists('dm_get_product_primary_cta')
+		? dm_get_product_primary_cta($product, [
+			'class'          => 'dm-btn dm-btn--comprar',
+			'waitlist_class' => 'dm-btn dm-btn--primary',
+		])
+		: [
+			'mode'       => 'cart',
+			'url'        => (string) $product->add_to_cart_url(),
+			'label'      => __('Agregar al carrito', 'daniela-child'),
+			'class'      => 'dm-btn dm-btn--comprar',
+			'attributes' => [
+				'data-product_id'   => (string) $product_id,
+				'data-product_sku'  => (string) $product->get_sku(),
+				'data-quantity'     => '1',
+				'data-product_name' => (string) $product->get_name(),
+			],
+		];
 	$product_url   = get_permalink($product->get_id());
 	$thumbnail_id  = $product->get_image_id();
 	$thumbnail_url = $thumbnail_id
@@ -174,14 +188,15 @@ function dm_products_render_card(WC_Product $product)
 					class="dm-btn dm-btn--ver-mas">
 					<?php esc_html_e('Ver más', 'daniela-child'); ?>
 				</a>
-				<?php if ($product->is_in_stock()) : ?>
-					<a href="<?php echo esc_url($add_to_cart); ?>"
-						class="dm-btn dm-btn--comprar add_to_cart_button ajax_add_to_cart"
-						data-product_id="<?php echo esc_attr($product_id); ?>"
-						data-product_sku="<?php echo esc_attr($product->get_sku()); ?>"
-						data-quantity="1"
-						data-product_name="<?php echo esc_attr($product->get_name()); ?>">
-						<?php esc_html_e('Agregar al carrito', 'daniela-child'); ?>
+				<?php if ('waitlist' === $cta['mode'] || $product->is_in_stock()) : ?>
+					<a href="<?php echo esc_url($cta['url']); ?>"
+						class="<?php echo esc_attr($cta['class']); ?><?php echo 'cart' === $cta['mode'] ? ' add_to_cart_button ajax_add_to_cart' : ''; ?>"
+						<?php if ('cart' === $cta['mode']) : ?>data-product_id="<?php echo esc_attr($cta['attributes']['data-product_id']); ?>"
+						data-product_sku="<?php echo esc_attr($cta['attributes']['data-product_sku']); ?>"
+						data-quantity="<?php echo esc_attr($cta['attributes']['data-quantity']); ?>"
+						data-product_name="<?php echo esc_attr($cta['attributes']['data-product_name']); ?>"
+						<?php endif; ?>>
+						<?php echo esc_html($cta['label']); ?>
 					</a>
 				<?php endif; ?>
 			</div><!-- /.dm-product-card__body -->

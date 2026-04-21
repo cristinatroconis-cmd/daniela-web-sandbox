@@ -188,6 +188,7 @@
 	/* Para que se vea “card” sin pelear con el theme */
 	border: 1px solid var(--dm-necesitas-border);
 	box-shadow: var(--dm-necesitas-shadow);
+	transition: box-shadow var(--dm-card-transition), transform var(--dm-card-transition);
 }
 
 /* Track */
@@ -245,12 +246,21 @@
 	object-position: center;
 	display: block;
 	transform: none;
-	transition: opacity 260ms ease;
+	transition: transform var(--dm-card-transition), opacity 260ms ease;
 }
 
-/* Hover premium */
+/* Hover premium: igual que .dm-card */
 @media (hover: hover) and (pointer: fine) {
-	.dm-carousel__slide:hover .dm-carousel__slide-hero-img {
+
+	.dm-carousel:hover,
+	.dm-carousel:focus-within {
+		box-shadow: var(--dm-card-hover-shadow);
+		transform: var(--dm-card-hover-lift);
+	}
+
+	.dm-carousel:hover .dm-carousel__slide-hero-img,
+	.dm-carousel:focus-within .dm-carousel__slide-hero-img {
+		transform: scale(1.03);
 		opacity: 0.96;
 	}
 }

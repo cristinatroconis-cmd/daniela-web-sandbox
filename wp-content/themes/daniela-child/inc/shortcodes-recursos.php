@@ -13,34 +13,6 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * [dm_recursos_gratis]
- * Legacy alias: lists all published products in the recursos category.
- * Place this shortcode on the /recursos/ page.
- */
-add_shortcode('dm_recursos_gratis', function () {
-    if (! function_exists('WC')) {
-        return '';
-    }
-    $back_url = home_url('/recursos/');
-    $query    = dm_get_products('recursos');
-    return dm_render_product_grid($query, $back_url);
-});
-
-/**
- * [dm_recursos_pagos]
- * Legacy alias: lists all published products in the recursos category.
- * Place this shortcode on the /recursos/ page.
- */
-add_shortcode('dm_recursos_pagos', function () {
-    if (! function_exists('WC')) {
-        return '';
-    }
-    $back_url = home_url('/recursos/');
-    $query    = dm_get_products('recursos');
-    return dm_render_product_grid($query, $back_url);
-});
-
-/**
  * [dm_recursos_temas]
  * Shows a chips (pill) navigation filtered by WooCommerce product_tag.
  *
@@ -127,13 +99,167 @@ add_shortcode('dm_recursos_temas', function () {
                 </a>
             <?php endforeach; ?>
         </nav>
-<?php endif;
+    <?php endif;
 
     $query = dm_get_products(['recursos'], $active_slug);
     echo dm_render_product_grid($query, $back_url); // phpcs:ignore WordPress.Security.EscapeOutput
 
     return ob_get_clean();
 });
+
+/**
+ * [dm_recursos]
+ * Filterable product catalog for recursos using `tema` as the public filter.
+ */
+add_shortcode('dm_recursos', 'dm_recursos_shortcode');
+
+/**
+ * Main shortcode callback for the recursos product catalog.
+ *
+ * @param array $atts Shortcode attributes.
+ * @return string
+ */
+function dm_recursos_shortcode($atts)
+{
+    $atts = shortcode_atts(
+        [
+            'per_page' => 12,
+            'columns'  => 3,
+        ],
+        $atts,
+        'dm_recursos'
+    );
+
+    $per_page    = absint($atts['per_page']);
+    $columns     = absint($atts['columns']);
+    $active_tema = isset($_GET['tema']) ? sanitize_key(wp_unslash($_GET['tema'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    if ($columns < 1 || $columns > 6) {
+        $columns = 3;
+    }
+
+    $query_args = [
+        'post_type'      => 'product',
+        'post_status'    => 'publish',
+        'posts_per_page' => $per_page,
+        'tax_query'      => [
+            'relation' => 'AND',
+            [
+                'taxonomy' => 'product_cat',
+                'field'    => 'slug',
+                'terms'    => ['recursos'],
+            ],
+        ],
+    ];
+
+    if ($active_tema !== '') {
+        $query_args['tax_query'][] = [
+            'taxonomy' => 'product_tag',
+            'field'    => 'slug',
+            'terms'    => [$active_tema],
+        ];
+    }
+
+    $products    = new WP_Query($query_args); // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+    $topic_terms = get_terms([
+        'taxonomy'   => 'product_tag',
+        'hide_empty' => true,
+    ]);
+    if (is_wp_error($topic_terms)) {
+        $topic_terms = [];
+    }
+
+    $current_url = dm_recursos_current_url_without_filters();
+
+    ob_start();
+    ?>
+    <div class="dm-recursos" data-columns="<?php echo esc_attr($columns); ?>">
+
+        <?php if (! empty($topic_terms)) : ?>
+            <div class="dm-recursos__filters" role="navigation" aria-label="<?php esc_attr_e('Filtros de recursos', 'daniela-child'); ?>">
+                <div class="dm-recursos__filter-group dm-recursos__filter-group--topic">
+                    <span class="dm-recursos__filter-label"><?php esc_html_e('Tema:', 'daniela-child'); ?></span>
+                    <?php $all_topics_url = remove_query_arg('tema', $current_url); ?>
+                    <a href="<?php echo esc_url($all_topics_url); ?>"
+                        class="dm-filter-pill dm-filter-pill--topic<?php echo $active_tema === '' ? ' is-active' : ''; ?>"
+                        data-filter-type="tema"
+                        data-filter-value=""
+                        <?php echo $active_tema === '' ? 'aria-current="true"' : ''; ?>>
+                        <?php esc_html_e('Todos', 'daniela-child'); ?>
+                    </a>
+                    <?php foreach ($topic_terms as $term) : ?>
+                        <?php $term_url = add_query_arg('tema', $term->slug, $current_url); ?>
+                        <a href="<?php echo esc_url($term_url); ?>"
+                            class="dm-filter-pill dm-filter-pill--topic<?php echo $term->slug === $active_tema ? ' is-active' : ''; ?>"
+                            data-filter-type="tema"
+                            data-filter-value="<?php echo esc_attr($term->slug); ?>"
+                            <?php echo $term->slug === $active_tema ? 'aria-current="true"' : ''; ?>>
+                            <?php echo esc_html($term->name); ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($products->have_posts()) : ?>
+            <ul class="dm-topic-products__grid" role="list">
+                <?php
+                while ($products->have_posts()) :
+                    $products->the_post();
+                    global $product;
+                    if (! $product instanceof WC_Product) {
+                        $product = wc_get_product(get_the_ID());
+                    }
+                    if (! $product) {
+                        continue;
+                    }
+                    dm_render_topic_product_card($product);
+                endwhile;
+                wp_reset_postdata();
+                ?>
+            </ul>
+        <?php else : ?>
+            <p class="dm-topic-products__empty">
+                <?php esc_html_e('No hay recursos disponibles para estos filtros.', 'daniela-child'); ?>
+            </p>
+        <?php endif; ?>
+
+    </div>
+<?php
+
+    wp_enqueue_script('dm-recursos-filters');
+
+    return ob_get_clean();
+}
+
+/**
+ * Return the current page URL without recursos filter query params.
+ *
+ * @return string
+ */
+function dm_recursos_current_url_without_filters()
+{
+    global $wp;
+    $url = home_url(add_query_arg([], $wp->request));
+
+    return remove_query_arg(['tema'], $url);
+}
+
+add_action('wp_enqueue_scripts', 'dm_recursos_enqueue_assets');
+
+/**
+ * Register the JS used by the filterable recursos catalog.
+ */
+function dm_recursos_enqueue_assets()
+{
+    $js_file = get_stylesheet_directory() . '/js/recursos-filters.js';
+    wp_register_script(
+        'dm-recursos-filters',
+        get_stylesheet_directory_uri() . '/js/recursos-filters.js',
+        [],
+        file_exists($js_file) ? (string) filemtime($js_file) : '1.0.0',
+        true
+    );
+}
 
 /**
  * [dm_recursos_home]

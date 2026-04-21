@@ -4,13 +4,41 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+function dm_header_login_menu_item_id()
+{
+    return 9366;
+}
+
+function dm_header_login_menu_target_url()
+{
+    $menu_item_id = dm_header_login_menu_item_id();
+    $menu_type    = (string) get_post_meta($menu_item_id, '_menu_item_type', true);
+    $menu_url     = trim((string) get_post_meta($menu_item_id, '_menu_item_url', true));
+
+    if ($menu_type === 'custom' && $menu_url !== '') {
+        return $menu_url;
+    }
+
+    $object_id = (int) get_post_meta($menu_item_id, '_menu_item_object_id', true);
+    if ($object_id > 0) {
+        $permalink = get_permalink($object_id);
+        if (is_string($permalink) && $permalink !== '') {
+            return $permalink;
+        }
+    }
+
+    if ($menu_url !== '') {
+        return $menu_url;
+    }
+
+    return '';
+}
+
 function dm_header_login_target_url()
 {
-    if (function_exists('wc_get_page_permalink')) {
-        $myaccount_url = wc_get_page_permalink('myaccount');
-        if (is_string($myaccount_url) && $myaccount_url !== '') {
-            return $myaccount_url;
-        }
+    $menu_target_url = dm_header_login_menu_target_url();
+    if ($menu_target_url !== '') {
+        return $menu_target_url;
     }
 
     return home_url('/acceso/');
@@ -49,13 +77,11 @@ function dm_render_header_cart_link()
         return;
     }
 
-    $sidebar_cart_enabled = function_exists('shoptimizer_get_option') ? shoptimizer_get_option('shoptimizer_layout_woocommerce_enable_sidebar_cart') : false;
     $cart_icon            = function_exists('shoptimizer_get_option') ? shoptimizer_get_option('shoptimizer_layout_woocommerce_cart_icon') : 'cart';
     $cart_count           = function_exists('WC') && WC()->cart ? (int) WC()->cart->get_cart_contents_count() : 0;
-    $cart_href            = $sidebar_cart_enabled ? '#' : wc_get_cart_url();
 
-    echo '<div class="cart-click">';
-    echo '<a class="cart-contents" href="' . esc_url($cart_href) . '" title="' . esc_attr__('View your shopping cart', 'shoptimizer') . '">';
+    echo '<div class="cart-click" data-dm-cart-trigger="header">';
+    echo '<a class="cart-contents" href="#" data-dm-cart-trigger="header" title="' . esc_attr__('View your shopping cart', 'shoptimizer') . '">';
 
     if ('basket' === $cart_icon) {
         echo '<span class="count">' . wp_kses_post(sprintf(_n('%d', '%d', $cart_count, 'shoptimizer'), $cart_count)) . '</span>';
@@ -120,6 +146,7 @@ function dm_remove_access_item_from_primary_menu($items, $args)
 }
 
 add_action('after_setup_theme', static function () {
+    remove_action('shoptimizer_header', 'shoptimizer_header_cart', 50);
     remove_action('shoptimizer_navigation', 'shoptimizer_header_cart', 60);
     add_action('shoptimizer_navigation', 'dm_header_cart', 60);
 }, 20);

@@ -26,6 +26,14 @@ if (! defined('ABSPATH')) {
  */
 remove_action('shoptimizer_before_site', 'shoptimizer_header_cart_drawer', 5);
 
+add_action(
+	'after_setup_theme',
+	static function () {
+		remove_action('shoptimizer_before_site', 'shoptimizer_header_cart_drawer', 5);
+	},
+	30
+);
+
 /**
  * Remove WooCommerce mini-cart default buttons (View cart / Checkout) on every
  * request — including WooCommerce AJAX fragment refresh — so they never appear

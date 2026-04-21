@@ -441,41 +441,55 @@ function dm_cpt_render_cta($post_id = null, $args = [])
 
 	$price   = (float) $product->get_price();
 	$is_free = ((float) $price <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
+	$uses_waitlist = function_exists('dm_product_uses_waitlist') && dm_product_uses_waitlist($product);
 
 	// Stock: siempre respetar stock.
-	if (! $product->is_in_stock()) {
+	if (! $uses_waitlist && ! $product->is_in_stock()) {
 		return '';
 	}
 
 	// Para productos de pago: exigir purchasable para evitar casos raros.
 	// Para productos gratis: permitir el CTA aunque purchasable sea false
 	// (p.ej. por plugins de memberships/subscriptions), manteniendo el mismo UX.
-	if (! $is_free && ! $product->is_purchasable()) {
+	if (! $uses_waitlist && ! $is_free && ! $product->is_purchasable()) {
 		return '';
 	}
 
 	$args      = is_array($args) ? $args : [];
-	$label     = isset($args['label']) && trim((string) $args['label']) !== ''
-		? trim((string) $args['label'])
-		: __('Agregar al carrito', 'daniela-child');
 	$btn_class = isset($args['class']) && trim((string) $args['class']) !== ''
 		? trim((string) $args['class'])
 		: 'dm-btn dm-btn--primary';
-	$url       = function_exists('dm_get_add_to_cart_url')
-		? dm_get_add_to_cart_url($product)
-		: (string) $product->add_to_cart_url();
+	$cta       = function_exists('dm_get_product_primary_cta')
+		? dm_get_product_primary_cta($product, [
+			'class'          => $btn_class,
+			'label'          => isset($args['label']) ? (string) $args['label'] : '',
+			'waitlist_label' => __('Unirme a la lista de espera', 'daniela-child'),
+		])
+		: [
+			'mode'       => 'cart',
+			'url'        => (string) $product->add_to_cart_url(),
+			'label'      => isset($args['label']) && trim((string) $args['label']) !== '' ? trim((string) $args['label']) : __('Agregar al carrito', 'daniela-child'),
+			'class'      => $btn_class,
+			'attributes' => [
+				'data-product_id'   => (string) $product->get_id(),
+				'data-product_sku'  => (string) $product->get_sku(),
+				'data-quantity'     => '1',
+				'data-product_name' => (string) $product->get_name(),
+			],
+		];
 
 	ob_start();
 ?>
 	<div class="dm-cta">
 		<a
-			href="<?php echo esc_url($url); ?>"
-			class="<?php echo esc_attr($btn_class); ?> add_to_cart_button ajax_add_to_cart"
-			data-product_id="<?php echo esc_attr($product->get_id()); ?>"
-			data-product_sku="<?php echo esc_attr($product->get_sku()); ?>"
-			data-quantity="1"
-			data-product_name="<?php echo esc_attr($product->get_name()); ?>">
-			<?php echo esc_html($label); ?>
+			href="<?php echo esc_url($cta['url']); ?>"
+			class="<?php echo esc_attr($cta['class']); ?><?php echo 'cart' === $cta['mode'] ? ' add_to_cart_button ajax_add_to_cart' : ''; ?>"
+			<?php if ('cart' === $cta['mode']) : ?>data-product_id="<?php echo esc_attr($cta['attributes']['data-product_id']); ?>"
+			data-product_sku="<?php echo esc_attr($cta['attributes']['data-product_sku']); ?>"
+			data-quantity="<?php echo esc_attr($cta['attributes']['data-quantity']); ?>"
+			data-product_name="<?php echo esc_attr($cta['attributes']['data-product_name']); ?>"
+			<?php endif; ?>>
+			<?php echo esc_html($cta['label']); ?>
 		</a>
 	</div>
 	<?php
@@ -1441,9 +1455,8 @@ function dm_cpt_archive_query_args($post_type, $taxonomy, $param = 'tipo')
 /**
  * Renderiza un grid de posts CPT como tarjetas.
  *
- * Para dm_escuela: usa _dm_tutor_course_url como enlace de imagen/título y
- * muestra dos botones en el footer ("Ver curso" + CTA WooCommerce).
- * Para otros CPTs: comportamiento original.
+ * Regla de navegación: imagen, título y CTA "Ver detalles" siempre apuntan
+ * al single editorial propio. La URL de Tutor solo se usa post-compra.
  *
  * UX Daniela Montes:
  * - El precio se muestra junto al título (si hay producto vinculado).
@@ -1470,17 +1483,11 @@ function dm_cpt_render_grid($query)
 		$excerpt   = dm_cpt_get_catalog_excerpt($post_id);
 		$thumb_html = dm_cpt_get_catalog_image_html($post_id, 'woocommerce_thumbnail');
 
-		// Para dm_escuela: enlazar imagen/título al curso Tutor si existe.
-		$tutor_url = '';
-		if ('dm_escuela' === get_post_type($post_id)) {
-			$tutor_url = trim((string) get_post_meta($post_id, '_dm_tutor_course_url', true));
-		}
-		$card_link = $tutor_url !== '' ? $tutor_url : $permalink;
-
 		// Producto vinculado (para precio junto al título y CTA Woo).
 		$product = dm_cpt_get_linked_product($post_id);
 		$price_html = '';
 		$is_free = false;
+		$topic_tags_html = '';
 
 		if ($product) {
 			$price = (float) $product->get_price();
@@ -1488,12 +1495,13 @@ function dm_cpt_render_grid($query)
 			if (! $is_free) {
 				$price_html = (string) $product->get_price_html();
 			}
+			$topic_tags_html = dm_get_product_topic_tags_html($product);
 		}
 
 		$html .= '<article class="dm-card">';
 
 		if ($thumb_html) {
-			$html .= '<a href="' . esc_url($card_link) . '" class="dm-card__image-link" tabindex="-1" aria-hidden="true">';
+			$html .= '<a href="' . esc_url($permalink) . '" class="dm-card__image-link" tabindex="-1" aria-hidden="true">';
 			$html .= '<div class="dm-card__thumb">';
 			$html .= $thumb_html; // phpcs:ignore WordPress.Security.EscapeOutput
 			$html .= '</div>';
@@ -1504,7 +1512,7 @@ function dm_cpt_render_grid($query)
 
 		// Title row (título + precio a la derecha).
 		$html .= '<div class="dm-card__title-row">';
-		$html .= '<h3 class="dm-card__title"><a href="' . esc_url($card_link) . '">' . esc_html($title) . '</a></h3>';
+		$html .= '<h3 class="dm-card__title"><a href="' . esc_url($permalink) . '">' . esc_html($title) . '</a></h3>';
 
 		if ($product) {
 			if ($is_free) {
@@ -1518,6 +1526,10 @@ function dm_cpt_render_grid($query)
 
 		if ($excerpt) {
 			$html .= '<p class="dm-card__excerpt">' . esc_html(wp_trim_words(wp_strip_all_tags($excerpt), 20)) . '</p>';
+		}
+
+		if ($topic_tags_html !== '') {
+			$html .= $topic_tags_html; // phpcs:ignore WordPress.Security.EscapeOutput
 		}
 
 		$html .= '</div>'; // .dm-card__body

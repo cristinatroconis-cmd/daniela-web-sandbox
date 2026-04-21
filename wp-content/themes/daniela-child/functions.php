@@ -15,6 +15,7 @@ if (! defined('ABSPATH')) {
 
 // Core modules — always loaded.
 require_once __DIR__ . '/inc/assets.php';
+require_once __DIR__ . '/inc/booking-waitlist.php';
 require_once __DIR__ . '/inc/header-navigation.php';
 require_once __DIR__ . '/inc/home-necesitas-admin.php';
 require_once __DIR__ . '/inc/helpers-products.php';
@@ -43,8 +44,7 @@ require_once __DIR__ . '/inc/woocommerce-emails.php';
 
 // Feature modules.
 require_once __DIR__ . '/inc/dm-products.php';
-require_once __DIR__ . '/inc/recursos-hub.php';
-require_once __DIR__ . '/inc/temas-page.php';
+require_once __DIR__ . '/inc/temas-productos-archive.php';
 require_once __DIR__ . '/inc/newsletter-optin.php';
 // Legacy freebie email/token flow disabled.
 // Free resources must follow the standard WooCommerce cart + checkout flow.
@@ -75,6 +75,6 @@ add_shortcode('dm_home_necesitas', function () {
 // Hub de temas (destino del slide 4).
 add_shortcode('dm_temas_hub', function () {
 	ob_start();
-	get_template_part('template-parts/home/section', 'temas-hub');
+	get_template_part('template-parts/home/section', 'explorar-por-tema');
 	return ob_get_clean();
 });

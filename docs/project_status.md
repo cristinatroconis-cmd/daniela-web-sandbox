@@ -1,6 +1,6 @@
 # Daniela Montes Psicóloga — Project Status (Sandbox)
 
-**Última actualización:** 2026-04-20  
+**Última actualización:** 2026-04-21  
 **Repo:** `cristinatroconis-cmd/daniela-web-sandbox`  
 **Producción (referencia):** https://danielamontespsic.com/ (rocket.net)  
 **Modo de trabajo:** staging-first — cambios técnicos en staging y promoción controlada a producción.
@@ -71,12 +71,12 @@ Todos en `wp-content/themes/daniela-child/`:
 - Sin CTAs → footer no se renderiza
 
 ### 3.5b Comportamiento `/recursos/`
-- Chips: Todos + temas por `dm_tema` (temas transversales como ansiedad, autoestima, etc.)
+- Chips: Todos + temas por `product_tag` (fuente primaria de temas)
 - Querystring: `?tema=<slug>` (ej. `/recursos/?tema=ansiedad`)
 - Tarjeta: excerpt limpio (sin HTML) + precio si es pago, o "Gratis" si precio=0
-- CTA: "Recíbelo por email" para freebies (endpoint `/recursos/recibir/`) | "Agregar al carrito" para pagos
-- Importer: asigna `product_cat` `recursos` (padre) + `recursos-gratis`/`recursos-pagos` (hija según precio) — compatible con el hub `[dm_recursos]`
-- Nota: taxonomía interna `dm_tipo_recurso` es **legacy** (sigue registrada en cpt.php, no se usa en chips ni UX)
+- CTA: "Agregar al carrito" o waitlist según reglas vigentes del producto; gratis/pago se comunica por precio, no por categoría pública
+- Importer: asigna `product_cat=recursos` como categoría pública estable
+- Nota: taxonomía interna `dm_tipo_recurso` es **legacy** (sigue registrada en cpt.php, no se usa en chips ni UX); `dm_tema` queda como espejo editorial sincronizado desde `product_tag`
 
 ### 3.5c Comportamiento `/servicios/` — Ruta A (estricto)
 - Chips: Todos / Sesiones / Paquetes / Membresías / Supervisiones (categorías WooCommerce hijas de `servicios`)
@@ -126,12 +126,40 @@ Todos en `wp-content/themes/daniela-child/`:
 - ✅ Producción quedó intacta; el ajuste fue solo en staging.
 - Estado visible validado en staging tras la limpieza: **Inicio / Recursos / Escuela / Servicios / Sobre Mi / Blog / Newsletter / [Acceso]**.
 - Dirección UX aprobada para la siguiente jerarquía del menú: `Recursos` sin hijos; `Escuela` con dropdown por tipos; `Servicios` con dropdown por tipos; `Sobre Mi` agrupando `Blog` y `Newsletter` como hijos.
+- ✅ Regla de header/cart aprobada: el item `nav-menu-item-9366` sale del menú primario y se reusa en el bloque de header como **Iniciar sesion**, conservando el destino original del item (`/escritorio/` en staging).
+- ✅ Regla global de carrito: el header nunca debe abrir el cart drawer nativo de Shoptimizer ni el de plugins terceros; siempre debe abrir el drawer del child theme (`#dm-cart-drawer`).
+- ✅ Regla de integración visual en `header-4`: el link **Iniciar sesion** del bloque custom de header no debe depender del estilo heredado del parent/Kirki; su apariencia final se fuerza desde el child theme sobre el selector real de `col-full-nav > .site-header-cart.menu`.
+- ✅ Regla operativa de validación en staging: después de cambios en header/CSS/JS, verificar con querystring única si Rocket/Cloudflare sigue sirviendo HTML viejo desde edge cache antes de concluir que el deploy falló.
+
+### 3.10b Agenda cerrada / lista de espera (2026-04-21)
+- ✅ Regla central implementada: cuando la agenda de sesiones está cerrada, los productos de la categoría WooCommerce `sesiones` no se pueden comprar ni agregar al carrito.
+- ✅ En ese estado, cualquier CTA relevante de sesiones pasa a la **lista de espera** en vez de checkout/carrito/agendado.
+- ✅ La URL de espera activa es: `https://docs.google.com/forms/d/e/1FAIpQLSez3rvnIR6LBL0oPVyHq1yBa6xXNt8nMGj3a87SbpNYuqVVzw/viewform`
+- ✅ La regla se aplica de forma centralizada en:
+  - cards/grids de producto,
+  - single editorial `dm_servicio`,
+  - loop nativo WooCommerce,
+  - single nativo de producto,
+  - intentos directos de `?add-to-cart=`.
+- ✅ Administración para cliente/terapeuta: `WP Admin > Ajustes > Generales`.
+  - Campo: **Agenda de sesiones abierta**.
+  - Campo: **URL lista de espera**.
+- ✅ Procedimiento para reabrir agenda:
+  1. entrar a `Ajustes > Generales`;
+  2. activar **Agenda de sesiones abierta**;
+  3. guardar cambios.
+- ✅ Procedimiento para volver a cerrar agenda:
+  1. desactivar **Agenda de sesiones abierta**;
+  2. confirmar que la URL de lista de espera siga correcta;
+  3. guardar cambios.
 
 ### 3.11 Home “¿Qué necesitas?” — stretch/alineación interna (2026-04-20)
 - ✅ `.dm-necesitas__left` ya estira a la misma altura del contenedor padre usando layout flex con `align-items: stretch` en la grilla y `height: 100%`/`min-height` consistentes.
 - ✅ `.dm-necesitas__copy` ahora ocupa verticalmente su columna (`flex: 1 1 auto`, `align-self: stretch`, `height: 100%`).
 - ✅ El contenido interno de `.dm-necesitas__copy` se distribuye con `justify-content: space-between`, de modo que los bloques queden espaciados de forma pareja dentro del panel izquierdo.
 - ✅ Ajuste verificado en staging.
+- ✅ Regla de interacción visual: `dm-carousel` hereda el hover premium de `.dm-card` para mantener consistencia de catálogo/Home. El contenedor aplica `lift + shadow` y la imagen hero interna usa zoom suave (`scale(1.03)`).
+- ✅ Fuente única de esta interacción: `assets/css/home-necesitas.css`.
 
 ### 3.12 Reglas de imágenes por contenedor (2026-04-20)
 - ✅ Regla operativa: no reutilizar una sola imagen para todos los contextos; cada bloque tiene su proporción ideal.

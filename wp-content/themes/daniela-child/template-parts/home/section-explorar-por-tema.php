@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Hub de temas — ¿Qué tipo de ayuda buscas?
+ * Explorar por tema — ¿Qué tipo de ayuda buscas?
  *
  * Destino del Slide 4 ("Explorar por tema") en la sección "¿Qué necesitas?".
- * Sin JS obligatorio (links normales). Reutiliza cache/filtros existentes
- * del ecosistema de recursos/temas para mantener consistencia en el front.
+ * Sin JS obligatorio (links normales). Usa product_tag como fuente de verdad
+ * de los temas para mantener consistencia entre catálogos y archivo /temas/.
  *
  * Se puede incluir directamente o via shortcode [dm_temas_hub].
  *
@@ -24,16 +24,13 @@ $active_tema = isset($_GET['tema']) ? sanitize_title(wp_unslash($_GET['tema'])) 
 $tema_label  = '';
 if ($active_tema) {
 	$tema_term  = get_term_by('slug', $active_tema, 'product_tag');
-	if (! $tema_term) {
-		$tema_term = get_term_by('slug', $active_tema, 'dm_tema');
-	}
 	$tema_label = $tema_term ? $tema_term->name : $active_tema;
 }
 
 /* -------------------------------------------------------------------------
-   Secciones del hub con sus destinos
-   Cuando hay un tema activo, los links incluyen el filtro de tema donde el
-   archive lo soporta (dm_topic en /recursos/, dm_topic en /escuela/?tipo=).
+	Secciones del hub con sus destinos.
+	Cuando hay un tema activo, los links propagan el mismo parámetro público
+	`tema` para conservar consistencia semántica entre pantallas.
    ---------------------------------------------------------------------- */
 $temas_hub_url = home_url('/temas/');
 
@@ -41,7 +38,7 @@ $build_type_url = function (string $base_url) use ($active_tema): string {
 	if (! $active_tema) {
 		return $base_url;
 	}
-	return add_query_arg('dm_topic', $active_tema, $base_url);
+	return add_query_arg('tema', $active_tema, $base_url);
 };
 
 $hub_sections = [
@@ -57,21 +54,21 @@ $hub_sections = [
 		'label' => __('Cursos', 'daniela-child'),
 		'desc'  => __('Aprendizaje online paso a paso, cuando tú quieras.', 'daniela-child'),
 		'icon'  => '🎓',
-		'url'   => $build_type_url(home_url('/escuela/?tipo=curso')),
+		'url'   => $build_type_url(home_url('/escuela/?tipo=cursos')),
 	],
 	[
 		'id'    => 'talleres',
 		'label' => __('Talleres', 'daniela-child'),
 		'desc'  => __('Experiencias en vivo para trabajar en comunidad.', 'daniela-child'),
 		'icon'  => '🤝',
-		'url'   => $build_type_url(home_url('/escuela/?tipo=taller')),
+		'url'   => $build_type_url(home_url('/escuela/?tipo=talleres')),
 	],
 	[
 		'id'    => 'programas',
 		'label' => __('Programas', 'daniela-child'),
 		'desc'  => __('Procesos más profundos y acompañados.', 'daniela-child'),
 		'icon'  => '🌱',
-		'url'   => $build_type_url(home_url('/escuela/?tipo=programa')),
+		'url'   => $build_type_url(home_url('/escuela/?tipo=programas')),
 	],
 	[
 		'id'    => 'sesiones',
@@ -83,15 +80,12 @@ $hub_sections = [
 ];
 
 /* -------------------------------------------------------------------------
-	Tags de temas
-	Prioriza product_tag y reutiliza el transient histórico de chips para
-	mantener compatibilidad con el shortcode legacy de recursos.
+	Temas disponibles desde WooCommerce product_tag.
 	---------------------------------------------------------------------- */
 $topic_tags = [];
 
 if (function_exists('wc_get_product_tag_tax_class') || taxonomy_exists('product_tag')) {
-	// Nombre de transient legado; se mantiene por compatibilidad.
-	$cached = get_transient('dm_recursos_temas_chips');
+	$cached = get_transient('dm_temas_hub_topics');
 
 	if (false === $cached) {
 		global $wpdb;
@@ -112,24 +106,9 @@ if (function_exists('wc_get_product_tag_tax_class') || taxonomy_exists('product_
 			 ORDER BY t.name ASC"
 		);
 		$topic_tags = is_array($rows) ? $rows : [];
+		set_transient('dm_temas_hub_topics', $topic_tags, HOUR_IN_SECONDS);
 	} else {
 		$topic_tags = $cached;
-	}
-} elseif (taxonomy_exists('dm_tema')) {
-	$terms = get_terms([
-		'taxonomy'   => 'dm_tema',
-		'hide_empty' => true,
-		'orderby'    => 'name',
-	]);
-	if (! is_wp_error($terms)) {
-		foreach ($terms as $term) {
-			$topic_tags[] = (object) [
-				'term_id' => $term->term_id,
-				'name'    => $term->name,
-				'slug'    => $term->slug,
-				'cnt'     => $term->count,
-			];
-		}
 	}
 }
 ?>

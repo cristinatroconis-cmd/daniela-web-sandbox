@@ -26,6 +26,10 @@ function dm_get_add_to_cart_url($product)
         return '';
     }
 
+    if (function_exists('dm_product_uses_waitlist') && dm_product_uses_waitlist($product)) {
+        return dm_get_booking_waitlist_url();
+    }
+
     $url       = (string) $product->add_to_cart_url();
     $price_raw = $product->get_price();
     $is_free   = ($price_raw !== '' && (float) $price_raw <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
@@ -41,6 +45,44 @@ function dm_get_add_to_cart_url($product)
 
     // Force cart add endpoint for free resources even when purchasable=false.
     return add_query_arg('add-to-cart', $product->get_id(), wc_get_cart_url());
+}
+
+function dm_get_product_primary_cta($product, $args = [])
+{
+    if (! $product instanceof WC_Product) {
+        return [
+            'mode'       => 'none',
+            'url'        => '',
+            'label'      => '',
+            'class'      => '',
+            'attributes' => [],
+        ];
+    }
+
+    $args = is_array($args) ? $args : [];
+
+    if (function_exists('dm_product_uses_waitlist') && dm_product_uses_waitlist($product)) {
+        return [
+            'mode'       => 'waitlist',
+            'url'        => dm_get_booking_waitlist_url(),
+            'label'      => isset($args['waitlist_label']) && trim((string) $args['waitlist_label']) !== '' ? trim((string) $args['waitlist_label']) : __('Unirme a la lista de espera', 'daniela-child'),
+            'class'      => isset($args['waitlist_class']) && trim((string) $args['waitlist_class']) !== '' ? trim((string) $args['waitlist_class']) : (isset($args['class']) ? trim((string) $args['class']) : 'dm-btn dm-btn--primary'),
+            'attributes' => [],
+        ];
+    }
+
+    return [
+        'mode'       => 'cart',
+        'url'        => dm_get_add_to_cart_url($product),
+        'label'      => isset($args['label']) && trim((string) $args['label']) !== '' ? trim((string) $args['label']) : __('Agregar al carrito', 'daniela-child'),
+        'class'      => isset($args['class']) && trim((string) $args['class']) !== '' ? trim((string) $args['class']) : 'dm-btn dm-btn--primary',
+        'attributes' => [
+            'data-product_id'   => (string) $product->get_id(),
+            'data-product_sku'  => (string) $product->get_sku(),
+            'data-quantity'     => '1',
+            'data-product_name' => (string) $product->get_name(),
+        ],
+    ];
 }
 
 /**
@@ -165,17 +207,22 @@ function dm_render_product_card($product, $back_url = '')
         <div class="dm-card__footer">
             <?php
             $btn_class = $is_free ? 'dm-btn dm-btn--secondary' : 'dm-btn dm-btn--primary';
+            $cta       = dm_get_product_primary_cta($product, [
+                'class'          => $btn_class,
+                'waitlist_class' => 'dm-btn dm-btn--primary',
+            ]);
             // Para productos de pago: respetar is_purchasable/in_stock.
             // Para productos gratis (precio = '0'): mostrar siempre el CTA.
-            $show_cta  = $is_free || ($product->is_purchasable() && $product->is_in_stock());
+            $show_cta  = ('waitlist' === $cta['mode']) || $is_free || ($product->is_purchasable() && $product->is_in_stock());
             if ($show_cta) :
             ?>
-                <a href="<?php echo esc_url(dm_get_add_to_cart_url($product)); ?>"
-                    data-product_id="<?php echo esc_attr($product->get_id()); ?>"
-                    data-product_sku="<?php echo esc_attr($product->get_sku()); ?>"
-                    data-quantity="1"
-                    class="button add_to_cart_button ajax_add_to_cart <?php echo esc_attr($btn_class); ?>">
-                    <?php esc_html_e('Agregar al carrito', 'daniela-child'); ?>
+                <a href="<?php echo esc_url($cta['url']); ?>"
+                    <?php if ('cart' === $cta['mode']) : ?>data-product_id="<?php echo esc_attr($cta['attributes']['data-product_id']); ?>"
+                    data-product_sku="<?php echo esc_attr($cta['attributes']['data-product_sku']); ?>"
+                    data-quantity="<?php echo esc_attr($cta['attributes']['data-quantity']); ?>"
+                    data-product_name="<?php echo esc_attr($cta['attributes']['data-product_name']); ?>"
+                    <?php endif; ?>class="button <?php echo 'cart' === $cta['mode'] ? 'add_to_cart_button ajax_add_to_cart ' : ''; ?><?php echo esc_attr($cta['class']); ?>">
+                    <?php echo esc_html($cta['label']); ?>
                 </a>
             <?php endif; ?>
         </div>
@@ -183,6 +230,152 @@ function dm_render_product_card($product, $back_url = '')
     </article>
 <?php
     return ob_get_clean();
+}
+
+/**
+ * Return product topic terms from WooCommerce product_tag.
+ *
+ * @param WC_Product|int $product Product object or product ID.
+ * @return WP_Term[]
+ */
+function dm_get_product_topic_terms($product)
+{
+    $product_id = $product instanceof WC_Product ? $product->get_id() : absint($product);
+
+    if ($product_id <= 0) {
+        return [];
+    }
+
+    $topic_terms = get_the_terms($product_id, 'product_tag');
+
+    if (is_wp_error($topic_terms) || empty($topic_terms)) {
+        return [];
+    }
+
+    return $topic_terms;
+}
+
+/**
+ * Render product topic tags as informational text chips.
+ *
+ * @param WC_Product|int $product Product object or product ID.
+ * @return string
+ */
+function dm_get_product_topic_tags_html($product)
+{
+    $topic_terms = dm_get_product_topic_terms($product);
+
+    if (empty($topic_terms)) {
+        return '';
+    }
+
+    ob_start();
+?>
+    <ul class="dm-topic-tags" aria-label="<?php esc_attr_e('Temas', 'daniela-child'); ?>">
+        <?php foreach ($topic_terms as $topic_term) : ?>
+            <li>
+                <span class="dm-topic-tag"><?php echo esc_html($topic_term->name); ?></span>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+<?php
+
+    return ob_get_clean();
+}
+
+/**
+ * Render a product card for topic-driven catalogs and archives.
+ *
+ * Used by resources and the /temas/ archive where the main navigational axis is
+ * the marketing topic (`product_tag`) rather than the editorial CPT layer.
+ *
+ * @param WC_Product $product   Product object.
+ * @param array      $args      Optional rendering args.
+ */
+function dm_render_topic_product_card(WC_Product $product, $args = [])
+{
+    $args = wp_parse_args($args, [
+        'show_topic_tags' => true,
+    ]);
+
+    $product_id = $product->get_id();
+    $price      = (float) $product->get_price();
+    $is_free    = ($price <= 0.0); // phpcs:ignore WordPress.PHP.StrictComparisons
+
+    $product_url = get_permalink($product_id);
+    $cta         = dm_get_product_primary_cta($product, [
+        'class'          => 'dm-btn dm-btn--comprar',
+        'waitlist_class' => 'dm-btn dm-btn--primary',
+    ]);
+    $thumbnail_id  = $product->get_image_id();
+    $thumbnail_url = $thumbnail_id
+        ? wp_get_attachment_image_url($thumbnail_id, 'woocommerce_thumbnail')
+        : wc_placeholder_img_src('woocommerce_thumbnail');
+    $price_html = $is_free ? '' : $product->get_price_html();
+    $excerpt    = dm_get_product_catalog_excerpt($product);
+    $topic_tags_html = $args['show_topic_tags'] ? dm_get_product_topic_tags_html($product) : '';
+?>
+    <li class="dm-topic-products__item">
+        <article class="dm-topic-card<?php echo $is_free ? ' dm-topic-card--gratis' : ' dm-topic-card--pago'; ?>"
+            aria-label="<?php echo esc_attr($product->get_name()); ?>">
+
+            <?php if ($thumbnail_url) : ?>
+                <a href="<?php echo esc_url($product_url); ?>" class="dm-topic-card__thumb-link" tabindex="-1" aria-hidden="true">
+                    <img src="<?php echo esc_url($thumbnail_url); ?>"
+                        alt="<?php echo esc_attr($product->get_name()); ?>"
+                        class="dm-topic-card__thumb"
+                        loading="lazy"
+                        width="300"
+                        height="300">
+                </a>
+            <?php endif; ?>
+
+            <div class="dm-topic-card__body">
+                <h3 class="dm-topic-card__title">
+                    <a href="<?php echo esc_url($product_url); ?>">
+                        <?php echo esc_html($product->get_name()); ?>
+                    </a>
+                </h3>
+
+                <?php if (! empty($excerpt)) : ?>
+                    <p class="dm-topic-card__excerpt">
+                        <?php echo wp_kses_post($excerpt); ?>
+                    </p>
+                <?php endif; ?>
+
+                <?php if ($topic_tags_html !== '') : ?>
+                    <?php echo $topic_tags_html; // phpcs:ignore WordPress.Security.EscapeOutput 
+                    ?>
+                <?php endif; ?>
+
+                <?php if (! $is_free && ! empty($price_html)) : ?>
+                    <p class="dm-topic-card__price">
+                        <?php echo wp_kses_post($price_html); ?>
+                    </p>
+                <?php endif; ?>
+
+                <div class="dm-topic-card__cta">
+                    <a href="<?php echo esc_url($product_url); ?>"
+                        class="dm-btn dm-btn--ghost">
+                        <?php esc_html_e('Ver detalles', 'daniela-child'); ?>
+                    </a>
+                    <?php if ('waitlist' === $cta['mode'] || $product->is_in_stock()) : ?>
+                        <a href="<?php echo esc_url($cta['url']); ?>"
+                            class="<?php echo esc_attr($cta['class']); ?><?php echo 'cart' === $cta['mode'] ? ' add_to_cart_button ajax_add_to_cart' : ''; ?>"
+                            <?php if ('cart' === $cta['mode']) : ?>data-product_id="<?php echo esc_attr($cta['attributes']['data-product_id']); ?>"
+                            data-product_sku="<?php echo esc_attr($cta['attributes']['data-product_sku']); ?>"
+                            data-quantity="<?php echo esc_attr($cta['attributes']['data-quantity']); ?>"
+                            data-product_name="<?php echo esc_attr($cta['attributes']['data-product_name']); ?>"
+                            <?php endif; ?>>
+                            <?php echo esc_html($cta['label']); ?>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div><!-- /.dm-topic-card__body -->
+
+        </article>
+    </li>
+<?php
 }
 
 /**
@@ -215,17 +408,19 @@ function dm_render_product_grid($query, $back_url = '')
 }
 
 // =============================================================================
-// CACHE INVALIDATION — temas tags transient
+// CACHE INVALIDATION — topic navigation transients
 // =============================================================================
 
 /**
- * Clear the cached temas chips whenever a product is created or updated,
- * so tag counts and visibility stay accurate.
+ * Clear the cached topic navigation whenever a product is created or updated,
+ * so resources-by-topic and the Home topic hub stay accurate.
  */
 add_action('save_post_product', function () {
     delete_transient('dm_recursos_temas_tags');
+    delete_transient('dm_temas_hub_topics');
 });
 
 add_action('woocommerce_update_product', function () {
     delete_transient('dm_recursos_temas_tags');
+    delete_transient('dm_temas_hub_topics');
 });

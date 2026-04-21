@@ -35,7 +35,7 @@ wp dm import-recursos --force-update
    - `_dm_source_attachment_id` → ID del attachment (clave de idempotencia).
    - Archivo descargable apunta a la URL del attachment.
    - Precio según regla free/paid.
-   - `product_cat` asignadas: `recursos` (padre) + `recursos-gratis` o `recursos-pagos` (hija según precio).
+   - `product_cat` asignada: `recursos`.
    - `product_tag` asignadas: temas detectados por palabras clave (ver sección 3).
 5. **Crea o actualiza** un CPT `dm_recurso`:
    - Título y excerpt sincronizados con el producto.

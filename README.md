@@ -231,7 +231,7 @@ Todos los shortcodes están registrados en `wp-content/themes/daniela-child/func
 | Shortcode | Página | Qué muestra |
 |---|---|---|
 | `[dm_escuela_home]` | `/escuela/` | **Cursos** (grid) + **Talleres** (grid) |
-| `[dm_recursos_home]` | `/recursos/` | **Gratis** (grid) + **Pagos** (grid) |
+| `[dm_recursos_home]` | `/recursos/` | Catálogo general de recursos |
 
 Para activarlos, pega el shortcode correspondiente en el contenido de cada página desde el editor de WordPress (WP Admin → Páginas). Las páginas hijas mantienen sus propios shortcodes y no se ven afectadas.
 
@@ -241,9 +241,8 @@ Para activarlos, pega el shortcode correspondiente en el contenido de cada pági
 |---|---|---|
 | `[dm_escuela_cursos]` | `/escuela/cursos/` | `cursos` |
 | `[dm_escuela_talleres]` | `/escuela/talleres/` | `talleres` |
-| `[dm_recursos_gratis]` | `/recursos/gratis/` | `recursos-gratis` |
-| `[dm_recursos_pagos]` | `/recursos/pagos/` | `recursos-pagos` |
-| `[dm_recursos_temas]` | `/recursos/temas/` | `recursos-gratis` + `recursos-pagos` (filtrado por tema) |
+| `[dm_recursos]` | `/recursos/` | `recursos` + filtro público `?tema=` |
+| `[dm_recursos_temas]` | `/recursos/temas/` | `recursos` (filtrado por tema) |
 
 ### `[dm_recursos_temas]` — Explorar recursos por tema
 
@@ -253,7 +252,7 @@ Renderiza un bloque de chips (pastillas) basados en las etiquetas de producto (`
 
 | Elemento | Descripción |
 |---|---|
-| Chips de temas | Se generan automáticamente a partir de las etiquetas (`product_tag`) que tengan al menos un producto publicado en `recursos-gratis` o `recursos-pagos`. Cada chip muestra el nombre del tema y el número de recursos disponibles. |
+| Chips de temas | Se generan automáticamente a partir de las etiquetas (`product_tag`) que tengan al menos un producto publicado en `recursos`. Cada chip muestra el nombre del tema y el número de recursos disponibles. |
 | Chip "Todos" | Siempre visible; muestra todos los recursos (sin filtro de tema). |
 | Parámetro `?tema=<slug>` | Controla el tema activo. Por ejemplo: `/recursos/temas/?tema=ansiedad`. El chip correspondiente se marca como activo. Si se omite, se muestran todos los recursos. |
 | Fallback sin JS | Los chips son enlaces HTML estándar; el filtrado funciona con recarga de página aunque JavaScript no esté disponible. |
@@ -272,6 +271,8 @@ Los chips y el grid se generan dinámicamente. Los resultados se cachean durante
 
 Los CPTs permiten estructurar el contenido editorial (recursos, escuela, servicios) de forma independiente a WooCommerce. WooCommerce **sigue siendo el motor de compra**; los CPTs son la capa de navegación/SEO/UX.
 
+> **Fuente de verdad del diccionario y de las decisiones de naming:** ver `docs/ARCHITECTURE_NOTES.md` → **Diccionario oficial**.
+
 > **Nota:** Las páginas estáticas principales (home, sobre mí, contacto) siguen siendo Pages de WordPress. El catálogo navega por CPTs.
 
 ### CPTs registrados
@@ -281,24 +282,39 @@ Los CPTs permiten estructurar el contenido editorial (recursos, escuela, servici
 | `dm_recurso` | Recursos CPT | `/recursos/` | Materiales descargables, guías, ejercicios |
 | `dm_escuela` | Escuela CPT | `/escuela/` | Cursos, talleres y programas formativos |
 | `dm_servicio` | Servicios CPT | `/servicios/` | Sesiones individuales y membresías |
+| `dm_temas` | Temas | `/temas/` | Archive temático que agrupa productos por `product_tag` |
 
-Todos los CPTs soportan: `title`, `editor`, `thumbnail`, `excerpt`, `revisions`.  
+`dm_recurso`, `dm_escuela` y `dm_servicio` soportan: `title`, `editor`, `thumbnail`, `excerpt`, `revisions`.  
+`dm_temas` es un CPT técnico para el archive `/temas/` y solo soporta `title`.  
 Todos aparecen en el editor de bloques (REST habilitado).
 
 ### Taxonomías internas
 
 | Taxonomía | CPT | Términos predefinidos | Uso |
 |---|---|---|---|
-| `dm_tipo_recurso` | `dm_recurso` | `gratis`, `pagos` | Chips de filtro en `/recursos/` |
-| `dm_tipo_escuela` | `dm_escuela` | `cursos`, `talleres`, `programas` | Chips de filtro en `/escuela/` |
-| `dm_tipo_servicio` | `dm_servicio` | `sesiones`, `membresias` | Chips de filtro en `/servicios/` |
-| `dm_tema` | los 3 CPTs | _(se sincronizan desde WC product_tag)_ | Temas transversales para chips y cross-navegación |
+| `dm_tipo_recurso` | `dm_recurso` | `gratis`, `pagos` | Legacy técnico; no gobierna la navegación pública |
+| `dm_tipo_escuela` | `dm_escuela` | `cursos`, `talleres`, `programas` | Legacy técnico; la navegación pública usa WooCommerce |
+| `dm_tipo_servicio` | `dm_servicio` | `sesiones`, `membresias` | Legacy técnico; la navegación pública usa WooCommerce |
+| `dm_tema` | los 3 CPTs | _(se sincronizan desde WC product_tag)_ | Espejo editorial del tema; no es la fuente primaria |
 
 Los términos de `dm_tipo_*` se crean automáticamente en el primer `init` si no existen.  
 Los términos de `dm_tema` **se crean y sincronizan automáticamente** desde los `product_tag` del
 producto WC vinculado al guardar el CPT (ver sección "Cómo crear un ítem" más abajo).
 
-### Diccionario core de tags de marketing (`dm_tema` / `product_tag`)
+### Diccionario oficial
+
+| Término | Definición oficial |
+|---|---|
+| Tema | Concepto de negocio/editorial como ansiedad, autoestima o relaciones. |
+| `product_tag` | Fuente de verdad primaria para clasificar productos Woo por tema. |
+| `dm_tema` | Espejo editorial sincronizado para CPTs; no se edita manualmente ni gobierna la navegación pública. |
+| Chip | Componente visual clicable que representa un filtro o acceso rápido. |
+| Hub | Pantalla de entrada o navegación, no necesariamente un listado de resultados. |
+| Archive/listado | Pantalla que muestra resultados filtrados o agrupados. |
+| Producto | Objeto comercial WooCommerce que compra, descarga o agenda el usuario. |
+| CPT editorial | Pieza SEO/UX/contenido (`dm_recurso`, `dm_escuela`, `dm_servicio`) vinculada opcionalmente a un producto. |
+
+### Diccionario core de temas de marketing (`dm_tema` / `product_tag`)
 
 Usa siempre estos slugs en minúscula para mantener consistencia entre WooCommerce y los CPTs:
 
@@ -326,36 +342,41 @@ Usa siempre estos slugs en minúscula para mantener consistencia entre WooCommer
 
 1. **Crear el producto en WooCommerce** (si aún no existe):  
    WP Admin → Productos → Añadir nuevo.  
-   - Asigna nombre, precio, categoría (`recursos-gratis` / `recursos-pagos` / `cursos` / etc.).  
+   - Asigna nombre, precio y **categorías WooCommerce** correctas (`recursos`, `cursos`, `talleres`, `programas`, `sesiones`, `membresias`, etc.).  
    - **Asigna máximo 3 tags** de marketing (`product_tag`) usando los slugs del diccionario core (ver más abajo).  
+   - Si quieres controlar cómo se ve la card del archive/editorial, completa en el producto su imagen y short description: el catálogo editorial usa esos datos del producto vinculado cuando existen.  
    - Publica el producto y copia su **ID** (número que aparece en la URL al editarlo).
 
 2. **Crear el post CPT:**  
    WP Admin → (Recursos CPT / Escuela CPT / Servicios CPT) → Añadir nuevo.  
-   Rellena título, contenido, imagen destacada y excerpt.
+   - Rellena el **título** del ítem editorial.  
+   - Completa el metabox **"Secciones del single tipo landing"**: ese es el flujo principal para construir el single.  
+   - El editor/excerpt/featured image nativos quedan como apoyo o fallback, no como la fuente principal del layout.
 
-3. **Asignar tipo/taxonomía:**  
-   En la barra lateral del editor, elige el tipo correspondiente:  
-   - Recursos: selecciona `gratis` o `pagos` en **Tipos de recurso**.  
-   - Escuela: selecciona `cursos`, `talleres` o `programas` en **Tipos de Escuela**.  
-   - Servicios: selecciona `sesiones` o `membresias` en **Tipos de servicio**.
-
-4. **Vincular producto WooCommerce:**  
+3. **Vincular producto WooCommerce:**  
    En la barra lateral del editor verás el metabox **"Producto WooCommerce relacionado"**.  
    - Introduce el **ID del producto** de WooCommerce (número entero).  
    - El metabox mostrará el nombre del producto, sus `product_tag` y una alerta si tiene más de 3.  
-   - Si el producto es gratis (precio = 0), el botón CTA dirá **"Recíbelo gratis"**.  
-   - Si el producto es de pago, el CTA dirá **"Comprar"** y mostrará el precio.  
-   - Si dejas el campo vacío, no se mostrará ningún CTA (útil para posts informativos).
+   - Al guardar, esos `product_tag` se sincronizan automáticamente hacia `dm_tema`.  
+   - Si dejas el campo vacío, el CPT se publica como pieza editorial sin CTA de compra.
+
+4. **Solo para Escuela, si el contenido comprado vive en Tutor:**  
+   Completa el metabox **"Curso Tutor (URL)"** con el path o URL del curso.  
+   Ese dato se usa como puente técnico hacia Tutor para el producto/curso, pero la navegación pública de catálogo usa **"Ver detalles"** al single editorial y **"Agregar al carrito"** como CTA comercial.
 
 5. **Publicar / Actualizar** el post CPT.  
    Al guardar, el sistema copia automáticamente los `product_tag` del producto vinculado
    a la taxonomía `dm_tema` del CPT (máximo 3, ordenados por `term_id` ASC).
 
-6. **Publicar.** La URL estará disponible en:
+6. **Revisar el resultado público.** La URL estará disponible en:
    - Recurso: `/recursos/<slug>/`
    - Escuela: `/escuela/<slug>/`
    - Servicio: `/servicios/<slug>/`
+
+7. **Validar el archive correspondiente** (`/recursos/`, `/escuela/`, `/servicios/`):  
+   - la card debe tomar imagen/excerpt del producto vinculado cuando existan,  
+   - `Ver detalles` debe ir al single editorial,  
+   - y los temas visibles de la card salen de `product_tag` como texto informativo.
 
 > **Importante:** después de registrar los CPTs por primera vez, ve a **WP Admin → Ajustes → Enlaces permanentes** y haz clic en **Guardar cambios** (aunque no cambies nada). Esto vacía el caché de rewrite rules y activa las nuevas URLs.
 
@@ -363,11 +384,11 @@ Usa siempre estos slugs en minúscula para mantener consistencia entre WooCommer
 
 | URL | Qué muestra |
 |---|---|
-| `/recursos/` | Archive CPT dm_recurso — grid con chips de tipo |
+| `/recursos/` | Archive CPT dm_recurso — grid editorial con chips de tema |
 | `/recursos/<slug>/` | Single dm_recurso — contenido + CTA |
-| `/escuela/` | Archive CPT dm_escuela — grid con chips de tipo |
+| `/escuela/` | Archive CPT dm_escuela — grid editorial con chips WooCommerce |
 | `/escuela/<slug>/` | Single dm_escuela — contenido + CTA |
-| `/servicios/` | Archive CPT dm_servicio — grid con chips de tipo |
+| `/servicios/` | Archive CPT dm_servicio — grid editorial con chips WooCommerce |
 | `/servicios/<slug>/` | Single dm_servicio — contenido + CTA |
 
 > **Nota:** las páginas estáticas existentes (`/recursos/`, `/escuela/`) no deben tener el mismo slug que el archive del CPT, o WordPress priorizará la página estática. Si ya existen como Pages, cámbiales el slug o conviértelas a borradores para que el archive del CPT tome el control de esa URL.
@@ -390,7 +411,7 @@ Los templates viven en la raíz del tema hijo (como manda WordPress):
 | Archivo | Responsabilidad |
 |---|---|
 | `inc/cpt.php` | Registra CPTs y taxonomías; crea términos por defecto |
-| `inc/helpers-cpt.php` | Metabox WC, CTA renderer, chips de taxonomía, grid CPT |
+| `inc/helpers-cpt.php` | Metaboxes, CTA renderer, chips/filtros, grid CPT, bridge de Escuela |
 | `inc/sync-tags.php` | Sincroniza `product_tag` WC → `dm_tema` al guardar el CPT |
 
 ### Relación con los shortcodes existentes (WooCommerce Pages)
@@ -399,6 +420,7 @@ Los shortcodes de WooCommerce (Páginas clásicas) y los CPTs **coexisten sin co
 
 | Capa | Motor | URL | Casos de uso |
 |---|---|---|---|
-| Pages + Shortcodes | WooCommerce | `/recursos/gratis/`, `/escuela/cursos/`… | Catálogo WC existente |
+| Pages + Shortcodes | WooCommerce | `/recursos/temas/`, listados/hubs específicos | Catálogo WC específico / exploración por shortcode |
 | CPT Archives/Singles | WordPress nativo | `/recursos/`, `/escuela/`, `/servicios/` | Nueva capa editorial |
+| Archive temático | WordPress + WooCommerce | `/temas/` | Productos agrupados por `product_tag` |
 | Checkout, Membresías, Suscripciones | WooCommerce | `/checkout/`, etc. | Motor de compra (no se toca) |

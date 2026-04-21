@@ -353,9 +353,22 @@ Todos soportan: `title`, `editor`, `thumbnail`, `excerpt`, `revisions`. REST hab
 | `dm_tipo_recurso` | `dm_recurso` | `gratis`, `pagos` |
 | `dm_tipo_escuela` | `dm_escuela` | `cursos`, `talleres`, `programas` |
 | `dm_tipo_servicio` | `dm_servicio` | `sesiones`, `membresias` — **LEGACY**: no se usa para chips/UX en `/servicios/`; la clasificación la manda WooCommerce `product_cat` |
-| `dm_tema` | los 3 CPTs | _(admin los crea libremente)_ |
+| `dm_tema` | los 3 CPTs | _(espejo editorial sincronizado desde `product_tag`; no es la fuente primaria)_ |
 
 Los términos de `dm_tipo_*` se crean automáticamente en el primer `init`.
+
+### Diccionario oficial
+
+| Término | Definición oficial |
+|---|---|
+| Tema | Concepto de negocio/editorial como ansiedad, autoestima o relaciones. |
+| `product_tag` | Fuente de verdad primaria para clasificar productos Woo por tema. |
+| `dm_tema` | Espejo editorial sincronizado para CPTs; no gobierna la navegación pública. |
+| Chip | Componente visual clicable que representa un filtro o acceso rápido. |
+| Hub | Pantalla de entrada o navegación; no implica por sí sola un listado de resultados. |
+| Archive/listado | Pantalla que muestra resultados filtrados o agrupados. |
+| Producto | Objeto comercial WooCommerce que compra, descarga o agenda el usuario. |
+| CPT editorial | Pieza SEO/UX/contenido (`dm_recurso`, `dm_escuela`, `dm_servicio`) vinculada opcionalmente a un producto. |
 
 ## 13.2 Templates
 
@@ -363,7 +376,7 @@ Viven en la raíz del tema hijo (convención WordPress):
 
 | Archivo | URL | Función |
 |---|---|---|
-| `archive-dm_recurso.php` | `/recursos/` | Grid de recursos con chips de tipo |
+| `archive-dm_recurso.php` | `/recursos/` | Grid editorial de recursos con chips de tema |
 | `single-dm_recurso.php` | `/recursos/<slug>/` | Recurso individual + CTA |
 | `archive-dm_escuela.php` | `/escuela/` | Grid de cursos con chips Woo (Ruta A) |
 | `single-dm_escuela.php` | `/escuela/<slug>/` | Ítem de escuela individual + CTA |
@@ -584,7 +597,7 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
 ## Menú / navegación (backlog)
 - Pendiente: subitems hover para Escuela, Recursos, Servicios en el menú principal.
   - Subitem Escuela: Cursos / Talleres / Programas.
-  - Subitem Recursos: Por tema (dm_tema slugs).
+  - Subitem Recursos: Por tema (`product_tag` slugs públicos).
   - Subitem Servicios: Sesiones / Paquetes / Membresías / Supervisiones (Woo categories hijas de `servicios`).
 - Implementar en WP Admin → Apariencia → Menús (no requiere código, solo configuración).
 - URLs a usar para Servicios:
@@ -602,12 +615,12 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
 ```bash
 wp dm import-recursos          # Importa nuevos attachments
 wp dm import-recursos --dry-run  # Solo simula (no escribe)
-wp dm import-recursos --force    # Fuerza actualización de existentes
+wp dm import-recursos --force-update  # Fuerza actualización de existentes
 ```
 
 ## Archivo
 
-`wp-content/themes/daniela-child/inc/cli-import.php`
+`wp-content/themes/daniela-child/inc/cli-import-recursos.php`
 
 Solo se carga cuando `WP_CLI` está definido (sin overhead en peticiones web).
 
@@ -624,7 +637,7 @@ Solo se carga cuando `WP_CLI` está definido (sin overhead en peticiones web).
 - Por cada attachment crea/actualiza:
   - Producto WooCommerce (simple, descargable) en categoría `recursos`.
   - CPT `dm_recurso` con excerpt y contenido.
-- Asigna `product_tag` y `dm_tema` con los mismos slugs derivados de keywords del título.
+- Asigna `product_tag` como fuente primaria de tema y sincroniza `dm_tema` como espejo editorial con los mismos slugs derivados de keywords del título.
 - Bundles (familia "Afirmaciones"): tag `bundle`, precio $9.
 
 ## Metas de trazabilidad

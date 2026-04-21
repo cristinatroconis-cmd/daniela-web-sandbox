@@ -128,6 +128,27 @@
 		}, 360 );
 	}
 
+	$( document.body ).on( 'dm_cart_drawer_open', function () {
+		openDrawer();
+	} );
+
+	document.addEventListener( 'click', function ( event ) {
+		var trigger = event.target.closest( '.site-header-cart [data-dm-cart-trigger="header"]' );
+
+		if ( ! trigger ) {
+			return;
+		}
+
+		event.preventDefault();
+		event.stopPropagation();
+		if ( typeof event.stopImmediatePropagation === 'function' ) {
+			event.stopImmediatePropagation();
+		}
+
+		$( 'body' ).removeClass( 'drawer-open' );
+		openDrawer();
+	}, true );
+
 	$( document ).on( 'click', '.dm-cta .add_to_cart_button, .dm-card .add_to_cart_button, .dm-recurso-card .add_to_cart_button, .dm-product-card .add_to_cart_button', function ( e ) {
 		var productId = String( $( this ).data( 'product_id' ) || '' );
 

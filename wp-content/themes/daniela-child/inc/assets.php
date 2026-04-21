@@ -110,7 +110,7 @@ add_action('wp_enqueue_scripts', function () {
 
 	// Enqueue scripts for pages using DM shortcodes that need the filter JS.
 	if ($post_obj) {
-		// Note: dm-recursos-filters is registered in recursos-hub.php and enqueued on-demand.
+		// Note: dm-recursos-filters is registered in shortcodes-recursos.php and enqueued on-demand.
 
 		// Lightweight scroll-into-view JS for [dm_recursos_temas] chips.
 		if (has_shortcode($post_obj->post_content, 'dm_recursos_temas')) {
