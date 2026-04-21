@@ -343,8 +343,10 @@ Registrados en `wp-content/themes/daniela-child/inc/cpt.php`.
 | `dm_recurso` | `/recursos/` | Recursos CPT |
 | `dm_escuela` | `/escuela/` | Escuela CPT |
 | `dm_servicio` | `/servicios/` | Servicios CPT |
+| `dm_temas` | `/temas/` | Temas |
 
-Todos soportan: `title`, `editor`, `thumbnail`, `excerpt`, `revisions`. REST habilitado.
+`dm_recurso`, `dm_escuela` y `dm_servicio` soportan: `title`, `editor`, `thumbnail`, `excerpt`, `revisions`. REST habilitado.
+`dm_temas` es un CPT técnico para el archive temático y solo soporta `title`.
 
 ### Taxonomías internas
 
@@ -391,7 +393,7 @@ Viven en la raíz del tema hijo (convención WordPress):
 | `dm_cpt_render_cta($post_id)` | Renderiza botón "Agregar al carrito" con precio (gratis → botón secundario) |
 | `dm_cpt_render_taxonomy_chips($taxonomy, $param, $base_url)` | Chips de filtro por taxonomía interna CPT |
 | `dm_cpt_archive_query_args($post_type, $taxonomy, $param)` | WP_Query args con filtro de taxonomía CPT |
-| `dm_cpt_render_grid($query)` | Grid de tarjetas CPT (maneja lógica especial para `dm_escuela`) |
+| `dm_cpt_render_grid($query)` | Grid editorial: `Ver detalles` al single CPT, tags informativos desde `product_tag`, CTA comercial WooCommerce |
 | `dm_escuela_render_woo_chips($param, $base_url)` | Chips de filtro /escuela/ usando categorías WooCommerce (Ruta A) |
 | `dm_escuela_query_args_by_woo_cat($param)` | WP_Query args filtrando por categoría WC del producto vinculado |
 | `dm_servicios_render_woo_chips($param, $base_url)` | Chips de filtro /servicios/ usando categorías WooCommerce hijas de `servicios` (Ruta A, estricto) |
@@ -404,7 +406,7 @@ Registrados en `inc/helpers-cpt.php`:
 | Meta key | CPT | Uso |
 |---|---|---|
 | `_dm_wc_product_id` | `dm_recurso`, `dm_escuela`, `dm_servicio` | ID del producto WooCommerce relacionado |
-| `_dm_tutor_course_url` | `dm_escuela` | Path del curso Tutor (ej. `/courses/tumenteencalma/`) |
+| `_dm_tutor_course_url` | `dm_escuela` | Puente técnico hacia Tutor; no cambia el CTA público de catálogo |
 
 ---
 
@@ -415,17 +417,17 @@ Visitante
     ↓
 /escuela/ (archive CPT dm_escuela)
     — chips: Cursos | Talleres | Programas (categorías WooCommerce)
-    — grid de tarjetas con imagen + título + excerpt
+  — grid de tarjetas con imagen + título + excerpt + temas informativos
     ↓
 Tarjeta de curso:
-    [Ver curso →]  (abre Tutor LMS en nueva pestaña)
+  [Ver detalles →]  (abre el single editorial)
     [Agregar al carrito]  (WooCommerce checkout)
     ↓
 Si elige "Agregar al carrito":
     → WooCommerce checkout estándar
     → post-compra: usuario obtiene acceso al curso Tutor
-Si elige "Ver curso":
-    → Va directo a Tutor LMS (linkout, sin gating adicional en ese botón)
+Si elige "Ver detalles":
+  → Ve el single editorial y desde ahí continúa al producto / flujo de compra
 ```
 
 **Por qué este diseño:**
@@ -447,16 +449,16 @@ Si elige "Ver curso":
 - Si WooCommerce no está activo, los helpers fallan silenciosamente (devuelven cadena vacía).
 
 ## Tutor LMS
-- Integración de **solo linkout**: el CPT `dm_escuela` almacena el path del curso en el meta `_dm_tutor_course_url`.
-- No hay llamadas a la API de Tutor desde el child theme; el tema solo enlaza.
-- El botón "Ver curso" abre la URL de Tutor en nueva pestaña (`target="_blank"`).
+- Integración de **puente técnico**: el CPT `dm_escuela` almacena el path del curso en el meta `_dm_tutor_course_url`.
+- No hay llamadas a la API de Tutor desde el child theme; el tema no consume su API.
+- El catálogo público no usa "Ver curso" como CTA principal; usa "Ver detalles" al single editorial y deja la compra en WooCommerce.
 - Gating de acceso: lo controla Tutor LMS (o Woo Memberships/Subscriptions); el child theme no replica esa lógica.
 
 ## Metabox `_dm_tutor_course_url`
 - Aparece en el editor de WP Admin al editar un ítem `dm_escuela`.
 - Campo: pega el path del curso (ej. `/courses/tumenteencalma/`).
-- Si está vacío, el enlace de imagen/título apunta al single CPT en vez del curso Tutor.
-- Si está presente, imagen y título de la tarjeta enlazan al curso Tutor.
+- Sirve como puente interno para la capa Escuela/Tutor.
+- No debe cambiar el enlace público de imagen/título/"Ver detalles" del catálogo, que apunta al single CPT.
 
 ---
 
@@ -605,47 +607,6 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
   - `/servicios/?tipo=paquetes`
   - `/servicios/?tipo=membresias`
   - `/servicios/?tipo=supervisiones`
-
----
-
-# 19. Importador idempotente de recursos (WP-CLI)
-
-## Comando
-
-```bash
-wp dm import-recursos          # Importa nuevos attachments
-wp dm import-recursos --dry-run  # Solo simula (no escribe)
-wp dm import-recursos --force-update  # Fuerza actualización de existentes
-```
-
-## Archivo
-
-`wp-content/themes/daniela-child/inc/cli-import-recursos.php`
-
-Solo se carga cuando `WP_CLI` está definido (sin overhead en peticiones web).
-
-## Lógica
-
-| Condición | Precio |
-|---|---|
-| Título contiene **gratuito** (case-insensitive) | $0 |
-| Familia "Afirmaciones" (bundle) | $9 |
-| Cualquier otro | $5 |
-
-- Archivos aceptados: PDF, MP3, M4A.
-- Idempotente: detecta importaciones previas por meta `_dm_source_attachment_id`.
-- Por cada attachment crea/actualiza:
-  - Producto WooCommerce (simple, descargable) en categoría `recursos`.
-  - CPT `dm_recurso` con excerpt y contenido.
-- Asigna `product_tag` como fuente primaria de tema y sincroniza `dm_tema` como espejo editorial con los mismos slugs derivados de keywords del título.
-- Bundles (familia "Afirmaciones"): tag `bundle`, precio $9.
-
-## Metas de trazabilidad
-
-| Meta key | Post type | Valor |
-|---|---|---|
-| `_dm_source_attachment_id` | `product`, `dm_recurso` | ID del attachment origen |
-| `_dm_wc_product_id` | `dm_recurso` | ID del producto WC vinculado |
 
 ---
 

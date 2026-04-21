@@ -287,7 +287,7 @@ El sitio usa **un solo sistema visual** de cards + grids para todos los catálog
 | Familia de card | Wrapper (ratio + overflow) | Elemento imagen |
 |---|---|---|
 | `.dm-card` (CPT grids: escuela, servicios…) | `a.dm-card__image-link` | `div.dm-card__thumb > img` (de `get_the_post_thumbnail()`) |
-| `.dm-recurso-card` (hub WooCommerce recursos) | `a.dm-recurso-card__thumb-link` | `img.dm-recurso-card__thumb` |
+| `.dm-topic-card` (grids temáticos de productos) | `a.dm-topic-card__thumb-link` | `img.dm-topic-card__thumb` |
 | `.dm-product-card` (grids de producto Woo) | `a.dm-product-card__thumb-link` | `img.dm-product-card__thumb` |
 
 - Para `.dm-card`, el ratio 16:9 se aplica sobre `a.dm-card__image-link`; el `div.dm-card__thumb` interior hereda `width/height: 100%`; el `<img>` (clase WordPress `wp-post-image`) se fuerza a `width/height: 100%` con `object-fit: cover`.
@@ -417,11 +417,11 @@ git pull --no-rebase origin main
 - [ ] Al hacer click en "Cursos", la URL cambia a `/escuela/?tipo=cursos` y el grid filtra.
 - [ ] Chip activo tiene clase `dm-chip--active` y `aria-current="true"`.
 - [ ] Las tarjetas muestran imagen, título y excerpt (sin HTML en el excerpt).
-- [ ] Si el ítem tiene `_dm_tutor_course_url`: imagen y título enlazan al curso Tutor.
-- [ ] Botón "Ver curso" abre en nueva pestaña.
+- [ ] Imagen, título y "Ver detalles" enlazan al single editorial propio.
+- [ ] Si el producto vinculado tiene temas (`product_tag`), se muestran como texto informativo no clickeable.
 - [ ] Botón "Agregar al carrito" añade el producto al carrito WooCommerce.
 - [ ] Si no hay `_dm_wc_product_id`: no aparece el botón de carrito.
-- [ ] Si no hay `_dm_tutor_course_url`: no aparece "Ver curso"; imagen/título enlazan al single CPT.
+- [ ] La presencia de `_dm_tutor_course_url` no cambia el CTA público del catálogo.
 
 ### Single `/escuela/<slug>/`
 - [ ] La página carga sin errores PHP.

@@ -1,5 +1,5 @@
 /**
- * Recursos Hub — Progressive Enhancement Filters
+ * Topic browser — Progressive Enhancement Filters
  *
  * When JS is available, filter clicks update the URL querystring and re-render
  * the grid via fetch() without a full page reload. Falls back to normal links
@@ -11,22 +11,22 @@
 	'use strict';
 
 	/**
-	 * Return the .dm-recursos wrapper element, or null if not on page.
+	 * Return the .dm-topic-browser wrapper element, or null if not on page.
 	 * @returns {HTMLElement|null}
 	 */
 	function getWrapper() {
-		return document.querySelector( '.dm-recursos' );
+		return document.querySelector( '.dm-topic-browser' );
 	}
 
 	/**
-	 * Parse the response HTML and extract the new .dm-recursos innerHTML.
+	 * Parse the response HTML and extract the new .dm-topic-browser innerHTML.
 	 * @param {string} html Full page HTML string.
-	 * @returns {string|null} Inner HTML of .dm-recursos, or null if not found.
+	 * @returns {string|null} Inner HTML of .dm-topic-browser, or null if not found.
 	 */
 	function extractRecursosHTML( html ) {
 		const parser = new DOMParser();
 		const doc    = parser.parseFromString( html, 'text/html' );
-		const el     = doc.querySelector( '.dm-recursos' );
+		const el     = doc.querySelector( '.dm-topic-browser' );
 		return el ? el.outerHTML : null;
 	}
 
@@ -67,7 +67,7 @@
 	/**
 	 * Fetch the new page HTML for a given URL and swap the grid.
 	 * @param {string}      url     Target URL with filter querystring.
-	 * @param {HTMLElement} wrapper Current .dm-recursos wrapper.
+	 * @param {HTMLElement} wrapper Current .dm-topic-browser wrapper.
 	 */
 	function fetchAndSwap( url, wrapper ) {
 		setLoading( wrapper );

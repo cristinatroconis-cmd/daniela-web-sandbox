@@ -51,11 +51,6 @@ require_once __DIR__ . '/inc/newsletter-optin.php';
 // require_once __DIR__ . '/inc/freebie-download.php';
 require_once __DIR__ . '/inc/cart-drawer.php';
 
-// WP-CLI + admin importer (loaded after WooCommerce is ready).
-add_action('plugins_loaded', function () {
-	require_once __DIR__ . '/inc/cli-import-recursos.php';
-});
-
 // Admin settings (loaded via WooCommerce filter so WC_Settings_Page is available).
 add_filter('woocommerce_get_settings_pages', function ($settings) {
 	if (is_admin()) {

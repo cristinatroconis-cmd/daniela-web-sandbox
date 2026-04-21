@@ -340,30 +340,30 @@ body.drawer-open {
 }
 
 /* ==========================================================================
-   Recursos Hub — [dm_recursos]
-   ========================================================================== */
+	Topic browser — [dm_recursos]
+	========================================================================== */
 
-.dm-recursos {
+.dm-topic-browser {
 	margin: 2rem 0;
 }
 
 /* ---- Filter bar ---- */
 
-.dm-recursos__filters {
+.dm-topic-browser__filters {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 1rem;
 	margin-bottom: 2rem;
 }
 
-.dm-recursos__filter-group {
+.dm-topic-browser__filter-group {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.5rem;
 }
 
-.dm-recursos__filter-label {
+.dm-topic-browser__filter-label {
 	font-size: 0.85rem;
 	font-weight: 600;
 	color: var(--dm-color-text-muted);
@@ -404,7 +404,6 @@ body.drawer-open {
 
 /* ---- Product grid ---- */
 
-.dm-recursos__grid,
 .dm-topic-products__grid {
 	list-style: none;
 	margin: 0;
@@ -415,24 +414,22 @@ body.drawer-open {
 }
 
 /* Column hint overrides (set via data-columns) */
-.dm-recursos[data-columns="1"] .dm-recursos__grid {
+.dm-topic-browser[data-columns="1"] .dm-topic-products__grid {
 	grid-template-columns: 1fr;
 }
 
-.dm-recursos[data-columns="2"] .dm-recursos__grid {
+.dm-topic-browser[data-columns="2"] .dm-topic-products__grid {
 	grid-template-columns: repeat(2, 1fr);
 }
 
-.dm-recursos[data-columns="4"] .dm-recursos__grid {
+.dm-topic-browser[data-columns="4"] .dm-topic-products__grid {
 	grid-template-columns: repeat(4, 1fr);
 }
 
-.dm-recursos__item,
 .dm-topic-products__item {
 	display: flex;
 }
 
-.dm-recursos__empty,
 .dm-topic-products__empty {
 	color: var(--dm-color-text-muted);
 	font-style: italic;
@@ -441,7 +438,6 @@ body.drawer-open {
 
 /* ---- Recurso card — type-specific styles only ---- */
 
-.dm-recurso-card__cta,
 .dm-topic-card__cta {
 	margin-top: auto;
 	padding-top: 0.5rem;
@@ -451,7 +447,6 @@ body.drawer-open {
 }
 
 /* Badge for type */
-.dm-recurso-card--gratis::before,
 .dm-topic-card--gratis::before {
 	content: "Gratis";
 	display: inline-block;
@@ -532,7 +527,6 @@ body.drawer-open {
 
 /* 1 · Card container — flex column + shared chrome */
 .dm-card,
-.dm-recurso-card,
 .dm-topic-card,
 .dm-product-card {
 	display: flex;
@@ -554,7 +548,6 @@ body.drawer-open {
 /* 2 · Thumb wrapper — unified 16 : 9 ratio */
 .dm-card__thumb,
 .dm-card__thumb-link,
-.dm-recurso-card__thumb-link,
 .dm-topic-card__thumb-link,
 .dm-product-card__thumb-link {
 	display: block;
@@ -565,7 +558,6 @@ body.drawer-open {
 
 /* 3 · Thumb image — fill wrapper, never distort */
 .dm-card__thumb img,
-.dm-recurso-card__thumb,
 .dm-topic-card__thumb,
 .dm-product-card__thumb {
 	display: block;
@@ -577,7 +569,6 @@ body.drawer-open {
 
 /* 4 · Card body — grows so CTA can align to bottom */
 .dm-card__body,
-.dm-recurso-card__body,
 .dm-topic-card__body,
 .dm-product-card__body {
 	display: flex;
@@ -597,7 +588,6 @@ body.drawer-open {
 }
 
 .dm-card__title a,
-.dm-recurso-card__title a,
 .dm-topic-card__title a,
 .dm-product-card__title a {
 	color: var(--dm-color-text);
@@ -605,7 +595,6 @@ body.drawer-open {
 }
 
 .dm-card__title a:hover,
-.dm-recurso-card__title a:hover,
 .dm-topic-card__title a:hover,
 .dm-product-card__title a:hover {
 	color: var(--dm-color-primary);
@@ -613,7 +602,6 @@ body.drawer-open {
 
 /* 6 · Excerpt */
 .dm-card__excerpt,
-.dm-recurso-card__excerpt,
 .dm-topic-card__excerpt,
 .dm-product-card__excerpt {
 	font-size: 0.875rem;
@@ -624,7 +612,6 @@ body.drawer-open {
 
 /* 7 · Price */
 .dm-card__price,
-.dm-recurso-card__price,
 .dm-topic-card__price,
 .dm-product-card__price {
 	font-size: 1rem;
@@ -668,8 +655,6 @@ body.drawer-open {
 	.dm-card:focus-within,
 	.dm-product-card:hover,
 	.dm-product-card:focus-within,
-	.dm-recurso-card:hover,
-	.dm-recurso-card:focus-within,
 	.dm-topic-card:hover,
 	.dm-topic-card:focus-within {
 		box-shadow: var(--dm-card-hover-shadow);
@@ -680,8 +665,6 @@ body.drawer-open {
 	.dm-card:focus-within .dm-card__thumb img,
 	.dm-product-card:hover .dm-product-card__thumb,
 	.dm-product-card:focus-within .dm-product-card__thumb,
-	.dm-recurso-card:hover .dm-recurso-card__thumb,
-	.dm-recurso-card:focus-within .dm-recurso-card__thumb,
 	.dm-topic-card:hover .dm-topic-card__thumb,
 	.dm-topic-card:focus-within .dm-topic-card__thumb {
 		transform: scale(1.03);
@@ -831,7 +814,7 @@ body.drawer-open {
 	outline: none;
 }
 
-/* Card footer with dual action buttons (Ver curso + Agregar al carrito) */
+/* Card footer with dual action buttons (Ver detalles + Agregar al carrito) */
 .dm-card__footer--actions {
 	display: flex;
 	justify-content: center;
@@ -861,10 +844,6 @@ body.drawer-open {
 	color: var(--dm-color-text-muted);
 	line-height: 1.5;
 }
-
-/* ==========================================================================
-   Temas Chips — [dm_recursos_temas]
-   ========================================================================== */
 
 /**
  * Horizontally scrollable chip row (nav.dm-chips).
@@ -940,16 +919,15 @@ body.drawer-open {
 
 @media (max-width: 600px) {
 
-	.dm-recursos__grid,
 	.dm-topic-products__grid,
 	.dm-products-grid {
 		grid-template-columns: 1fr;
 	}
 
 	/* Always single column on very small screens regardless of data-columns */
-	.dm-recursos[data-columns="2"] .dm-recursos__grid,
-	.dm-recursos[data-columns="3"] .dm-recursos__grid,
-	.dm-recursos[data-columns="4"] .dm-recursos__grid,
+	.dm-topic-browser[data-columns="2"] .dm-topic-products__grid,
+	.dm-topic-browser[data-columns="3"] .dm-topic-products__grid,
+	.dm-topic-browser[data-columns="4"] .dm-topic-products__grid,
 	.dm-products-grid--cols-2,
 	.dm-products-grid--cols-3,
 	.dm-products-grid--cols-4 {
@@ -959,13 +937,12 @@ body.drawer-open {
 
 @media (min-width: 601px) and (max-width: 900px) {
 
-	.dm-recursos__grid,
 	.dm-topic-products__grid,
 	.dm-products-grid {
 		grid-template-columns: repeat(2, 1fr);
 	}
 
-	.dm-recursos[data-columns="4"] .dm-recursos__grid,
+	.dm-topic-browser[data-columns="4"] .dm-topic-products__grid,
 	.dm-products-grid--cols-4 {
 		grid-template-columns: repeat(2, 1fr);
 	}
@@ -979,14 +956,12 @@ body.drawer-open {
 
 	.dm-card,
 	.dm-product-card,
-	.dm-recurso-card,
 	.dm-topic-card {
 		transition: none;
 	}
 
 	.dm-card__thumb img,
 	.dm-product-card__thumb,
-	.dm-recurso-card__thumb,
 	.dm-topic-card__thumb {
 		transition: none;
 	}
@@ -996,7 +971,6 @@ body.drawer-open {
    Topic tags — informational only
    ========================================================================== */
 
-.dm-recurso-card__tags,
 .dm-topic-card__tags,
 .dm-topic-tags {
 	list-style: none;
@@ -1007,7 +981,6 @@ body.drawer-open {
 	gap: 6px;
 }
 
-.dm-recurso-card__tag,
 .dm-topic-card__tag,
 .dm-topic-tag {
 	display: inline-block;
@@ -1640,7 +1613,6 @@ body.dm-cart-drawer-open {
 .dm-cta .added_to_cart.wc-forward,
 .dm-single__actions .added_to_cart.wc-forward,
 .dm-card .added_to_cart.wc-forward,
-.dm-recurso-card .added_to_cart.wc-forward,
 .dm-topic-card .added_to_cart.wc-forward,
 .dm-product-card .added_to_cart.wc-forward {
 	display: none !important;

@@ -46,7 +46,7 @@
 	}
 
 	function dmCardsRemoveViewCartLink() {
-		$( '.dm-card a.added_to_cart.wc-forward, .dm-cta a.added_to_cart.wc-forward, .dm-single__actions a.added_to_cart.wc-forward, .dm-recurso-card__cta a.added_to_cart.wc-forward, .dm-product-card a.added_to_cart.wc-forward' ).remove();
+		$( '.dm-card a.added_to_cart.wc-forward, .dm-cta a.added_to_cart.wc-forward, .dm-single__actions a.added_to_cart.wc-forward, .dm-topic-card__cta a.added_to_cart.wc-forward, .dm-product-card a.added_to_cart.wc-forward' ).remove();
 	}
 
 	function showDrawerNotice( message ) {
@@ -149,7 +149,7 @@
 		openDrawer();
 	}, true );
 
-	$( document ).on( 'click', '.dm-cta .add_to_cart_button, .dm-card .add_to_cart_button, .dm-recurso-card .add_to_cart_button, .dm-product-card .add_to_cart_button', function ( e ) {
+	$( document ).on( 'click', '.dm-cta .add_to_cart_button, .dm-card .add_to_cart_button, .dm-topic-card .add_to_cart_button, .dm-product-card .add_to_cart_button', function ( e ) {
 		var productId = String( $( this ).data( 'product_id' ) || '' );
 
 		if ( productId && inCartIds[ productId ] ) {

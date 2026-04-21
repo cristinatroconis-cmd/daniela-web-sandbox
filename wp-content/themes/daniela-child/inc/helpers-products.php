@@ -416,11 +416,9 @@ function dm_render_product_grid($query, $back_url = '')
  * so resources-by-topic and the Home topic hub stay accurate.
  */
 add_action('save_post_product', function () {
-    delete_transient('dm_recursos_temas_tags');
     delete_transient('dm_temas_hub_topics');
 });
 
 add_action('woocommerce_update_product', function () {
-    delete_transient('dm_recursos_temas_tags');
     delete_transient('dm_temas_hub_topics');
 });

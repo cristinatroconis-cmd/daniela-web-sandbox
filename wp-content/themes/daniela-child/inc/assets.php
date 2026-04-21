@@ -107,21 +107,4 @@ add_action('wp_enqueue_scripts', function () {
 	wp_enqueue_script('wc-add-to-cart');
 	wp_enqueue_script('wc-cart-fragments');
 	wp_enqueue_script('dm-cart-drawer');
-
-	// Enqueue scripts for pages using DM shortcodes that need the filter JS.
-	if ($post_obj) {
-		// Note: dm-recursos-filters is registered in shortcodes-recursos.php and enqueued on-demand.
-
-		// Lightweight scroll-into-view JS for [dm_recursos_temas] chips.
-		if (has_shortcode($post_obj->post_content, 'dm_recursos_temas')) {
-			$js_chips = get_stylesheet_directory() . '/js/temas-chips.js';
-			wp_enqueue_script(
-				'dm-temas-chips',
-				get_stylesheet_directory_uri() . '/js/temas-chips.js',
-				array(),
-				file_exists($js_chips) ? (string) filemtime($js_chips) : '1.0.0',
-				true
-			);
-		}
-	}
 }, 25);
