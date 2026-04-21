@@ -184,6 +184,14 @@ Todos en `wp-content/themes/daniela-child/`:
 - [ ] **Sanitizar excerpt en el grid** (`dm_cpt_render_grid` en `inc/helpers-cpt.php`)  
   Algunos excerpts traen HTML/CTAs antiguos. Usar `wp_strip_all_tags()` antes de `wp_trim_words()`.
 
+- [ ] **Promoción de cambios DB-backed de WooCommerce a producción**  
+  En staging ya hubo ajustes vía WP Admin / runtime sobre descargas y emails de WooCommerce. Antes de promover a producción, aplicar esos cambios de forma controlada y no copiando staging a ciegas.
+  Referencia operativa: `docs/db-promotions/2026-04-21-woocommerce-staging-db-snapshot.md`
+  Incluye:
+  1. opciones WooCommerce de descargas/email validadas en staging;
+  2. directorios aprobados de descarga que deben recrearse con host/path de producción;
+  3. lista explícita de qué NO promover (pedidos/permisos de staging, URLs de staging, metadatos temporales).
+
 - [ ] **Saneamiento canónico de Tutor/Tutor Pro (post-incidente)**  
   Mantener Tutor funcionando como está por ahora, pero planificar ventana técnica para:
   1. reemplazar `tutor` y `tutor-pro` por paquetes oficiales/verificados,

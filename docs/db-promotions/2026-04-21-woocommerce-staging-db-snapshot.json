@@ -1,0 +1,55 @@
+{
+  "captured_at": "2026-04-21",
+  "source_environment": {
+    "name": "staging",
+    "host": "v2vvroh9bv-staging.onrocket.site"
+  },
+  "plugins": {
+    "woocommerce": "8.9.4",
+    "woocommerce-gateway-stripe": "8.3.1",
+    "woocommerce-memberships": "1.25.0",
+    "woocommerce-subscriptions": "5.4.0",
+    "woo-mailerlite": "3.1.13",
+    "mailersend-official-smtp-integration": "1.0.3"
+  },
+  "options": {
+    "woocommerce_file_download_method": "force",
+    "woocommerce_downloads_grant_access_after_payment": "yes",
+    "woocommerce_downloads_require_login": "no",
+    "wc_downloads_approved_directories_mode": "enabled",
+    "woocommerce_customer_completed_order_settings": {
+      "enabled": "yes",
+      "subject": "",
+      "heading": "",
+      "additional_content": "Gracias!!",
+      "email_type": "html"
+    }
+  },
+  "approved_download_directories": {
+    "runtime_table": "wp_wc_product_download_directories",
+    "rows": [
+      {
+        "url": "file:///home/v2vvxfo/public_html/wp-content/uploads/woocommerce_uploads/",
+        "enabled": 1
+      },
+      {
+        "url": "https://v2vvroh9bv.onrocket.site/wp-content/uploads/woocommerce_uploads/",
+        "enabled": 1
+      },
+      {
+        "url": "https://v2vvroh9bv-staging.onrocket.site/wp-content/uploads/2026/04/",
+        "enabled": 1
+      },
+      {
+        "url": "file:///home/v2vvxfo/public_html/v2vvroh9bv-staging.onrocket.site/wp-content/uploads/2026/04/",
+        "enabled": 1
+      }
+    ]
+  },
+  "do_not_promote": [
+    "staging orders",
+    "staging download permissions",
+    "staging URLs",
+    "temporary order meta such as _dm_customer_completed_email_sent"
+  ]
+}
