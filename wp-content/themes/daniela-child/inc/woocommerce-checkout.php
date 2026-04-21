@@ -178,6 +178,110 @@ add_action('woocommerce_checkout_order_processed', function ($order_id) {
 }, 20);
 
 /**
+ * Detecta si un pedido tiene permisos de descarga corruptos o desactualizados.
+ */
+function dm_order_download_permissions_need_repair(WC_Order $order): bool
+{
+    if (! function_exists('WC_Data_Store')) {
+        return false;
+    }
+
+    $data_store = WC_Data_Store::load('customer-download');
+
+    foreach ($order->get_items('line_item') as $item) {
+        if (! $item instanceof WC_Order_Item_Product) {
+            continue;
+        }
+
+        $product = $item->get_product();
+        if (! $product || ! $product->is_downloadable()) {
+            continue;
+        }
+
+        $expected_ids = array_keys($product->get_downloads());
+        if (empty($expected_ids)) {
+            continue;
+        }
+
+        $customer_downloads = $data_store->get_downloads([
+            'user_email' => $order->get_billing_email(),
+            'order_id'   => $order->get_id(),
+            'product_id' => $product->get_id(),
+        ]);
+
+        if (count($customer_downloads) !== count($expected_ids)) {
+            return true;
+        }
+
+        foreach ($customer_downloads as $customer_download) {
+            $download_id = (string) $customer_download->get_download_id();
+            if ($download_id === '' || ! in_array($download_id, $expected_ids, true)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Regenera permisos de descarga si Woo guardó download_id vacíos o desfasados.
+ */
+function dm_repair_order_download_permissions($order_id): void
+{
+    $order = wc_get_order($order_id);
+    if (! $order instanceof WC_Order) {
+        return;
+    }
+
+    if (! dm_order_download_permissions_need_repair($order)) {
+        return;
+    }
+
+    global $wpdb;
+
+    $wpdb->delete(
+        $wpdb->prefix . 'woocommerce_downloadable_product_permissions',
+        ['order_id' => $order->get_id()],
+        ['%d']
+    );
+
+    $order->delete_meta_data('_download_permissions_granted');
+    $order->save();
+
+    wc_downloadable_product_permissions($order->get_id(), true);
+}
+add_action('woocommerce_order_status_completed', 'dm_repair_order_download_permissions', 20);
+add_action('woocommerce_order_status_processing', 'dm_repair_order_download_permissions', 20);
+
+/**
+ * En la página de gracias, la entrega debe ser por correo, no con descarga inmediata.
+ */
+add_filter('woocommerce_order_downloads_table_show_downloads', function ($show_downloads) {
+    if (function_exists('is_order_received_page') && is_order_received_page()) {
+        return false;
+    }
+
+    return $show_downloads;
+}, 20);
+
+/**
+ * Oculta también el bloque de descargas del checkout por bloques.
+ */
+add_filter('render_block', function ($block_content, $block) {
+    if (
+        function_exists('is_order_received_page')
+        && is_order_received_page()
+        && is_array($block)
+        && (($block['blockName'] ?? '') === 'woocommerce/order-confirmation-downloads')
+    ) {
+        return '';
+    }
+
+    return $block_content;
+}, 20, 2);
+
+/**
  * Mensaje UX en checkout para pedidos con recursos gratis.
  */
 add_action('woocommerce_review_order_before_submit', function () {

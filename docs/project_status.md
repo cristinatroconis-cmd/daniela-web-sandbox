@@ -307,3 +307,19 @@ Implicaciones operativas:
 Nota de estabilidad post-restauración (2026-04-14):
 
 - Se normalizó acceso de admin en producción corrigiendo permisos de core (`wp-admin`, `wp-includes`) y detección SSL detrás de proxy en `wp-config.php`.
+
+## Pendiente técnico
+- Evaluar eliminación de `[dm_recursos]` si ya no existe ninguna página que lo use.
+- Antes de borrarlo:
+  - confirmar en WP Admin si alguna página sigue insertando el shortcode
+  - validar que `/recursos/` ya depende solo del archive editorial + `?tema=`
+  - si no hay uso real, quitar shortcode, registro de assets asociado y documentación residual
+
+## Pendiente técnico
+ -WooCommerce freebies — estabilizar envío automático del email de descarga
+Estado actual en staging: el pedido completado sí genera links válidos y el correo puede enviarse manualmente, pero el flujo automático todavía no está confirmado como confiable. En la prueba del pedido 9397, el correo recibido coincidió con el reenvío manual de las 16:07:45, así que falta aislar y corregir la capa de delivery/disparo automático.
+Pendiente:
+distinguir con trazabilidad si el email llegó por trigger automático o por reenvío manual;
+revisar integración SMTP/MailerSend en staging;
+validar con un pedido nuevo sin intervención manual;
+solo después, promover la solución a producción.

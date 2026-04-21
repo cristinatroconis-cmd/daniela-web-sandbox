@@ -387,19 +387,139 @@ function dm_get_order_download_links(WC_Order $order): array
 		// no requieren que el cliente esté logueado.
 		$downloads = $item->get_item_downloads();
 		if (empty($downloads)) {
+			$fallback_url = dm_get_free_product_direct_download_url($product);
+			if ($fallback_url) {
+				dm_store_best_order_download_link($links, $product, $fallback_url);
+			}
 			continue;
 		}
 
 		foreach ($downloads as $dl) {
-			if (empty($dl['download_url'])) {
+			$url = ! empty($dl['download_url']) ? (string) $dl['download_url'] : '';
+			if (! dm_is_valid_guest_download_url($url)) {
+				$url = dm_get_free_product_direct_download_url($product);
+			}
+
+			if (! $url) {
 				continue;
 			}
-			$links[] = [
-				'name' => $product->get_name(),
-				'url'  => $dl['download_url'],
-			];
+
+			dm_store_best_order_download_link($links, $product, $url);
 		}
 	}
 
-	return $links;
+	return array_values($links);
 }
+
+/**
+ * Conserva el mejor enlace por producto, priorizando el guest-link válido de Woo.
+ *
+ * @param array<int|string, array{name: string, url: string, priority: int}> $links
+ */
+function dm_store_best_order_download_link(array &$links, WC_Product $product, string $url): void
+{
+	if ($url === '') {
+		return;
+	}
+
+	$key      = (string) $product->get_id();
+	$priority = dm_is_valid_guest_download_url($url) ? 2 : 1;
+
+	if (! isset($links[$key]) || $priority > $links[$key]['priority']) {
+		$links[$key] = [
+			'name'     => $product->get_name(),
+			'url'      => $url,
+			'priority' => $priority,
+		];
+	}
+}
+
+/**
+ * Valida que la URL guest-friendly de Woo incluya un token `key` usable.
+ */
+function dm_is_valid_guest_download_url(string $url): bool
+{
+	if ($url === '') {
+		return false;
+	}
+
+	$query = wp_parse_url($url, PHP_URL_QUERY);
+	if (! is_string($query) || $query === '') {
+		return false;
+	}
+
+	parse_str($query, $params);
+
+	return ! empty($params['download_file'])
+		&& ! empty($params['order'])
+		&& ! empty($params['key']);
+}
+
+/**
+ * Fallback para recursos gratuitos: usa el archivo directo del producto.
+ */
+function dm_get_free_product_direct_download_url(WC_Product $product): string
+{
+	$price = $product->get_price();
+	if ($price === '' || (float) $price > 0.0 || ! $product->is_downloadable()) {
+		return '';
+	}
+
+	$downloads = $product->get_downloads();
+	if (empty($downloads)) {
+		return '';
+	}
+
+	$first = reset($downloads);
+	if (! $first instanceof WC_Product_Download) {
+		return '';
+	}
+
+	return (string) $first->get_file();
+}
+
+/**
+ * Marca cuando el email completed se envió correctamente.
+ */
+add_action('woocommerce_email_sent', function ($sent, $email_id, $email): void {
+	if (! $sent || 'customer_completed_order' !== $email_id) {
+		return;
+	}
+
+	$order = $email instanceof WC_Email ? $email->object : null;
+	if (! $order instanceof WC_Order) {
+		return;
+	}
+
+	$order->update_meta_data('_dm_customer_completed_email_sent', current_time('mysql'));
+	$order->save();
+}, 20, 3);
+
+/**
+ * Reintento controlado para pedidos gratuitos completados si Woo no envió el email.
+ */
+add_action('woocommerce_order_status_completed', function ($order_id): void {
+	$order = wc_get_order($order_id);
+	if (! $order instanceof WC_Order) {
+		return;
+	}
+
+	if ((float) $order->get_total() > 0.0 || ! $order->has_downloadable_item()) {
+		return;
+	}
+
+	if ($order->get_meta('_dm_customer_completed_email_sent')) {
+		return;
+	}
+
+	if (! function_exists('WC') || ! WC()->mailer()) {
+		return;
+	}
+
+	$email = WC()->mailer()->emails['WC_Email_Customer_Completed_Order'] ?? null;
+	if (! $email instanceof WC_Email_Customer_Completed_Order) {
+		return;
+	}
+
+	$email->trigger($order->get_id(), $order);
+}, 30);
