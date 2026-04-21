@@ -316,10 +316,10 @@ Nota de estabilidad post-restauración (2026-04-14):
   - si no hay uso real, quitar shortcode, registro de assets asociado y documentación residual
 
 ## Pendiente técnico
- -WooCommerce freebies — estabilizar envío automático del email de descarga
+WooCommerce freebies — estabilizar envío automático del email de descarga
 Estado actual en staging: el pedido completado sí genera links válidos y el correo puede enviarse manualmente, pero el flujo automático todavía no está confirmado como confiable. En la prueba del pedido 9397, el correo recibido coincidió con el reenvío manual de las 16:07:45, así que falta aislar y corregir la capa de delivery/disparo automático.
-Pendiente:
-distinguir con trazabilidad si el email llegó por trigger automático o por reenvío manual;
-revisar integración SMTP/MailerSend en staging;
-validar con un pedido nuevo sin intervención manual;
-solo después, promover la solución a producción.
+  - Pendiente:
+    - distinguir con trazabilidad si el email llegó por trigger automático o por reenvío manual;
+    - revisar integración SMTP/MailerSend en staging;
+    - validar con un pedido nuevo sin intervención manual;
+    - solo después, promover la solución a producción.
