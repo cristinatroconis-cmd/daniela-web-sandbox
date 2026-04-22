@@ -326,8 +326,35 @@ Nota de estabilidad post-restauración (2026-04-14):
 ## Pendiente técnico
 WooCommerce freebies — estabilizar envío automático del email de descarga
 Estado actual en staging: el pedido completado sí genera links válidos y el correo puede enviarse manualmente, pero el flujo automático todavía no está confirmado como confiable. En la prueba del pedido 9397, el correo recibido coincidió con el reenvío manual de las 16:07:45, así que falta aislar y corregir la capa de delivery/disparo automático.
+Diagnóstico técnico (2026-04-22): el MU plugin `wp-content/mu-plugins/dm-staging-guardrails.php` estaba cortando todo `wp_mail` en no-producción con `pre_wp_mail => true`, lo que impide verificar triggers automáticos de WooCommerce aunque el flujo de pedido/completado sea correcto.
+Corrección aplicada en código: staging ya no bloquea en silencio `wp_mail`; el sink de redirección ahora es **opt-in** y solo se activa si existe la constante `DM_STAGING_MAIL_SINK` (sin fallback automático a `admin_email`).
+Trazabilidad aplicada: el email `customer_completed_order` guarda en el pedido si salió por `automatic` o `manual` mediante metas `_dm_customer_completed_email_last_source` y `_dm_customer_completed_email_last_source_at`.
+Validación staging (2026-04-22): pedido `#9405` confirmado con trigger automático (`_dm_customer_completed_email_last_source = automatic`) y timestamp registrado.
   - Pendiente:
-    - distinguir con trazabilidad si el email llegó por trigger automático o por reenvío manual;
-    - revisar integración SMTP/MailerSend en staging;
-    - validar con un pedido nuevo sin intervención manual;
+   - promover la misma corrección a producción con ventana controlada;
     - solo después, promover la solución a producción.
+
+### Runbook — promoción a producción (email automático freebies)
+1. **Pre-check de seguridad**
+  - Backup completo (archivos + DB) de producción.
+  - Confirmar `WP_ENVIRONMENT_TYPE=production` y que **NO** exista `DM_STAGING_MAIL_SINK` en `wp-config.php` de producción.
+2. **Deploy de código**
+  - Promover estos archivos:
+    - `wp-content/mu-plugins/dm-staging-guardrails.php`
+    - `wp-content/themes/daniela-child/inc/woocommerce-emails.php`
+3. **Checks de configuración Woo en producción**
+  - `woocommerce_customer_completed_order_settings.enabled = yes`
+  - `woocommerce_file_download_method = force`
+  - `woocommerce_downloads_grant_access_after_payment = yes`
+  - `woocommerce_downloads_require_login = no`
+4. **Checks de infraestructura de correo**
+  - Verificar plugin SMTP activo y credenciales/API válidas en producción.
+  - Ejecutar prueba de envío SMTP desde WordPress (test message del plugin o `wp_mail` controlado).
+5. **QA funcional post-deploy (obligatoria)**
+  - Crear 1 pedido gratis nuevo en producción (sin reenvío manual).
+  - Confirmar:
+    - llega email `customer_completed_order` al comprador;
+    - el link de descarga funciona;
+    - en metadatos del pedido queda `_dm_customer_completed_email_last_source = automatic`.
+6. **Criterio de rollback**
+  - Si no llega email automático o falla enlace de descarga, rollback inmediato del deploy y restaurar backup según protocolo.

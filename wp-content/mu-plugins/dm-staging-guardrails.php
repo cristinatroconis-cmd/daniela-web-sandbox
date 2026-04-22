@@ -83,10 +83,61 @@ add_action('send_headers', function () {
     }
 }, 20);
 
-// Block all outbound WordPress mail on non-production.
-add_filter('pre_wp_mail', function ($pre, $atts) {
-    return true;
-}, 10, 2);
+/**
+ * Resolve sink mailbox for non-production deliveries.
+ *
+ * Only active when DM_STAGING_MAIL_SINK is explicitly defined.
+ */
+function dm_staging_get_mail_sink_address()
+{
+    if (! defined('DM_STAGING_MAIL_SINK')) {
+        return '';
+    }
+
+    $sink = sanitize_email((string) DM_STAGING_MAIL_SINK);
+
+    return is_email($sink) ? $sink : '';
+}
+
+/**
+ * Redirect all outbound wp_mail() to a controlled sink inbox on non-production.
+ * This preserves trigger behavior while avoiding real customer deliveries.
+ */
+add_filter('wp_mail', function ($atts) {
+    if (! is_array($atts)) {
+        return $atts;
+    }
+
+    $sink = dm_staging_get_mail_sink_address();
+    if ($sink === '') {
+        return $atts;
+    }
+
+    $original_to = $atts['to'] ?? '';
+    if (is_array($original_to)) {
+        $original_to = implode(', ', array_map('sanitize_text_field', $original_to));
+    } else {
+        $original_to = sanitize_text_field((string) $original_to);
+    }
+
+    $atts['to'] = $sink;
+
+    $subject = isset($atts['subject']) ? (string) $atts['subject'] : '';
+    if (strpos($subject, '[STAGING REDIRECT]') !== 0) {
+        $atts['subject'] = '[STAGING REDIRECT] ' . $subject;
+    }
+
+    $headers = $atts['headers'] ?? array();
+    if (! is_array($headers)) {
+        $headers = array($headers);
+    }
+
+    $headers[] = 'X-DM-Staging-Original-To: ' . $original_to;
+    $headers[] = 'X-DM-Staging-Sink-To: ' . $sink;
+    $atts['headers'] = $headers;
+
+    return $atts;
+}, 20);
 
 // Prevent WooCommerce webhook delivery from non-production.
 add_filter('woocommerce_webhook_should_deliver', function ($should_deliver, $webhook, $arg) {

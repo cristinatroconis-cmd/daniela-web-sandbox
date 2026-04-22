@@ -55,6 +55,9 @@ Motivo:
 3. El código del child theme asociado a:
    - `inc/woocommerce-checkout.php`
    - `inc/woocommerce-emails.php`
+4. El ajuste del MU plugin de staging para no bloquear `wp_mail` en silencio:
+   - `wp-content/mu-plugins/dm-staging-guardrails.php`
+   - el sink de redirección debe ser **opt-in** (`DM_STAGING_MAIL_SINK`), sin fallback automático.
 
 ## Qué NO promover desde staging
 - Pedidos de prueba (`9395`, `9397`, etc.).
@@ -70,7 +73,9 @@ Motivo:
    - `woocommerce_file_download_method = force`
    - email `customer_completed_order` habilitado
    - permisos de descarga generándose con `download_id` válido
+   - `DM_STAGING_MAIL_SINK` **no** definido en `wp-config.php` de producción
 5. Ejecutar una compra gratis controlada post-deploy y validar:
    - no aparece descarga en `order received` si esa sigue siendo la decisión UX;
    - sí llega el correo;
-   - el link del correo funciona.
+   - el link del correo funciona;
+   - meta `_dm_customer_completed_email_last_source = automatic` en el pedido de prueba.

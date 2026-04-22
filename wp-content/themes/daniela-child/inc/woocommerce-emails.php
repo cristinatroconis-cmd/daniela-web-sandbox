@@ -479,6 +479,43 @@ function dm_get_free_product_direct_download_url(WC_Product $product): string
 }
 
 /**
+ * Helper: mark last known source for customer_completed_order email.
+ *
+ * @param int    $order_id Order ID.
+ * @param string $source   automatic|manual
+ */
+function dm_mark_customer_completed_email_source(int $order_id, string $source): void
+{
+	if ($order_id <= 0) {
+		return;
+	}
+
+	set_transient('dm_completed_email_source_' . $order_id, $source, 10 * MINUTE_IN_SECONDS);
+}
+
+/**
+ * Automatic source marker: order reached completed status.
+ */
+add_action('woocommerce_order_status_completed', function ($order_id): void {
+	dm_mark_customer_completed_email_source((int) $order_id, 'automatic');
+}, 1);
+
+/**
+ * Manual source marker: admin triggered "Resend order emails".
+ */
+add_action('woocommerce_before_resend_order_emails', function ($order, $email_type): void {
+	if ('customer_completed_order' !== (string) $email_type) {
+		return;
+	}
+
+	if (! $order instanceof WC_Order) {
+		return;
+	}
+
+	dm_mark_customer_completed_email_source((int) $order->get_id(), 'manual');
+}, 10, 2);
+
+/**
  * Marca cuando el email completed se envió correctamente.
  */
 add_action('woocommerce_email_sent', function ($sent, $email_id, $email): void {
@@ -491,8 +528,24 @@ add_action('woocommerce_email_sent', function ($sent, $email_id, $email): void {
 		return;
 	}
 
+	$source = get_transient('dm_completed_email_source_' . $order->get_id());
+	if (! is_string($source) || $source === '') {
+		$source = 'unknown';
+	}
+
 	$order->update_meta_data('_dm_customer_completed_email_sent', current_time('mysql'));
+	$order->update_meta_data('_dm_customer_completed_email_last_source', $source);
+	$order->update_meta_data('_dm_customer_completed_email_last_source_at', current_time('mysql'));
+	$order->add_order_note(
+		sprintf(
+			/* translators: %s: trigger source */
+			__('Email customer_completed_order enviado (%s).', 'daniela-child'),
+			$source
+		)
+	);
 	$order->save();
+
+	delete_transient('dm_completed_email_source_' . $order->get_id());
 }, 20, 3);
 
 /**
