@@ -142,9 +142,10 @@ Siempre que se agregue código:
 ## Estado reciente — WooCommerce (2026-04-10)
 
 Cambios ya aplicados en el child theme:
-- `assets/css/woocommerce.css` hereda la estética del child theme (tipografía, botones, formularios, tarjetas y notices)
+- `style.css` centraliza la capa visual WooCommerce del child theme (tipografía, botones, formularios, tarjetas, drawer y notices)
 - WooCommerce reutiliza el padding vertical de Home vía `--dm-necesitas-pad-y`
 - `inc/woocommerce-checkout.php` fuerza al español los textos visibles más importantes de WooCommerce
+- los recursos gratuitos y de pago comparten el mismo flujo WooCommerce de carrito + checkout + email `customer_completed_order`
 - `inc/newsletter-optin.php` muestra el checkbox GDPR de newsletter en checkout sin duplicarlo
 - el cart drawer y el popup de add-to-cart usan el copy unificado **“Seguir comprando”** / **“Finalizar compra”**
 

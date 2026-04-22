@@ -296,10 +296,10 @@ add_action('woocommerce_review_order_before_submit', function () {
 
     $has_paid = dm_cart_has_paid_item();
     $message  = $has_paid
-        ? __('Tus recursos PDF gratuitos llegarán por correo junto con la confirmación de tu compra.', 'daniela-child')
-        : __('Este pedido no requiere pago. Al finalizar, recibirás tus recursos PDF gratuitos por correo.', 'daniela-child');
+        ? __('Tus recursos descargables llegarán por correo junto con la confirmación de tu compra.', 'daniela-child')
+        : __('Este pedido no requiere pago. Al finalizar, recibirás tus recursos descargables por correo.', 'daniela-child');
 
-    echo '<div class="dm-checkout-freebie-note" role="status" aria-live="polite">';
+    echo '<div class="dm-checkout-download-note" role="status" aria-live="polite">';
     echo '<strong>' . esc_html__('Entrega por correo:', 'daniela-child') . '</strong> ';
     echo esc_html($message);
     echo '</div>';

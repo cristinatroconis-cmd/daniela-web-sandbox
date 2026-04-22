@@ -99,8 +99,10 @@ Una sola "fuente de verdad" para gating:
 
 - ✅ Tokens de diseño extraídos automáticamente de `style.css` `:root {}` (transient 12 h).
 - ✅ CSS email-safe (filtro `woocommerce_email_styles`, priority 20).
-- ✅ Asunto y heading personalizados para emails Processing y Completed.
-- ✅ Bloque CTA de descarga directa (guest-friendly) inyectado en `woocommerce_email_after_order_table`.
+- ✅ Asunto y heading personalizados para `customer_completed_order`.
+- ✅ Bloque CTA de descarga directa (guest-friendly) inyectado solo en `customer_completed_order`.
+- ✅ Los recursos gratuitos y de pago comparten el mismo flujo WooCommerce de carrito + checkout + email `customer_completed_order`.
+- ✅ El módulo legacy `dm_freebie` fue retirado del bootstrap del child theme y ya no forma parte de la arquitectura activa.
 - **Referencia:** `ARCHITECTURE.md` §21.
 
 ### 3.9 Cart Drawer (`inc/cart-drawer.php`)
@@ -113,7 +115,7 @@ Una sola "fuente de verdad" para gating:
 ### 3.9b Reglas CTA aprobadas (2026-04-16) — siguiente ajuste UX
 
 - **Catálogo:** CTA principal = **"Agregar al carrito"**; CTA secundario = **"Ver detalles"**.
-- **Freebies en catálogo:** mantener badge **"Gratis"** y no modificar el copy del botón; la explicación de "sin pago" vive en single/drawer/checkout.
+- **Recursos gratis en catálogo:** mantener badge **"Gratis"** y no modificar el copy del botón; la explicación de "sin pago" vive en single/drawer/checkout.
 - **Single editorial:** CTA principal = **"Agregar al carrito"**; CTA secundario = solo regreso contextual tipo **"Volver a categoría / subcategoría / tag"**.
 - **Copy público precompra:** no usar **"Ver curso"**; ese acceso externo queda reservado al momento posterior a la compra.
 - **Producto ya en carrito:** el clic debe dejar al usuario en la misma página, reabrir el drawer y mostrar un notice breve tipo **"Ya está en tu carrito"**.
@@ -123,7 +125,11 @@ Una sola "fuente de verdad" para gating:
 
 ### 3.10 WooCommerce front-end / checkout polish (2026-04-10)
 
-- ✅ `assets/css/woocommerce.css` hereda tokens del child theme y reutiliza `--dm-necesitas-pad-y` para dar continuidad visual entre Home y WooCommerce.
+- ✅ `style.css` es la fuente única de verdad del sistema visual y también contiene las superficies WooCommerce reales del proyecto.
+- ✅ Los valores visuales específicos de WooCommerce que representan decisiones de marca (`focus ring`, fondos suaves, errores, contraste de botones, etc.) deben nacer como tokens en `style.css` antes de usarse en CSS de superficie.
+- ✅ Shoptimizer y WooCommerce pueden seguir cargando CSS base, pero la apariencia final aprobada se fuerza desde el child theme con orden de carga y selectores del layout real.
+- ✅ No se copian templates del parent o de Woo para cambios meramente cosméticos; los overrides quedan reservados para cambios de markup, estructura o hooks.
+- ✅ La capa WooCommerce en `style.css` hereda tokens del child theme y reutiliza `--dm-necesitas-pad-y` para dar continuidad visual entre Home y WooCommerce.
 - ✅ Botones, formularios, tarjetas y notices de WooCommerce ya usan el lenguaje visual de `style.css`.
 - ✅ `inc/woocommerce-checkout.php` fuerza al español los strings visibles más comunes (`Checkout`, `Place order`, `Billing details`, etc.) vía `gettext`.
 - ✅ `inc/newsletter-optin.php` renderiza el opt-in GDPR en checkout con guard anti-duplicado (`static $rendered`).

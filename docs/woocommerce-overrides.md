@@ -32,7 +32,6 @@ lo usa; si no, usa el suyo propio.
 | Archivo | Email | Destinatario |
 |---|---|---|
 | `customer-on-hold-order.php` | Pedido en espera | Cliente |
-| `customer-processing-order.php` | Pedido en proceso | Cliente |
 | `customer-completed-order.php` | Pedido completado | Cliente |
 | `customer-refunded-order.php` | Pedido reembolsado (total o parcial) | Cliente |
 | `customer-cancelled-order.php` | Pedido cancelado | Cliente |
@@ -59,9 +58,8 @@ Esta estructura garantiza que:
   `woocommerce_email_styles`) se aplican correctamente.
 - El bloque CTA de descarga (hook `woocommerce_email_after_order_table` en
   `inc/woocommerce-emails.php`) se renderiza dentro de la tabla de pedido.
-- Los subject/heading personalizados (filtros
-  `woocommerce_email_subject_*` y `woocommerce_email_heading_*`) siguen
-  funcionando sin cambios.
+- Los subject/heading personalizados del email `customer_completed_order`
+   siguen funcionando sin cambios.
 
 ### Cómo mantener los overrides al actualizar WooCommerce
 
@@ -86,39 +84,30 @@ Cuando WooCommerce publica una nueva versión:
 ### Archivo
 
 ```
-wp-content/themes/daniela-child/assets/css/woocommerce.css
+wp-content/themes/daniela-child/style.css
 ```
 
-### Cómo funciona el enqueue
+### Cómo funciona la carga
 
-El enqueue está en `inc/assets.php` y se ejecuta en `wp_enqueue_scripts`
-(prioridad 25). Se carga **solo en páginas WooCommerce**:
+El child theme encola `style.css` como `daniela-child-style` desde
+`inc/assets.php`, y ahí vive también la capa WooCommerce activa. No hay un
+archivo CSS WooCommerce separado en producción.
 
-```php
-if ( is_woocommerce() || is_cart() || is_checkout() || is_account_page() ) {
-    wp_enqueue_style( 'daniela-child-woocommerce', ... );
-}
-```
-
-La condición cubre:
-- `is_woocommerce()` — tienda, archivo de productos, página de producto individual.
-- `is_cart()` — carrito (incluyendo páginas con shortcode `[woocommerce_cart]`).
-- `is_checkout()` — checkout.
-- `is_account_page()` — Mi cuenta.
-
-### Dependencia de carga
-
-El handle `daniela-child-woocommerce` declara `daniela-child-style` como
-dependencia, garantizando que el CSS de WooCommerce del child theme se carga
-**después** del CSS base del child theme y **después** del CSS de Shoptimizer,
-permitiendo sobrescribir cualquier estilo del tema padre.
+`style.css` sigue cargando después del CSS base del parent/theme stack del
+sitio, por lo que la capa del child puede absorber la apariencia final de Woo,
+Shoptimizer y plugins visibles sin abrir un segundo sistema visual.
 
 ### Cómo editar estilos
 
-Abre `assets/css/woocommerce.css` y añade tus reglas CSS dentro de la sección
-correspondiente (carrito, checkout, tienda, etc.). El archivo tiene comentarios
-de sección para orientarte. Usa selectores con prefijo `.woocommerce` o
-`body.woocommerce-cart` etc. para limitar el alcance y evitar conflictos.
+Abre `style.css` y añade tus reglas CSS dentro de la sección WooCommerce o del
+scope real del componente (`body.woocommerce-cart`, `body.woocommerce-checkout`,
+`#dm-cart-drawer`, etc.). El criterio es trabajar por superficies reales del
+producto, no perseguir clases sueltas del ecosistema.
+
+Antes de escribir una regla nueva, aplicar esta jerarquía:
+1. Si el cambio es una decisión de marca reutilizable, crear o reutilizar el token en `style.css`.
+2. Si el cambio es de superficie WooCommerce, consumir ese token dentro del scope Woo correspondiente en `style.css`.
+3. Solo tocar templates WooCommerce o del parent si el problema no es visual sino estructural.
 
 ### Estado actual del CSS WooCommerce (2026-04-10)
 
@@ -126,11 +115,35 @@ El archivo ya cubre estas decisiones base:
 
 | Área | Comportamiento actual |
 |---|---|
+| Fuente de verdad visual | `style.css` define tokens, primitives y superficies Woo reales del proyecto |
 | Tipografía / color | hereda tokens del child theme (`--dm-color-*`) |
 | Espaciado vertical | reutiliza `--dm-necesitas-pad-y` desde Home para que WooCommerce no se vea “pegado” |
 | Botones / inputs | usan el mismo lenguaje visual del child theme |
 | Carrito / checkout / mi cuenta | cajas con padding interno consistente (`--dm-woo-box-pad`) |
-| Newsletter opt-in | `.dm-newsletter-optin` se estiliza dentro del checkout |
+| Newsletter opt-in / nota de descarga | `.dm-newsletter-optin` y `.dm-checkout-download-note` se estilizan dentro del checkout |
+| Drawer / mini-cart | `#dm-cart-drawer` absorbe el markup nativo de WooCommerce con scope propio |
+
+### Política de overrides visuales
+
+- Shoptimizer y WooCommerce pueden seguir cargando su CSS base, pero la apariencia final aprobada debe salir del child theme.
+- No copiar templates del parent o de WooCommerce por razones solo cosméticas.
+- El CSS del child debe ganar por dependencia de carga, tokens `--dm-*` y selectores específicos del layout real.
+- Si aparece un valor visual hardcodeado que ya representa marca, moverlo a `style.css` antes de reutilizarlo.
+
+### Mapa medio de superficies reales
+
+| Superficie | Scope recomendado | Fuente de markup permitida |
+|---|---|---|
+| Drawer / mini-cart | `#dm-cart-drawer` | WooCommerce mini-cart + fragments |
+| Carrito | `body.woocommerce-cart` | WooCommerce |
+| Checkout | `body.woocommerce-checkout` | WooCommerce + plugins de pago/fields |
+| Mi cuenta | `body.woocommerce-account` | WooCommerce |
+| Notices globales | `.woocommerce-message`, `.woocommerce-info`, `.woocommerce-error` | WooCommerce / plugins |
+| Formularios Woo | `.woocommerce form`, `.select2-container...` bajo scopes Woo | WooCommerce / plugins |
+| Cards/listados de producto | `.woocommerce ul.products li.product` y wrappers DM | WooCommerce + child |
+| Producto individual | `.woocommerce div.product` | WooCommerce |
+| Header/cart triggers | `body.header-4 ... .site-header-cart`, `#dm-cart-drawer` | Shoptimizer + child |
+| CTAs add-to-cart / added_to_cart | `.woocommerce a.button`, `.added_to_cart`, wrappers DM | WooCommerce |
 
 ### Checkout, localización y opt-in
 
@@ -154,9 +167,14 @@ overrides o no. Los overrides del child theme NO anulan la lógica de ese archiv
 | Componente | Mecanismo | Afectado por override |
 |---|---|---|
 | CSS email-safe | `woocommerce_email_styles` filter | No (filtro global) |
-| Subject personalizado | `woocommerce_email_subject_*` filter | No |
-| Heading personalizado | `woocommerce_email_heading_*` filter | No |
+| Subject personalizado | `woocommerce_email_subject_customer_completed_order` filter | No |
+| Heading personalizado | `woocommerce_email_heading_customer_completed_order` filter | No |
 | Bloque CTA descarga | `woocommerce_email_after_order_table` action | **Sí** — los overrides llaman `do_action('woocommerce_email_order_details',...)` que incluye el hook internamente |
+
+### Decisión actual
+
+- El email de entrega de descargables vive en `customer-completed-order.php`.
+- `customer_processing_order` puede seguir existiendo en WooCommerce como email de estado, pero ya no forma parte de la personalización de entrega del child theme.
 
 El bloque CTA requiere que `woocommerce_email_after_order_table` se dispare
 dentro del renderizado del pedido. Los overrides garantizan esto llamando

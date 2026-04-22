@@ -97,7 +97,7 @@ Todos en `wp-content/themes/daniela-child/`:
 - ✅ Estilos centralizados en `style.css`; PHP renderers no llevan layout inline.
 - ✅ CTA público neutro en catálogo: "Ver detalles".
 - ✅ CTA público primario de compra: "Agregar al carrito".
-- ✅ Regla de freebies: el badge "Gratis" comunica el estado en catálogo; la aclaración de que no pagará vive en single, drawer o checkout.
+- ✅ Regla de recursos gratis: el badge "Gratis" comunica el estado en catálogo; la aclaración de que no pagará vive en single, drawer o checkout.
 - 🟡 Regla UX aprobada para siguiente ajuste: si el producto ya está en el carrito, el clic debe reabrir el drawer y mostrar "Ya está en tu carrito", sin duplicados ni botón "Ver carrito" junto al CTA del bloque.
 - ✅ Regla: 3 columnas en desktop (≥1024px), responsivo en tablet/mobile.
 - ✅ **Thumb unificado 16:9** — todas las card-thumbs (CPT grids + recurso hub + product grids) usan `aspect-ratio: 16/9` (`--dm-card-thumb-ratio`) con `object-fit: cover`, alineado con el hero del carousel de la Home.
@@ -108,12 +108,14 @@ Todos en `wp-content/themes/daniela-child/`:
 ### 3.8 Email customization (`inc/email-tokens.php` + `inc/woocommerce-emails.php`)
 - ✅ **`dm_get_email_tokens()`** — tokens de diseño cacheados (transient `dm_email_tokens_v1`, 12 h), derivados de `style.css` `:root {}`.
 - ✅ **`dm_woo_email_styles()`** — CSS email-safe aplicado vía filtro `woocommerce_email_styles` (priority 20).
-- ✅ Asunto y heading personalizados para emails "Pedido en proceso" y "Pedido completado".
-- ✅ **`dm_email_cta_block()`** — bloque CTA de descarga directa (guest-friendly) en `woocommerce_email_after_order_table`.
+- ✅ Asunto y heading personalizados para el email `customer_completed_order`.
+- ✅ **`dm_email_cta_block()`** — bloque CTA de descarga directa (guest-friendly) solo en `customer_completed_order`.
 - ✅ Defaults de opciones WooCommerce email no destructivos (respeta configuración admin existente).
+- ✅ Consolidación: productos descargables gratis y de pago usan el mismo flujo WooCommerce de carrito + checkout + `customer_completed_order`.
+- ✅ Limpieza legacy: `inc/freebie-download.php` y el naming operativo `dm_freebie_*` fueron retirados del flujo activo del child theme.
 
 ### 3.9 WooCommerce front-end / checkout polish (2026-04-10)
-- ✅ `assets/css/woocommerce.css` ya hereda el sistema visual del child theme (tipografía, botones, formularios, notices, cards de producto).
+- ✅ `style.css` ya centraliza el sistema visual WooCommerce del child theme (tipografía, botones, formularios, notices, cards de producto y drawer).
 - ✅ Espaciado vertical sincronizado con Home vía `--dm-necesitas-pad-y` + padding interno `--dm-woo-box-pad` para carrito, checkout y mi cuenta.
 - ✅ `inc/woocommerce-checkout.php` fuerza al español los textos visibles clave de WooCommerce mediante filtro `gettext`.
 - ✅ `inc/newsletter-optin.php` renderiza el checkbox GDPR de newsletter en checkout con guard anti-duplicado.
@@ -324,7 +326,7 @@ Nota de estabilidad post-restauración (2026-04-14):
   - si no hay uso real, quitar shortcode, registro de assets asociado y documentación residual
 
 ## Pendiente técnico
-WooCommerce freebies — estabilizar envío automático del email de descarga
+WooCommerce descargables — estabilizar envío automático del email de descarga
 Estado actual en staging: el pedido completado sí genera links válidos y el correo puede enviarse manualmente, pero el flujo automático todavía no está confirmado como confiable. En la prueba del pedido 9397, el correo recibido coincidió con el reenvío manual de las 16:07:45, así que falta aislar y corregir la capa de delivery/disparo automático.
 Diagnóstico técnico (2026-04-22): el MU plugin `wp-content/mu-plugins/dm-staging-guardrails.php` estaba cortando todo `wp_mail` en no-producción con `pre_wp_mail => true`, lo que impide verificar triggers automáticos de WooCommerce aunque el flujo de pedido/completado sea correcto.
 Corrección aplicada en código: staging ya no bloquea en silencio `wp_mail`; el sink de redirección ahora es **opt-in** y solo se activa si existe la constante `DM_STAGING_MAIL_SINK` (sin fallback automático a `admin_email`).
@@ -334,7 +336,7 @@ Validación staging (2026-04-22): pedido `#9405` confirmado con trigger automát
    - promover la misma corrección a producción con ventana controlada;
     - solo después, promover la solución a producción.
 
-### Runbook — promoción a producción (email automático freebies)
+### Runbook — promoción a producción (email automático descargables)
 1. **Pre-check de seguridad**
   - Backup completo (archivos + DB) de producción.
   - Confirmar `WP_ENVIRONMENT_TYPE=production` y que **NO** exista `DM_STAGING_MAIL_SINK` en `wp-config.php` de producción.

@@ -1,14 +1,14 @@
 <?php
 
 /**
- * WooCommerce Emails — Estética + CTA de descarga directa
+ * WooCommerce Emails — Estética + entrega de descargables en completed
  *
  * Aplica el sistema de diseño del child theme a los correos transaccionales
  * de WooCommerce mediante filtros nativos (sin plugins). Cubre:
  *
  *  - Defaults de opciones de email (solo si no están ya configuradas).
  *  - CSS email-safe usando tokens de dm_get_email_tokens().
- *  - Subject/heading personalizados para Processing y Completed.
+ *  - Subject/heading personalizados para Customer Completed Order.
  *  - Bloque CTA con enlace de descarga/pedido (guest-friendly).
  *
  * @package daniela-child
@@ -23,6 +23,24 @@ if (! defined('ABSPATH')) {
 // =============================================================================
 
 add_action('init', 'dm_set_woo_email_defaults');
+add_action('init', 'dm_migrate_legacy_download_email_options', 5);
+
+/**
+ * Migra opciones legacy `dm_freebie_*` al naming neutral de descargables.
+ */
+function dm_migrate_legacy_download_email_options(): void
+{
+	$legacy_value = get_option('dm_freebie_email_button_text', null);
+	$new_value    = get_option('dm_downloads_email_button_text', null);
+
+	if (null === $new_value && null !== $legacy_value) {
+		update_option('dm_downloads_email_button_text', $legacy_value);
+	}
+
+	if (null !== $legacy_value) {
+		delete_option('dm_freebie_email_button_text');
+	}
+}
 
 /**
  * Establece valores por defecto para las opciones visuales de los emails de
@@ -178,45 +196,6 @@ h2 {
 // =============================================================================
 
 /**
- * Subject del email de pedido en proceso.
- *
- * @param  string           $subject Asunto original.
- * @param  WC_Order         $order   Objeto pedido.
- * @param  WC_Email         $email   Objeto email.
- * @return string
- */
-add_filter(
-	'woocommerce_email_subject_customer_processing_order',
-	'dm_email_subject_processing',
-	20,
-	3
-);
-function dm_email_subject_processing(string $subject, WC_Order $order, WC_Email $email): string
-{ // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	/* translators: %s: order number */
-	return sprintf(__('✅ Recibimos tu pedido #%s — ya lo estamos procesando', 'daniela-child'), $order->get_order_number());
-}
-
-/**
- * Heading del email de pedido en proceso.
- *
- * @param  string   $heading Encabezado original.
- * @param  WC_Order $order   Objeto pedido.
- * @param  WC_Email $email   Objeto email.
- * @return string
- */
-add_filter(
-	'woocommerce_email_heading_customer_processing_order',
-	'dm_email_heading_processing',
-	20,
-	3
-);
-function dm_email_heading_processing(string $heading, WC_Order $order, WC_Email $email): string
-{ // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	return __('¡Gracias por tu compra! 🌿', 'daniela-child');
-}
-
-/**
  * Subject del email de pedido completado.
  *
  * @param  string   $subject Asunto original.
@@ -260,8 +239,7 @@ function dm_email_heading_completed(string $heading, WC_Order $order, WC_Email $
 // =============================================================================
 
 /**
- * Inyecta el bloque CTA de descarga en los emails de Processing y Completed.
- * Se evalúa el tipo de email para mostrar el bloque solo cuando aplica.
+ * Inyecta el bloque CTA de descarga en el email Customer Completed Order.
  *
  * @param  WC_Order $order         Objeto pedido.
  * @param  bool     $sent_to_admin Si es para admin.
@@ -280,14 +258,13 @@ function dm_email_cta_block(WC_Order $order, bool $sent_to_admin, bool $plain_te
 		return;
 	}
 
-	$is_processing = $email instanceof WC_Email_Customer_Processing_Order;
 	$is_completed  = $email instanceof WC_Email_Customer_Completed_Order;
 
-	if (! $is_processing && ! $is_completed) {
+	if (! $is_completed) {
 		return;
 	}
 
-	dm_render_email_cta($order, $is_processing ? 'processing' : 'completed');
+	dm_render_email_cta($order);
 }
 
 /**
@@ -298,23 +275,17 @@ function dm_email_cta_block(WC_Order $order, bool $sent_to_admin, bool $plain_te
  *   2. URL de visualización del pedido (no requiere login en Woo si el order-pay está habilitado).
  *
  * @param  WC_Order $order  Objeto pedido.
- * @param  string   $context 'processing' | 'completed'.
  */
-function dm_render_email_cta(WC_Order $order, string $context): void
+function dm_render_email_cta(WC_Order $order): void
 {
 	// Recopilar links de descarga asociados al pedido.
 	$download_links = dm_get_order_download_links($order);
-
-	if ('processing' === $context && empty($download_links)) {
-		// En procesando, si no hay descargas todavía, no mostramos CTA de descarga.
-		return;
-	}
 
 	$order_view_url = $order->get_view_order_url();
 	$t              = dm_get_email_tokens();
 	$cta_title      = (string) get_option('dm_downloads_email_cta_title', __('⬇️ Accede a tu descarga', 'daniela-child'));
 	$cta_note       = (string) get_option('dm_downloads_email_cta_note', __('Los enlaces de descarga tienen un límite de usos y tiempo de validez.', 'daniela-child'));
-	$button_label   = (string) get_option('dm_freebie_email_button_text', __('Descargar recurso', 'daniela-child'));
+	$button_label   = (string) get_option('dm_downloads_email_button_text', __('Descargar recurso', 'daniela-child'));
 
 ?>
 	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:<?php echo esc_attr($t['color_bg']); ?>;border-top:1px solid <?php echo esc_attr($t['color_border']); ?>;margin-top:24px;">

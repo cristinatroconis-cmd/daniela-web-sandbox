@@ -72,38 +72,16 @@ if (! class_exists('DM_Settings_Page')) :
 						'id'   => 'dm_newsletter_optin_section',
 					),
 
-					// ---- Section: Downloadable Email Copy (global) ----
+					// ---- Section: Downloadable Email Copy (Woo completed order) ----
 					array(
 						'title' => __('Emails de Descargables (General)', 'daniela-child'),
 						'type'  => 'title',
-						'id'    => 'dm_freebie_email_copy_section',
-					),
-					array(
-						'title'       => __('Asunto del correo', 'daniela-child'),
-						'desc'        => __('Puedes usar %1$s para el nombre del producto y %2$s para el nombre del sitio.', 'daniela-child'),
-						'id'          => 'dm_freebie_email_subject_text',
-						'type'        => 'text',
-						'css'         => 'width:420px;',
-						'default'     => __('Tu recurso "%1$s" de %2$s', 'daniela-child'),
-						'placeholder' => __('Tu recurso "%1$s" de %2$s', 'daniela-child'),
-						'desc_tip'    => true,
-						'autoload'    => false,
-					),
-					array(
-						'title'       => __('Texto introductorio', 'daniela-child'),
-						'desc'        => __('Se muestra antes del botón de descarga en el email de enlace directo (freebie).', 'daniela-child'),
-						'id'          => 'dm_freebie_email_intro_text',
-						'type'        => 'textarea',
-						'css'         => 'width:100%; height:80px;',
-						'default'     => __('Aquí tienes el link para descargar tu contenido.', 'daniela-child'),
-						'placeholder' => __('Aquí tienes el link para descargar tu contenido.', 'daniela-child'),
-						'desc_tip'    => true,
-						'autoload'    => false,
+						'id'    => 'dm_downloads_email_copy_section',
 					),
 					array(
 						'title'       => __('Texto del botón', 'daniela-child'),
-						'desc'        => __('Etiqueta del botón de descarga en el email.', 'daniela-child'),
-						'id'          => 'dm_freebie_email_button_text',
+						'desc'        => __('Etiqueta principal de descarga mostrada en el email Pedido completado.', 'daniela-child'),
+						'id'          => 'dm_downloads_email_button_text',
 						'type'        => 'text',
 						'css'         => 'width:300px;',
 						'default'     => __('Descargar recurso', 'daniela-child'),
@@ -112,34 +90,8 @@ if (! class_exists('DM_Settings_Page')) :
 						'autoload'    => false,
 					),
 					array(
-						'title'       => __('Texto de despedida', 'daniela-child'),
-						'desc'        => __('Puedes usar %s para insertar automáticamente el nombre del sitio.', 'daniela-child'),
-						'id'          => 'dm_freebie_email_signoff_text',
-						'type'        => 'text',
-						'css'         => 'width:300px;',
-						'default'     => __('Con cariño, %s', 'daniela-child'),
-						'placeholder' => __('Con cariño, %s', 'daniela-child'),
-						'desc_tip'    => true,
-						'autoload'    => false,
-					),
-					array(
-						'title'       => __('Límite de descargas por enlace', 'daniela-child'),
-						'desc'        => __('Número máximo de descargas permitidas por enlace tokenizado del email directo.', 'daniela-child'),
-						'id'          => 'dm_freebie_max_downloads',
-						'type'        => 'number',
-						'css'         => 'width:120px;',
-						'default'     => '10',
-						'custom_attributes' => array(
-							'min'  => '1',
-							'max'  => '100',
-							'step' => '1',
-						),
-						'desc_tip'    => true,
-						'autoload'    => false,
-					),
-					array(
 						'title'       => __('Título CTA en correos WooCommerce', 'daniela-child'),
-						'desc'        => __('Texto mostrado en emails de pedido cuando hay productos descargables.', 'daniela-child'),
+						'desc'        => __('Texto mostrado encima de los botones de descarga en el email Pedido completado.', 'daniela-child'),
 						'id'          => 'dm_downloads_email_cta_title',
 						'type'        => 'text',
 						'css'         => 'width:420px;',
@@ -161,7 +113,7 @@ if (! class_exists('DM_Settings_Page')) :
 					),
 					array(
 						'type' => 'sectionend',
-						'id'   => 'dm_freebie_email_copy_section',
+						'id'   => 'dm_downloads_email_copy_section',
 					),
 
 					// ---- Section: MailerLite API Fallback ----

@@ -547,7 +547,7 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
 
 - CTA primario público de compra: **"Agregar al carrito"** (texto unificado en catálogo y singles editoriales, tanto para productos gratis como de pago).
 - CTA secundario público de catálogo: **"Ver detalles"**. Este es el único copy secundario permitido en cards/listados.
-- En catálogo, los freebies se diferencian visualmente con badge **"Gratis"**; no se recarga el botón con copy extra.
+- En catálogo, los recursos gratis se diferencian visualmente con badge **"Gratis"**; no se recarga el botón con copy extra.
 - La aclaración de que un recurso no requiere pago debe vivir como microcopy en single, drawer o checkout, no en el CTA principal de la card.
 - En singles editoriales, el CTA secundario **no** es "Ver detalles": debe ser un regreso contextual tipo **"Volver a categoría / subcategoría / tag"**, y usarse con moderación como apoyo de navegación.
 - **No usar "Ver curso" como CTA público precompra.** El acceso externo tipo **"Iniciar curso"** solo debe aparecer después de la compra (por ejemplo, en thank-you page, cuenta del usuario o acceso ya autorizado).
@@ -612,87 +612,30 @@ El sitio usa **un solo sistema** de cards + grids para todos los catálogos.
 
 # 20. Descargas de productos
 
-## Resumen: dos flujos completamente separados
+## Resumen: un solo flujo WooCommerce
+
+Todos los productos descargables, gratuitos o de pago, usan el mismo flujo WooCommerce:
 
 | Flujo | Activación | Archivos |
 |---|---|---|
-| **WooCommerce nativo** | Productos con precio > $0, tras completar el pago con Stripe | Sistema nativo de WC (permisos, límites, expiración) |
-| **Freebie tokenizado** | Productos con precio = $0, formulario de email | `inc/freebie-download.php`, `inc/freebie-delivery.php` |
+| **WooCommerce nativo** | Productos descargables con precio = $0 o > $0 | `inc/woocommerce-checkout.php`, `inc/woocommerce-emails.php`, `woocommerce/emails/customer-completed-order.php` |
 
-Ninguno de los dos flujos interfiere con el otro.
+Los recursos gratuitos ya no usan un sistema tokenizado paralelo.
 Ver detalles completos en [`docs/woocommerce-downloads.md`](docs/woocommerce-downloads.md).
 
 ---
 
-## 20.1 Productos pagados — WooCommerce nativo
+## 20.1 Productos descargables — WooCommerce nativo
 
-Los productos descargables de pago usan **exclusivamente el sistema nativo de WooCommerce**:
+Los productos descargables de pago y gratuitos usan **exclusivamente el sistema nativo de WooCommerce**:
 
 - **Permisos de descarga** gestionados por WooCommerce (tabla `woocommerce_downloadable_product_permissions`).
 - **Límite de descargas** y **expiración** configurables en cada producto.
-- **Email automático** "Pedido completado" enviado por WooCommerce con link protegido.
+- **Email automático** `customer_completed_order` enviado por WooCommerce con link protegido.
 - **Método de entrega:** `Force downloads` (por defecto). El archivo nunca se expone directamente en `/wp-content/uploads/`.
+- **Pedidos gratis:** el child theme los completa automáticamente tras checkout para reutilizar el mismo email de entrega.
 
 El child theme **no sobreescribe** ningún hook `woocommerce_download_*` ni modifica la lógica de entrega de WooCommerce.
-
----
-
-## 20.2 Freebies por email con link tokenizado
-
-**Solo para productos con precio = $0.**
-
-### Archivo principal
-
-`wp-content/themes/daniela-child/inc/freebie-download.php`
-
-### Tabla de base de datos
-
-`{prefix}dm_freebie_tokens` (creada automáticamente en `init` si no existe):
-
-| Columna | Tipo | Descripción |
-|---|---|---|
-| `token` | VARCHAR(64) PK | Token hex de 64 chars |
-| `email` | VARCHAR(200) | Email del solicitante |
-| `product_id` | BIGINT | Producto WC |
-| `created_at` | DATETIME | Fecha de creación |
-| `expires_at` | DATETIME | Expiración (NULL = sin límite) |
-| `download_count` | INT | Descargas realizadas |
-| `max_downloads` | INT DEFAULT 10 | Límite de descargas |
-| `newsletter_optin` | TINYINT | Consentimiento newsletter |
-
-### Shortcode
-
-```
-[dm_freebie_form product_id="123"]
-[dm_freebie_form product_id="123" title="Recíbelo gratis" button_text="Enviarme el PDF"]
-```
-
-Muestra: campo email + checkbox opt-in newsletter (no pre-marcado, GDPR-compliant).
-
-### Endpoint de descarga
-
-`?dm_freebie_token=<hex64>` en cualquier URL del sitio.
-
-Valida: token existe, no expirado, no superó `max_downloads`, producto tiene precio = $0. Entrega el archivo y actualiza el contador.
-
-### Aislamiento (garantías)
-
-El flujo freebie **no puede ejecutarse para productos de pago**:
-
-- Si `price > 0`, el shortcode muestra un enlace al producto WooCommerce (no el formulario).
-- Si `price > 0`, `dm_freebie_process_request()` rechaza la solicitud con `WP_Error`.
-- Si `price > 0`, el endpoint `?dm_freebie_token=` devuelve HTTP 403.
-- El flujo freebie no modifica emails ni hooks de WooCommerce.
-
-### Integración con single-dm_recurso.php
-
-Para recursos con precio $0 (vinculados por `_dm_wc_product_id`), `single-dm_recurso.php` muestra automáticamente el `[dm_freebie_form]` en lugar del botón "Agregar al carrito".
-
-### Integración newsletter
-
-Mismo flujo que `newsletter-optin.php`:
-1. Si el hook `mailerlite_woocommerce_subscribe` existe → delega al plugin oficial.
-2. Si no, y el fallback API está habilitado en DM Settings → llama a la API de MailerLite directamente.
 
 ---
 
@@ -727,12 +670,10 @@ Cargados desde `functions.php` (antes del bloque de feature modules).
 
 ### 3) Asunto y encabezado personalizados
 
-Cuatro filtros activos:
+Dos filtros activos:
 
 | Filtro | Resultado |
 |---|---|
-| `woocommerce_email_subject_customer_processing_order` | `"✅ Recibimos tu pedido #X — ya lo estamos procesando"` |
-| `woocommerce_email_heading_customer_processing_order` | `"¡Gracias por tu compra! 🌿"` |
 | `woocommerce_email_subject_customer_completed_order` | `"🎉 Tu pedido #X está listo — descarga tu recurso"` |
 | `woocommerce_email_heading_customer_completed_order` | `"¡Tu recurso está listo! 🎉"` |
 
@@ -740,10 +681,9 @@ Cuatro filtros activos:
 
 `dm_email_cta_block()` en acción `woocommerce_email_after_order_table` (priority 20):
 
-- Solo se inyecta en emails de cliente (no admin) en formato HTML, para pedidos Processing o Completed.
+- Solo se inyecta en emails de cliente (no admin) en formato HTML para `customer_completed_order`.
 - Llama a `dm_get_order_download_links($order)`, que usa `WC_Order_Item_Product::get_item_downloads()` — genera URLs de descarga únicas por pedido que no requieren login del cliente.
 - Muestra un botón de descarga por producto descargable del pedido.
-- Si no hay descargas disponibles (ej. email Processing sin archivos listos), no muestra el bloque.
 - Siempre incluye enlace "Ver detalles del pedido" (`$order->get_view_order_url()`).
 
 ---
@@ -808,7 +748,7 @@ $price_raw = $product->get_price(); // '' = sin precio configurado; '0' = gratis
 $is_free   = ( $price_raw !== '' && (float) $price_raw <= 0.0 );
 ```
 
-**Invariante crítica:** un producto sin precio configurado (`get_price() === ''`) **no** es tratado como gratuito. Solo los productos con precio explícitamente en `$0` activan el flujo de freebie.
+**Invariante crítica:** un producto sin precio configurado (`get_price() === ''`) **no** es tratado como gratuito. Solo los productos con precio explícitamente en `$0` activan el flujo WooCommerce de recurso gratis.
 
 ### Clase del botón
 
@@ -837,13 +777,17 @@ $show_cta = $is_free || ( $product->is_purchasable() && $product->is_in_stock() 
 
 | Archivo | Responsabilidad |
 |---|---|
-| `wp-content/themes/daniela-child/assets/css/woocommerce.css` | Hereda la estética del child theme en páginas WooCommerce (botones, formularios, tarjetas, notices, carrito, checkout y mi cuenta) |
+| `wp-content/themes/daniela-child/style.css` | Sistema visual global del child theme y capas de integración para WooCommerce, drawer, carrito, checkout, mi cuenta y notices |
 | `wp-content/themes/daniela-child/inc/woocommerce-checkout.php` | Traducción forzada al español de los textos visibles más comunes de WooCommerce (`gettext`) y lógica auxiliar del checkout |
 | `wp-content/themes/daniela-child/inc/newsletter-optin.php` | Checkbox GDPR de newsletter en checkout + persistencia del consentimiento |
 | `wp-content/themes/daniela-child/inc/cart-drawer.php` | Drawer lateral con CTAs “Seguir comprando” / “Finalizar compra” |
 
 ## Decisiones implementadas
 
+- **Fuente única de verdad visual:** `wp-content/themes/daniela-child/style.css` define los tokens de marca, tipografía, color, radios, sombras, espaciados y primitivas reutilizables del proyecto.
+- **WooCommerce como capa integrada del child:** `wp-content/themes/daniela-child/style.css` contiene los tokens globales y las superficies WooCommerce reales del proyecto; no hay un sistema visual paralelo separado.
+- **Parent y plugins pueden cargar CSS base**, pero la apariencia final aprobada debe quedar gobernada por el child theme mediante tokens `--dm-*`, orden de carga y selectores específicos del layout real.
+- **No copiar templates del parent o de Woo por motivos solo visuales:** primero resolver con CSS del child, hooks o selectores más específicos; solo crear overrides cuando haga falta cambiar markup, estructura o puntos de extensión.
 - El CSS de WooCommerce reutiliza `--dm-necesitas-pad-y` (definido en Home) para mantener un espaciado vertical consistente entre Home, carrito y checkout.
 - Los contenedores de carrito / checkout / mi cuenta usan `--dm-woo-box-pad` para dar aire interno sin tocar el layout base del parent theme.
 - Los strings visibles más importantes (`Checkout`, `Place order`, `Billing details`, etc.) se fuerzan al español desde el child theme para evitar mezcla de idiomas en frontend y emails.
@@ -855,3 +799,8 @@ Cualquier ajuste futuro de la UX WooCommerce debe documentarse primero en:
 - `docs/project_status.md`
 - `docs/ARCHITECTURE_NOTES.md`
 - `docs/woocommerce-overrides.md`
+
+Si el ajuste es visual, la secuencia correcta es:
+1. decidir si el valor debe vivir como token o primitive en `style.css`;
+2. consumir ese token dentro de la sección/scope Woo correspondiente en `style.css`;
+3. evitar overrides de templates salvo que el problema sea estructural.
