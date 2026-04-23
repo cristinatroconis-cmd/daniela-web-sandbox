@@ -7,6 +7,20 @@
 
 ## 1. Overrides de templates de email
 
+### Regla operativa vigente para emails de WooCommerce
+
+Para los emails del child theme, la regla correcta es esta:
+
+1. La ruta activa y permitida para overrides de email es `wp-content/themes/daniela-child/woocommerce/emails/`.
+2. No se deben crear ni mantener copias sueltas de templates de email en la raiz del theme.
+3. La estructura del email se resuelve en los templates override de `woocommerce/emails/`.
+4. La logica reutilizable, helpers y renderers compartidos se mantiene en `inc/woocommerce-emails.php`.
+5. La apariencia del email debe salir de los tokens del child theme, leidos desde `inc/email-tokens.php` y originados en `style.css`.
+6. Si el cambio es estructural o de contenido principal del email, se edita el template override.
+7. Si el cambio es de estilo reutilizable, CTA, bloques compartidos o helpers de render, se edita `inc/woocommerce-emails.php`.
+
+Esta es la convención que se debe seguir en staging y en producción.
+
 ### ¿Qué son y cómo funcionan?
 
 WooCommerce permite sobreescribir (override) sus plantillas HTML copiándolas
@@ -55,11 +69,43 @@ duplica lógica del plugin; se limita a:
 
 Esta estructura garantiza que:
 - Los estilos CSS inyectados por `inc/woocommerce-emails.php` (filtro
-  `woocommerce_email_styles`) se aplican correctamente.
-- El bloque CTA de descarga (hook `woocommerce_email_after_order_table` en
-  `inc/woocommerce-emails.php`) se renderiza dentro de la tabla de pedido.
+   `woocommerce_email_styles`) se aplican correctamente.
 - Los subject/heading personalizados del email `customer_completed_order`
    siguen funcionando sin cambios.
+
+### Regla actual para `customer-completed-order`
+
+`customer-completed-order.php` ya no debe depender de la tabla visual nativa de
+WooCommerce si el objetivo es una experiencia editorial alineada al child theme.
+
+La practica aprobada es:
+
+1. Mantener el template en `woocommerce/emails/customer-completed-order.php`.
+2. Usar ese template para decidir la composicion visual final del email.
+3. Delegar bloques reutilizables a funciones del child theme.
+4. Leer colores, bordes, radios, tipografia y demas decisiones visuales desde
+    los tokens del child theme.
+
+En otras palabras: template correcto para estructura, helpers correctos para
+render reutilizable, tokens correctos para apariencia.
+
+### Archivos usados en la personalizacion actual de emails
+
+Estos son los archivos que hay que revisar primero al retomar este trabajo:
+
+| Archivo | Rol |
+|---|---|
+| `wp-content/themes/daniela-child/woocommerce/emails/customer-completed-order.php` | Template activo del email de pedido completado |
+| `wp-content/themes/daniela-child/woocommerce/emails/customer-invoice.php` | Template activo de invoice para cliente |
+| `wp-content/themes/daniela-child/woocommerce/emails/customer-on-hold-order.php` | Template activo de pedido en espera |
+| `wp-content/themes/daniela-child/woocommerce/emails/customer-cancelled-order.php` | Template activo de pedido cancelado |
+| `wp-content/themes/daniela-child/woocommerce/emails/customer-refunded-order.php` | Template activo de reembolso |
+| `wp-content/themes/daniela-child/woocommerce/emails/customer-note.php` | Template activo de nota al cliente |
+| `wp-content/themes/daniela-child/inc/woocommerce-emails.php` | Lógica compartida de emails, subject/heading, CTA, newsletter y helpers |
+| `wp-content/themes/daniela-child/inc/email-tokens.php` | Lectura de tokens visuales desde `style.css` |
+| `wp-content/themes/daniela-child/inc/email-settings.php` | Opciones editables desde WooCommerce > Ajustes > Emails |
+| `wp-content/themes/daniela-child/style.css` | Fuente de verdad visual del child theme |
+| `wp-content/themes/daniela-child/functions.php` | Carga de módulos del child theme |
 
 ### Cómo mantener los overrides al actualizar WooCommerce
 
@@ -160,22 +206,21 @@ Además del CSS, la UX WooCommerce del child theme hoy depende de estos archivos
 
 ## 3. Relación entre los overrides de email y `inc/woocommerce-emails.php`
 
-El archivo `inc/woocommerce-emails.php` usa **filtros y acciones de WooCommerce**
-(no templates PHP directos), por lo que funciona independientemente de si hay
-overrides o no. Los overrides del child theme NO anulan la lógica de ese archivo:
+El archivo `inc/woocommerce-emails.php` usa **filtros y helpers del child theme**
+para centralizar la logica de render reutilizable. Los overrides del child theme
+no reemplazan ese archivo: lo consumen.
 
 | Componente | Mecanismo | Afectado por override |
 |---|---|---|
 | CSS email-safe | `woocommerce_email_styles` filter | No (filtro global) |
 | Subject personalizado | `woocommerce_email_subject_customer_completed_order` filter | No |
 | Heading personalizado | `woocommerce_email_heading_customer_completed_order` filter | No |
-| Bloque CTA descarga | `woocommerce_email_after_order_table` action | **Sí** — los overrides llaman `do_action('woocommerce_email_order_details',...)` que incluye el hook internamente |
+| CTA de descarga | `dm_render_cta_block()` | Sí, se llama desde el template activo |
+| Resumen editorial de compra | `dm_render_completed_order_summary()` | Sí, se llama desde el template activo |
+| Newsletter | `dm_render_newsletter_block()` | Sí, se llama desde el template activo o desde otros templates customer-* |
 
 ### Decisión actual
 
 - El email de entrega de descargables vive en `customer-completed-order.php`.
 - `customer_processing_order` puede seguir existiendo en WooCommerce como email de estado, pero ya no forma parte de la personalización de entrega del child theme.
-
-El bloque CTA requiere que `woocommerce_email_after_order_table` se dispare
-dentro del renderizado del pedido. Los overrides garantizan esto llamando
-`woocommerce_email_order_details`, que es quien dispara ese hook interno.
+- La ruta correcta manda: si un email no cambia, primero verificar el archivo activo en `woocommerce/emails/` y luego la logica compartida en `inc/woocommerce-emails.php`.
