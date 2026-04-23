@@ -16,7 +16,6 @@ Text Domain: daniela-child
 :root {
 	/* ======================================================================
 	   Edicion rapida cliente (valores nombrados, manuales)
-	   Si quieres usar herencia Elementor/Kirki, mira el bloque "Variables heredadas".
 	   ====================================================================== */
 	--dm-brand-primary: #7c6b8e;
 	--dm-brand-primary-dark: #5e4f6c;
@@ -36,25 +35,14 @@ Text Domain: daniela-child
 	--dm-brand-font-heading-family: 'Abril Fatface', serif;
 	--dm-brand-font-heading-weight: 400;
 	--dm-brand-font-heading-line-height: 1.2;
+	--dm-brand-font-heading-letter-spacing: 0;
+	--dm-brand-font-heading-compact-line-height: 1.25;
+	--dm-brand-font-heading-compact-letter-spacing: 0.012em;
 	--dm-brand-font-body-family: 'Open Sans', sans-serif;
 	--dm-brand-font-body-weight: 400;
 	--dm-brand-font-body-line-height: 1.6;
 	--dm-brand-font-button-family: 'Abril Fatface', serif;
 	--dm-brand-font-button-weight: 400;
-
-	/* Variables heredadas (Elementor/Kirki) - referencia opcional */
-	--dm-inherit-primary: var(--e-global-color-primary, var(--dm-brand-primary));
-	--dm-inherit-secondary: var(--e-global-color-secondary, var(--dm-brand-primary-dark));
-	--dm-inherit-accent: var(--e-global-color-accent, var(--dm-brand-accent));
-	--dm-inherit-text: var(--e-global-color-text, var(--dm-brand-text));
-	--dm-inherit-font-heading-family: var(--e-global-typography-primary-font-family, var(--dm-brand-font-heading-family));
-	--dm-inherit-font-heading-weight: var(--e-global-typography-primary-font-weight, var(--dm-brand-font-heading-weight));
-	--dm-inherit-font-heading-line-height: var(--e-global-typography-primary-line-height, var(--dm-brand-font-heading-line-height));
-	--dm-inherit-font-body-family: var(--e-global-typography-text-font-family, var(--dm-brand-font-body-family));
-	--dm-inherit-font-body-weight: var(--e-global-typography-text-font-weight, var(--dm-brand-font-body-weight));
-	--dm-inherit-font-body-line-height: var(--e-global-typography-text-line-height, var(--dm-brand-font-body-line-height));
-	--dm-inherit-font-button-family: var(--e-global-typography-accent-font-family, var(--dm-brand-font-button-family));
-	--dm-inherit-font-button-weight: var(--e-global-typography-accent-font-weight, var(--dm-brand-font-button-weight));
 
 	/* Sistema base del child (por defecto usa valores nombrados) */
 	--dm-color-primary: var(--dm-brand-primary);
@@ -72,11 +60,13 @@ Text Domain: daniela-child
 	--dm-transition: 0.2s ease;
 	--dm-font-sans: var(--dm-brand-font-body-family);
 
-	/* Tipografias activas (por defecto usa valores nombrados)
-	   Si prefieres herencia, cambia a: var(--dm-inherit-font-...) */
+	/* Tipografias activas del child */
 	--dm-font-heading-family: var(--dm-brand-font-heading-family);
 	--dm-font-heading-weight: var(--dm-brand-font-heading-weight);
 	--dm-font-heading-line-height: var(--dm-brand-font-heading-line-height);
+	--dm-font-heading-letter-spacing: var(--dm-brand-font-heading-letter-spacing);
+	--dm-font-heading-compact-line-height: var(--dm-brand-font-heading-compact-line-height);
+	--dm-font-heading-compact-letter-spacing: var(--dm-brand-font-heading-compact-letter-spacing);
 	--dm-font-body-family: var(--dm-brand-font-body-family);
 	--dm-font-body-weight: var(--dm-brand-font-body-weight);
 	--dm-font-body-line-height: var(--dm-brand-font-body-line-height);
@@ -201,6 +191,7 @@ h6,
 	font-family: var(--dm-font-heading-family);
 	font-weight: var(--dm-font-heading-weight);
 	line-height: var(--dm-font-heading-line-height);
+	letter-spacing: var(--dm-font-heading-letter-spacing);
 	color: var(--dm-color-text);
 }
 
@@ -246,6 +237,53 @@ input[type="reset"],
 	gap: var(--dm-header-actions-gap);
 }
 
+.header-4 .col-full-nav {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--dm-header-actions-gap);
+	min-width: 0;
+}
+
+.header-4 .col-full-nav>.main-navigation {
+	flex: 0 1 auto;
+	width: auto;
+	max-width: 100%;
+	min-width: 0;
+	display: block;
+}
+
+.header-4 .col-full-nav>.main-navigation .primary-navigation,
+.header-4 .col-full-nav>.main-navigation .menu-primary-menu-container {
+	display: block;
+	max-width: 100%;
+}
+
+.header-4 .col-full-nav>.main-navigation .primary-navigation {
+	flex: 0 1 auto;
+	width: auto;
+	max-width: 100%;
+}
+
+.header-4 .col-full-nav>.main-navigation .menu-primary-menu-container {
+	margin: 0;
+	max-width: 100%;
+}
+
+.header-4 .col-full-nav>.main-navigation #menu-primary-menu {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.header-4 .col-full-nav>.main-navigation #menu-primary-menu>li {
+	position: relative;
+}
+
+.header-4 .col-full-nav>.main-navigation #menu-primary-menu>li>a.main-menu-link {
+	white-space: nowrap;
+}
+
 .header-4 .col-full-nav>.site-header-cart.menu {
 	margin-left: auto;
 	justify-content: flex-end;
@@ -253,10 +291,57 @@ input[type="reset"],
 }
 
 @media (min-width: 993px) {
+	.header-4 .header-4-inner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1.5rem;
+	}
+
+	.header-4 .header-4-inner>.site-header {
+		flex: 0 0 auto;
+		margin-right: 0;
+	}
+
 	.header-4 .header-4-inner>.col-full-nav {
 		flex: 1 1 auto;
 		min-width: 0;
 		position: relative;
+		justify-content: flex-end;
+	}
+
+	.header-4 .header-4-inner>.col-full-nav>.main-navigation {
+		display: block;
+		flex: 0 1 auto;
+		width: auto;
+		height: auto;
+		margin-left: auto;
+	}
+
+	.header-4 .header-4-inner>.col-full-nav>.main-navigation .primary-navigation {
+		position: static;
+		inset: auto;
+		display: block;
+		width: auto;
+		height: auto;
+	}
+
+	.header-4 .header-4-inner>.col-full-nav>.main-navigation .menu-primary-menu-container {
+		display: block;
+	}
+
+	.header-4 .header-4-inner>.col-full-nav>.main-navigation #menu-primary-menu {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.header-4 .main-navigation ul.menu>li.menu-item-has-children:not(.full-width)>.sub-menu-wrapper {
+		top: 100%;
+	}
+
+	.header-4 .main-navigation ul.menu>li.menu-item-has-children:not(.full-width)>.sub-menu-wrapper>.container>ul.sub-menu {
+		top: 0;
 	}
 
 	.header-4 .header-4-inner>.col-full-nav>.site-header-cart.menu {
@@ -340,9 +425,9 @@ body.header-4 #page .col-full-nav .site-header-cart.menu .dm-header-login>a span
 body.header-4 #page .col-full-nav .site-header-cart.menu .dm-header-login>a:hover span,
 body.header-4 #page .col-full-nav .site-header-cart.menu .dm-header-login>a:focus-visible span {
 	color: inherit !important;
-	font-family: inherit !important;
-	font-size: inherit !important;
-	font-weight: inherit !important;
+	font-family: var(--dm-font-button-family) !important;
+	font-size: 16px !important;
+	font-weight: var(--dm-font-button-weight) !important;
 	letter-spacing: inherit !important;
 	line-height: inherit !important;
 	text-transform: inherit !important;
@@ -637,11 +722,16 @@ body.drawer-open {
 	gap: 0.6rem;
 }
 
-.dm-card__title {
+.dm-card__title,
+.dm-topic-card__title,
+.dm-product-card__title {
+	font-family: var(--dm-font-heading-family);
 	font-size: 20px;
-	font-weight: 600;
+	font-weight: var(--dm-font-heading-weight);
 	margin: 0;
-	line-height: 1.35;
+	line-height: var(--dm-font-heading-compact-line-height);
+	letter-spacing: var(--dm-font-heading-compact-letter-spacing);
+	text-wrap: balance;
 }
 
 .dm-card__title a,
@@ -661,10 +751,11 @@ body.drawer-open {
 .dm-card__excerpt,
 .dm-topic-card__excerpt,
 .dm-product-card__excerpt {
+	font-family: var(--dm-font-body-family);
 	font-size: 0.875rem;
 	color: var(--dm-color-text-muted);
 	margin: 0;
-	line-height: 1.5;
+	line-height: var(--dm-text-line-height-base);
 }
 
 /* 7 · Price */
@@ -1077,7 +1168,9 @@ body.drawer-open {
 	font-weight: var(--dm-font-heading-weight);
 	color: var(--dm-color-text);
 	margin: 0 0 0.75rem;
-	line-height: var(--dm-font-heading-line-height);
+	line-height: var(--dm-font-heading-compact-line-height);
+	letter-spacing: var(--dm-font-heading-compact-letter-spacing);
+	text-wrap: balance;
 }
 
 .dm-archive__description {
@@ -1235,17 +1328,21 @@ body.single-tutor_course {
 }
 
 .dm-single__title {
+	font-family: var(--dm-font-heading-family);
 	font-size: clamp(1.5rem, 3vw, 2rem);
-	font-weight: 700;
+	font-weight: var(--dm-font-heading-weight);
 	color: var(--dm-color-text);
 	margin: 0;
-	line-height: 1.25;
+	line-height: var(--dm-font-heading-compact-line-height);
+	letter-spacing: var(--dm-font-heading-compact-letter-spacing);
+	text-wrap: balance;
 }
 
 .dm-single__content {
+	font-family: var(--dm-font-body-family);
 	font-size: 0.975rem;
 	color: var(--dm-color-text-muted);
-	line-height: 1.7;
+	line-height: var(--dm-text-line-height-base);
 }
 
 .dm-single__content p:last-child {
@@ -1916,7 +2013,9 @@ body.woocommerce-page .site-main {
 .woocommerce-page input,
 .woocommerce-page select,
 .woocommerce-page textarea {
-	font-family: inherit;
+	font-family: var(--dm-form-font-family);
+	font-size: var(--dm-form-font-size);
+	line-height: var(--dm-form-line-height);
 	color: var(--dm-color-text);
 }
 
