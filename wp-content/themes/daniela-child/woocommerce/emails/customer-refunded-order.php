@@ -78,6 +78,14 @@ do_action( 'woocommerce_email_order_meta', $order, $sent_to_admin, $plain_text, 
  */
 do_action( 'woocommerce_email_customer_details', $order, $sent_to_admin, $plain_text, $email );
 
+<?php
+/* CTA + Newsletter blocks — injected directly from child theme. */
+if ( ! $sent_to_admin && ! $plain_text ) {
+	dm_render_cta_block( $order );
+	dm_render_newsletter_block( $order );
+}
+?>
+
 /**
  * @hooked WC_Emails::email_footer() Output the email footer.
  */

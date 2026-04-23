@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Customer completed order email — Child theme override.
  *
@@ -20,43 +21,31 @@
  * @var WC_Email $email          Objeto email.
  */
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 /*
  * @hooked WC_Emails::email_header() Output the email header.
  */
-do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
+do_action('woocommerce_email_header', $email_heading, $email);
 
-<p>
-	<?php
-	/* translators: %s: Customer first name */
-	printf( esc_html__( 'Hi %s,', 'woocommerce' ), esc_html( $order->get_billing_first_name() ) );
-	?>
+$first_name = trim((string) $order->get_billing_first_name());
+?>
+
+<p style="margin:0 0 12px;font-family:'Open Sans',Arial,sans-serif;font-size:16px;line-height:1.7;color:#2d2d2d;">
+	<?php echo esc_html($first_name ? sprintf(__('Hola %s,', 'daniela-child'), $first_name) : __('Hola,', 'daniela-child')); ?>
 </p>
-<p>
-	<?php echo wp_kses_post( __( 'We have finished processing your order.', 'woocommerce' ) ); ?>
+<p style="margin:0;font-family:'Open Sans',Arial,sans-serif;font-size:15px;line-height:1.8;color:#6b6b6b;">
+	<?php esc_html_e('Tu recurso ya esta preparado. Te dejo todo listo para que lo descargues de forma simple y sin pasos de mas.', 'daniela-child'); ?>
 </p>
 
 <?php
-/*
- * @hooked WC_Emails::order_details() Shows the order details table.
- * @hooked WC_Structured_Data::generate_order_data() Generates structured data.
- * @since 2.5.0
- */
-do_action( 'woocommerce_email_order_details', $order, $sent_to_admin, $plain_text, $email );
-
-/*
- * @hooked WC_Emails::order_meta() Shows order meta data.
- */
-do_action( 'woocommerce_email_order_meta', $order, $sent_to_admin, $plain_text, $email );
-
-/*
- * @hooked WC_Emails::customer_details() Shows customer details.
- * @hooked WC_Emails::email_address() Shows email address.
- */
-do_action( 'woocommerce_email_customer_details', $order, $sent_to_admin, $plain_text, $email );
+if (! $sent_to_admin && ! $plain_text) {
+	dm_render_cta_block($order);
+	dm_render_completed_order_summary($order);
+	dm_render_newsletter_block($order);
+}
 
 /**
  * @hooked WC_Emails::email_footer() Output the email footer.
  */
-do_action( 'woocommerce_email_footer', $email );
+do_action('woocommerce_email_footer', $email);

@@ -271,8 +271,7 @@ add_filter(
 );
 function dm_email_subject_completed(string $subject, WC_Order $order, WC_Email $email): string
 { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	/* translators: %s: order number */
-	return sprintf(__('🎉 Tu pedido #%s está listo — descarga tu recurso', 'daniela-child'), $order->get_order_number());
+	return __('Tu recurso ya esta listo para ti', 'daniela-child');
 }
 
 /**
@@ -291,41 +290,12 @@ add_filter(
 );
 function dm_email_heading_completed(string $heading, WC_Order $order, WC_Email $email): string
 { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	return __('¡Tu recurso está listo! 🎉', 'daniela-child');
+	return __('Tu recurso ya esta disponible', 'daniela-child');
 }
 
 // =============================================================================
 // 4) BLOQUE CTA — DESCARGA DIRECTA (guest-friendly)
 // =============================================================================
-
-/**
- * Inyecta el bloque CTA de descarga en el email Customer Completed Order.
- *
- * @param  WC_Order $order         Objeto pedido.
- * @param  bool     $sent_to_admin Si es para admin.
- * @param  bool     $plain_text    Si es texto plano.
- * @param  WC_Email $email         Objeto email.
- */
-add_action(
-	'woocommerce_email_after_order_table',
-	'dm_email_cta_block',
-	20,
-	4
-);
-function dm_email_cta_block(WC_Order $order, bool $sent_to_admin, bool $plain_text, WC_Email $email): void
-{
-	if ($sent_to_admin || $plain_text) {
-		return;
-	}
-
-	$is_completed  = $email instanceof WC_Email_Customer_Completed_Order;
-
-	if (! $is_completed) {
-		return;
-	}
-
-	dm_render_email_cta($order);
-}
 
 /**
  * Renderiza el bloque CTA con enlace(s) de descarga para el pedido.
@@ -336,7 +306,7 @@ function dm_email_cta_block(WC_Order $order, bool $sent_to_admin, bool $plain_te
  *
  * @param  WC_Order $order  Objeto pedido.
  */
-function dm_render_email_cta(WC_Order $order): void
+function dm_render_cta_block(WC_Order $order): void
 {
 	// Recopilar links de descarga asociados al pedido.
 	$download_links = dm_get_order_download_links($order);
@@ -348,42 +318,106 @@ function dm_render_email_cta(WC_Order $order): void
 	$button_label   = (string) get_option('dm_downloads_email_button_text', __('Descargar recurso', 'daniela-child'));
 
 ?>
-	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:<?php echo esc_attr($t['color_bg']); ?>;border-top:1px solid <?php echo esc_attr($t['color_border']); ?>;margin-top:24px;">
+	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:24px 0 0;">
 		<tr>
-			<td style="padding:24px 48px;text-align:center;">
-				<?php if (! empty($download_links)) : ?>
-					<p style="margin:0 0 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;color:<?php echo esc_attr($t['color_text']); ?>;font-weight:600;">
-						<?php echo esc_html($cta_title); ?>
-					</p>
-					<?php foreach ($download_links as $dl) : ?>
-						<div style="margin-bottom:12px;">
-							<a href="<?php echo esc_url($dl['url']); ?>"
-								style="display:inline-block;background-color:<?php echo esc_attr($t['color_accent']); ?>;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:<?php echo esc_attr($t['radius']); ?>;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.02em;">
-								<?php
-								if (false !== strpos($button_label, '%s')) {
-									/* translators: %s: product name */
-									printf(esc_html($button_label), esc_html($dl['name']));
-								} else {
-									echo esc_html($button_label);
-								}
-								?>
-							</a>
-						</div>
-					<?php endforeach; ?>
-					<span style="display:block;margin-top:10px;color:<?php echo esc_attr($t['color_text_muted']); ?>;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;">
-						<?php echo esc_html($cta_note); ?>
-					</span>
-				<?php endif; ?>
+			<td style="padding:0;">
+				<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:#f7f2ed;border:1px solid <?php echo esc_attr($t['color_border']); ?>;border-radius:<?php echo esc_attr($t['radius']); ?>;overflow:hidden;">
+					<tr>
+						<td style="padding:28px 32px;text-align:center;">
+							<?php if (! empty($download_links)) : ?>
+								<p style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;color:<?php echo esc_attr($t['color_primary']); ?>;font-weight:400;">
+									<?php echo esc_html($cta_title); ?>
+								</p>
+								<p style="margin:0 0 18px;font-family:'Open Sans',Arial,sans-serif;font-size:14px;line-height:1.6;color:<?php echo esc_attr($t['color_text_muted']); ?>;">
+									<?php esc_html_e('Todo esta listo. Puedes descargar tu recurso desde aqui cuando quieras.', 'daniela-child'); ?>
+								</p>
+								<?php foreach ($download_links as $dl) : ?>
+									<div style="margin-bottom:12px;">
+										<a href="<?php echo esc_url($dl['url']); ?>"
+											style="display:inline-block;background-color:<?php echo esc_attr($t['color_primary']); ?>;border:1.5px solid <?php echo esc_attr($t['color_primary']); ?>;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:0;line-height:1.2;">
+											<?php
+											if (false !== strpos($button_label, '%s')) {
+												/* translators: %s: product name */
+												printf(esc_html($button_label), esc_html($dl['name']));
+											} else {
+												echo esc_html($button_label);
+											}
+											?>
+										</a>
+									</div>
+									<p style="margin:0 0 14px;font-family:'Open Sans',Arial,sans-serif;font-size:13px;line-height:1.5;color:<?php echo esc_attr($t['color_text']); ?>;">
+										<?php echo esc_html($dl['name']); ?>
+									</p>
+								<?php endforeach; ?>
+								<span style="display:block;margin-top:6px;color:<?php echo esc_attr($t['color_text_muted']); ?>;font-family:'Open Sans',Arial,sans-serif;font-size:12px;line-height:1.5;">
+									<?php echo esc_html($cta_note); ?>
+								</span>
+							<?php endif; ?>
 
-				<?php if ($order_view_url) : ?>
-					<p style="margin:<?php echo empty($download_links) ? '0' : '16px'; ?> 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;color:<?php echo esc_attr($t['color_text_muted']); ?>;">
-						<?php esc_html_e('¿Necesitas acceder más tarde?', 'daniela-child'); ?>
-						<a href="<?php echo esc_url($order_view_url); ?>"
-							style="color:<?php echo esc_attr($t['color_primary']); ?>;text-decoration:underline;">
-							<?php esc_html_e('Ver detalles del pedido', 'daniela-child'); ?>
-						</a>
-					</p>
-				<?php endif; ?>
+							<?php if ($order_view_url) : ?>
+								<p style="margin:<?php echo empty($download_links) ? '0' : '16px'; ?> 0 0;font-family:'Open Sans',Arial,sans-serif;font-size:13px;line-height:1.6;color:<?php echo esc_attr($t['color_text_muted']); ?>;">
+									<?php esc_html_e('¿Necesitas acceder más tarde?', 'daniela-child'); ?>
+									<a href="<?php echo esc_url($order_view_url); ?>"
+										style="color:<?php echo esc_attr($t['color_primary']); ?>;text-decoration:underline;">
+										<?php esc_html_e('Ver detalles del pedido', 'daniela-child'); ?>
+									</a>
+								</p>
+							<?php endif; ?>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+<?php
+}
+
+/**
+ * Renderiza un resumen editorial del pedido completado sin tablas de Woo.
+ *
+ * @param WC_Order $order Objeto pedido.
+ */
+function dm_render_completed_order_summary(WC_Order $order): void
+{
+	$t     = dm_get_email_tokens();
+	$items = $order->get_items();
+
+	if (empty($items)) {
+		return;
+	}
+
+	$purchase_date = $order->get_date_created();
+?>
+	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;margin-top:20px;">
+		<tr>
+			<td style="padding:0;">
+				<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:#ffffff;border:1px solid <?php echo esc_attr($t['color_border']); ?>;border-radius:<?php echo esc_attr($t['radius']); ?>;overflow:hidden;">
+					<tr>
+						<td style="padding:24px 32px;">
+							<p style="margin:0 0 6px;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.2;color:<?php echo esc_attr($t['color_primary']); ?>;font-weight:400;">
+								<?php esc_html_e('Tu compra incluye', 'daniela-child'); ?>
+							</p>
+							<?php if ($purchase_date) : ?>
+								<p style="margin:0 0 18px;font-family:'Open Sans',Arial,sans-serif;font-size:13px;line-height:1.5;color:<?php echo esc_attr($t['color_text_muted']); ?>;">
+									<?php echo esc_html(wp_date('j \d\e F, Y', $purchase_date->getTimestamp())); ?>
+								</p>
+							<?php endif; ?>
+							<?php foreach ($items as $item) : ?>
+								<?php if (! $item instanceof WC_Order_Item_Product) {
+									continue;
+								} ?>
+								<div style="padding:14px 16px;margin-bottom:12px;background-color:#fbf7f2;border:1px solid rgba(124,107,142,0.14);border-radius:<?php echo esc_attr($t['radius']); ?>;">
+									<p style="margin:0;font-family:'Open Sans',Arial,sans-serif;font-size:15px;line-height:1.5;color:<?php echo esc_attr($t['color_text']); ?>;font-weight:600;">
+										<?php echo esc_html($item->get_name()); ?>
+									</p>
+								</div>
+							<?php endforeach; ?>
+							<p style="margin:4px 0 0;font-family:'Open Sans',Arial,sans-serif;font-size:13px;line-height:1.6;color:<?php echo esc_attr($t['color_text_muted']); ?>;">
+								<?php esc_html_e('Preparado para una experiencia mas limpia, simple y facil de descargar.', 'daniela-child'); ?>
+							</p>
+						</td>
+					</tr>
+				</table>
 			</td>
 		</tr>
 	</table>
@@ -525,60 +559,16 @@ function dm_mark_customer_completed_email_source(int $order_id, string $source):
 }
 
 // =============================================================================
-// 5) NEWSLETTER BLOCK — INYECTABLE EN CUSTOMER COMPLETED ORDER
+// 5) NEWSLETTER BLOCK — INYECTABLE EN TODOS LOS EMAILS DE CLIENTE
 // =============================================================================
 
 /**
- * Inyecta el bloque de newsletter en TODOS los emails de cliente.
- * Se renderiza después del contenido principal (priority 21).
- *
- * Aparece en:
- *   - customer-completed-order
- *   - customer-invoice
- *   - customer-on-hold-order
- *   - customer-cancelled-order
- *   - customer-refunded-order
- *   - customer-note
- *
- * @param  WC_Order $order         Objeto pedido.
- * @param  bool     $sent_to_admin Si es para admin.
- * @param  bool     $plain_text    Si es texto plano.
- * @param  WC_Email $email         Objeto email.
- */
-add_action(
-	'woocommerce_email_after_order_table',
-	'dm_email_newsletter_block',
-	21,
-	4
-);
-function dm_email_newsletter_block(WC_Order $order, bool $sent_to_admin, bool $plain_text, WC_Email $email): void
-{
-	// No mostrar en emails al admin ni en versión texto plano.
-	if ($sent_to_admin || $plain_text) {
-		return;
-	}
-
-	// Verificar que es un email de cliente (class name empieza con WC_Email_Customer_).
-	$email_class = get_class($email);
-	if (false === strpos($email_class, 'WC_Email_Customer_')) {
-		return;
-	}
-
-	$is_enabled = (bool) get_option('dm_newsletter_email_enabled', true);
-	if (! $is_enabled) {
-		return;
-	}
-
-	dm_render_email_newsletter_block($order);
-}
-
-/**
- * Renderiza el bloque de newsletter en el email de pedido completado.
+ * Renderiza el bloque de newsletter en los emails de cliente.
  * Ofrece suscripción con link directo a MailerLite (o formulario embebido).
  *
  * @param WC_Order $order Objeto pedido.
  */
-function dm_render_email_newsletter_block(WC_Order $order): void
+function dm_render_newsletter_block(WC_Order $order): void
 {
 	$t = dm_get_email_tokens();
 
