@@ -131,9 +131,9 @@
 .dm-necesitas__lead {
 	max-width: 34rem;
 	line-height: 1.6;
-	font-family: Kollektif, var(--dm-font-sans, sans-serif);
+	font-family: var(--dm-font-body-family);
 	font-size: 1.25rem;
-	color: #222;
+	color: var(--dm-color-text);
 	text-align: center;
 }
 
@@ -285,13 +285,13 @@
 
 .dm-carousel__slide-title {
 	margin: 0 0 10px;
-	font-family: IBM Plex Sans;
+	font-family: var(--dm-font-heading-family);
 	font-size: 40px;
 	/* para un título de 3 palabras, 2 líneas, max-width ~44ch */
 	;
-	color: #222;
+	color: var(--dm-color-text);
 	line-height: 1.25;
-	font-weight: 600;
+	font-weight: var(--dm-font-heading-weight);
 }
 
 .dm-carousel__slide-text {
@@ -299,8 +299,8 @@
 	max-width: 44ch;
 	line-height: 1.55;
 	font-size: 1.25rem;
-	color: #222;
-	font-family: Kollektif, var(--dm-font-sans, sans-serif);
+	color: var(--dm-color-text);
+	font-family: var(--dm-font-body-family);
 	opacity: 0.95;
 }
 

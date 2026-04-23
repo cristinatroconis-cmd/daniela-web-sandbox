@@ -16,11 +16,18 @@ if (! defined('ABSPATH')) {
  * La versión usa filemtime() para cache-busting automático.
  */
 add_action('wp_enqueue_scripts', function () {
+	wp_enqueue_style(
+		'daniela-child-brand-fonts',
+		'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Open+Sans:wght@400;600;700&display=swap',
+		array(),
+		null
+	);
+
 	$style_file = get_stylesheet_directory() . '/style.css';
 	wp_enqueue_style(
 		'daniela-child-style',
 		get_stylesheet_uri(),
-		array(),
+		array('daniela-child-brand-fonts'),
 		file_exists($style_file) ? (string) filemtime($style_file) : '1.0.0'
 	);
 }, 20);

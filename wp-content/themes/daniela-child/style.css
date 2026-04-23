@@ -89,6 +89,10 @@ Text Domain: daniela-child
 	--dm-form-font-size: var(--dm-text-size-base);
 	--dm-form-line-height: var(--dm-text-line-height-base);
 	--dm-form-text-color: var(--dm-text-color-base);
+	--dm-header-actions-gap: 0.75rem;
+	--dm-header-actions-offset-inline: 0.5rem;
+	--dm-header-login-pad-y: 0.45rem;
+	--dm-header-login-pad-x: 1rem;
 
 	/* Botones de marca */
 	--dm-btn-radius: var(--dm-radius);
@@ -180,7 +184,20 @@ h6,
 .woocommerce-page h3,
 .woocommerce-page h4,
 .woocommerce-page h5,
-.woocommerce-page h6 {
+.woocommerce-page h6,
+.entry-content h1,
+.entry-content h2,
+.entry-content h3,
+.entry-content h4,
+.entry-content h5,
+.entry-content h6,
+.elementor h1,
+.elementor h2,
+.elementor h3,
+.elementor h4,
+.elementor h5,
+.elementor h6,
+.elementor-widget-heading .elementor-heading-title {
 	font-family: var(--dm-font-heading-family);
 	font-weight: var(--dm-font-heading-weight);
 	line-height: var(--dm-font-heading-line-height);
@@ -189,7 +206,11 @@ h6,
 
 p,
 li,
-blockquote {
+blockquote,
+.entry-content p,
+.elementor p,
+.elementor-widget-text-editor,
+.elementor-widget-text-editor p {
 	font-family: var(--dm-font-body-family);
 	font-size: var(--dm-text-size-base);
 	line-height: var(--dm-text-line-height-base);
@@ -222,13 +243,13 @@ input[type="reset"],
 .header-4 .main-header .site-header-cart.menu {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--dm-header-actions-gap);
 }
 
 .header-4 .col-full-nav>.site-header-cart.menu {
 	margin-left: auto;
 	justify-content: flex-end;
-	padding-left: 1rem;
+	padding-left: var(--dm-header-actions-offset-inline);
 }
 
 @media (min-width: 993px) {
@@ -260,7 +281,7 @@ input[type="reset"],
 	align-items: center;
 	justify-content: center;
 	gap: 0.35rem;
-	padding: 0.35rem 0.9rem;
+	padding: var(--dm-header-login-pad-y) var(--dm-header-login-pad-x);
 	border: 1.5px solid var(--dm-color-primary);
 	border-radius: 2rem;
 	color: var(--dm-color-primary);
@@ -298,7 +319,7 @@ body.header-4 #page .col-full-nav .site-header-cart.menu .dm-header-login>a:focu
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.35rem 0.9rem;
+	padding: var(--dm-header-login-pad-y) var(--dm-header-login-pad-x);
 	border: 1.5px solid var(--dm-color-primary) !important;
 	border-radius: 2rem !important;
 	background: transparent !important;
@@ -1051,19 +1072,21 @@ body.drawer-open {
 }
 
 .dm-archive__title {
+	font-family: var(--dm-font-heading-family);
 	font-size: clamp(1.5rem, 4vw, 2.25rem);
-	font-weight: 700;
+	font-weight: var(--dm-font-heading-weight);
 	color: var(--dm-color-text);
 	margin: 0 0 0.75rem;
-	line-height: 1.2;
+	line-height: var(--dm-font-heading-line-height);
 }
 
 .dm-archive__description {
+	font-family: var(--dm-font-body-family);
 	font-size: 1rem;
 	color: var(--dm-color-text-muted);
 	margin: 0 0 1.75rem;
 	max-width: 600px;
-	line-height: 1.6;
+	line-height: var(--dm-text-line-height-base);
 }
 
 .dm-archive__content {

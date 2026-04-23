@@ -224,7 +224,7 @@ $slides = [
 								<?php endif; ?>
 
 								<?php if ($slide_title) : ?>
-									<p class="dm-carousel__slide-title"><?php echo $slide_title; ?></p>
+									<h3 class="dm-carousel__slide-title"><?php echo $slide_title; ?></h3>
 								<?php endif; ?>
 
 								<?php if ($slide_text) : ?>
