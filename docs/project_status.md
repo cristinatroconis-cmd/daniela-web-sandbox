@@ -5,6 +5,12 @@
 **Producción (referencia):** https://danielamontespsic.com/ (rocket.net)  
 **Modo de trabajo:** staging-first — cambios técnicos en staging y promoción controlada a producción.
 
+**Regla transversal (obligatoria):** best practices first.
+1. Priorizar arquitectura reutilizable por componentes/tokens sobre parches por página.
+2. Evitar `!important` salvo bloqueo real de terceros documentado.
+3. Reducir especificidad y duplicación; mantener `style.css` como fuente única visual.
+4. Cerrar tareas solo con validación real en staging (`?dm_nocache=...`).
+
 ---
 
 ## 1) Contexto / objetivo de negocio

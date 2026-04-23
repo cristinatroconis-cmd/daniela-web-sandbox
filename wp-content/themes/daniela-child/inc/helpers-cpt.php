@@ -900,7 +900,7 @@ function dm_reorder_product_catalog_metaboxes()
 function dm_cpt_editorial_fields_config()
 {
 	return [
-		'_dm_single_hero_image_url'        => ['label' => __('Imagen hero del single', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona una imagen desde medios. Si la dejas vacía, se usará la imagen del producto o el fallback disponible.', 'daniela-child')],
+		'_dm_single_hero_image_url'        => ['label' => __('Imagen hero del single', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona una imagen desde medios. Imagen vertical `1600x900px` o `1280x720px`.', 'daniela-child')],
 		'_dm_editorial_hero_kicker'        => ['label' => __('Texto superior del hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Aprende a regular tu mente y tu cuerpo desde la raíz'],
 		'_dm_editorial_hero_intro'         => ['label' => __('Bajada del hero', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Deja de luchar con...', 'help' => __('Texto breve de 1–3 líneas para explicar el beneficio principal.', 'daniela-child')],
 		'_dm_editorial_hero_button_label'  => ['label' => __('Texto botón hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito'],

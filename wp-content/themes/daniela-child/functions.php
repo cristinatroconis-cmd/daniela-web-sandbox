@@ -34,7 +34,7 @@ require_once __DIR__ . '/inc/sync-tags.php'; // Sincronización Woo product_tag 
  *
  * Desactivado a propósito: la sección Home "¿Qué necesitas?" ya NO se gestiona
  * desde el Customizer/Kirki. El contenido se define en el template y el diseño
- * se controla en: assets/css/home-necesitas.css
+ * se controla en: style.css
  */
 // require_once __DIR__ . '/inc/customizer-home-necesitas.php';
 

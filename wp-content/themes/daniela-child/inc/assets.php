@@ -40,7 +40,7 @@ add_action('wp_enqueue_scripts', function () {
 add_action('wp_enqueue_scripts', function () {
 	wp_dequeue_style('shoptimizer-child-style');
 	wp_deregister_style('shoptimizer-child-style');
-}, 21);
+}, 999);
 
 /**
  * Enqueue scripts/estilos específicos por shortcode/página.
@@ -49,20 +49,12 @@ add_action('wp_enqueue_scripts', function () {
 	global $post;
 	$post_obj = is_a($post, 'WP_Post') ? $post : null;
 
-	// Home sección "¿Qué necesitas?" (single source of truth: assets/css/home-necesitas.css).
+	// Home sección "¿Qué necesitas?".
 	if (
 		is_front_page() ||
 		($post_obj && has_shortcode($post_obj->post_content, 'dm_home_necesitas')) ||
 		($post_obj && has_shortcode($post_obj->post_content, 'dm_temas_hub'))
 	) {
-		$css_file = get_stylesheet_directory() . '/assets/css/home-necesitas.css';
-		wp_enqueue_style(
-			'dm-home-necesitas',
-			get_stylesheet_directory_uri() . '/assets/css/home-necesitas.css',
-			array(),
-			file_exists($css_file) ? (string) filemtime($css_file) : '1.0.0'
-		);
-
 		$js_carousel = get_stylesheet_directory() . '/assets/js/home-necesitas-carousel.js';
 		wp_enqueue_script(
 			'dm-home-necesitas-carousel',
