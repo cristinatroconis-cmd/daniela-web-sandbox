@@ -74,6 +74,85 @@
 		}, 2200 );
 	}
 
+	function isHeader4MobileMenuContext() {
+		return window.matchMedia( '(max-width: 992px)' ).matches && document.body.classList.contains( 'header-4' );
+	}
+
+	function setMobileMenuOpen( shouldOpen ) {
+		var body = document.body;
+		var menuToggle = document.querySelector( '.menu-toggle' );
+
+		if ( ! body ) {
+			return;
+		}
+
+		body.classList.toggle( 'mobile-toggled', !! shouldOpen );
+
+		if ( menuToggle ) {
+			menuToggle.setAttribute( 'aria-expanded', shouldOpen ? 'true' : 'false' );
+		}
+	}
+
+	function initMobileHeaderMenuFallback() {
+		document.addEventListener( 'click', function ( event ) {
+			var toggle = event.target.closest( '.menu-toggle' );
+
+			if ( ! toggle || ! isHeader4MobileMenuContext() ) {
+				return;
+			}
+
+			event.preventDefault();
+			event.stopPropagation();
+			if ( typeof event.stopImmediatePropagation === 'function' ) {
+				event.stopImmediatePropagation();
+			}
+
+			setMobileMenuOpen( ! document.body.classList.contains( 'mobile-toggled' ) );
+		}, true );
+
+		document.addEventListener( 'click', function ( event ) {
+			var caret = event.target;
+			
+			// Check if clicked element is the caret or is inside the caret
+			while ( caret && caret !== document ) {
+				if ( caret.classList && caret.classList.contains( 'caret' ) ) {
+					break;
+				}
+				caret = caret.parentElement;
+			}
+
+			if ( ! caret || ! caret.classList.contains( 'caret' ) ) {
+				return;
+			}
+
+			var parentLi = caret.closest( '.menu-item-has-children' );
+			if ( parentLi ) {
+				event.preventDefault();
+				event.stopPropagation();
+				if ( typeof event.stopImmediatePropagation === 'function' ) {
+					event.stopImmediatePropagation();
+				}
+				parentLi.classList.toggle( 'expanded' );
+			}
+		}, true );
+
+		document.addEventListener( 'click', function ( event ) {
+			var clickInNav = event.target.closest( '#site-navigation' );
+			var clickOnToggle = event.target.closest( '.menu-toggle' );
+			var clickInNavLayer = event.target.closest( '.col-full-nav' );
+
+			if ( ! isHeader4MobileMenuContext() || ! document.body.classList.contains( 'mobile-toggled' ) ) {
+				return;
+			}
+
+			if ( clickInNav || clickOnToggle || ! clickInNavLayer ) {
+				return;
+			}
+
+			setMobileMenuOpen( false );
+		}, true );
+	}
+
 	function init() {
 		$drawer  = $( '#dm-cart-drawer' );
 		$overlay = $( '#dm-cart-drawer-overlay' );
@@ -86,8 +165,13 @@
 		$overlay.on( 'click', closeDrawer );
 		$close.on( 'click', closeDrawer );
 		$( '#dm-cart-drawer-continue' ).on( 'click', closeDrawer );
+		initMobileHeaderMenuFallback();
 
 		$( document ).on( 'keydown', function ( e ) {
+			if ( ( e.key === 'Escape' || e.key === 'Esc' ) && document.body.classList.contains( 'mobile-toggled' ) ) {
+				setMobileMenuOpen( false );
+			}
+
 			if ( ( e.key === 'Escape' || e.key === 'Esc' ) && isOpen ) {
 				closeDrawer();
 			}

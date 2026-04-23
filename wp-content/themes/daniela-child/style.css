@@ -62,6 +62,8 @@ Text Domain: daniela-child
 	--dm-color-primary-soft-border: rgba(124, 107, 142, 0.18);
 	--dm-color-accent-soft: rgba(86, 182, 174, 0.12);
 	--dm-color-accent-soft-border: rgba(86, 182, 174, 0.28);
+	--dm-color-success-soft: #e5f5e0;
+	--dm-color-success: #2e7d32;
 	--dm-overlay-scrim: rgba(0, 0, 0, 0.45);
 	--dm-elevation-drawer: -4px 0 24px rgba(0, 0, 0, 0.10);
 	--dm-elevation-popup: 0 8px 40px rgba(0, 0, 0, 0.18);
@@ -128,6 +130,7 @@ Text Domain: daniela-child
 	--dm-necesitas-border: var(--dm-color-border);
 	--dm-necesitas-shadow: var(--dm-shadow);
 	--dm-necesitas-transition: 200ms ease;
+	--dm-necesitas-pill-bg: rgba(255, 255, 255, 0.38);
 
 	/* WooCommerce */
 	--dm-woo-section-pad-y: var(--dm-necesitas-pad-y);
@@ -142,6 +145,12 @@ Text Domain: daniela-child
 	--dm-woo-note-bg: var(--dm-color-primary-soft);
 	--dm-woo-error: var(--dm-color-error);
 	--dm-woo-product-border: var(--dm-color-primary-soft-border);
+	--dm-woo-grid-min-col: 280px;
+	--dm-woo-grid-gap: 1.5rem;
+	--dm-woo-card-gap: 0.75rem;
+	--dm-woo-card-header-gap: 0.65rem;
+	--dm-woo-btn-line-height: 1.2;
+	--dm-woo-btn-transition: background var(--dm-transition), color var(--dm-transition), border-color var(--dm-transition);
 	--dm-drawer-width: 400px;
 	--dm-drawer-overlay-bg: var(--dm-overlay-scrim);
 	--dm-drawer-shadow: var(--dm-elevation-drawer);
@@ -150,6 +159,18 @@ Text Domain: daniela-child
 	--dm-drawer-accent-border: var(--dm-color-accent-soft-border);
 	--dm-drawer-thumb-size: 88px;
 	--dm-popup-shadow: var(--dm-elevation-popup);
+
+	/* Home carousel */
+	--dm-carousel-slide-bg-fallback: #f4f0eb;
+	--dm-carousel-slide-fg: #ffffff;
+	--dm-carousel-hero-bg: rgba(255, 255, 255, 0.28);
+	--dm-carousel-btn-border: rgba(255, 255, 255, 0.55);
+	--dm-carousel-btn-bg: rgba(0, 0, 0, 0.22);
+	--dm-carousel-btn-bg-hover: rgba(0, 0, 0, 0.3);
+	--dm-carousel-btn-border-hover: rgba(255, 255, 255, 0.75);
+	--dm-carousel-dot-bg: #ffffff;
+	--dm-carousel-dot-opacity: 0.35;
+	--dm-carousel-dot-opacity-active: 0.95;
 
 	/* Layer scale */
 	--dm-layer-base: 1;
@@ -431,6 +452,118 @@ body.header-4 #page .col-full-nav .site-header-cart.menu .dm-header-login>a:focu
 	pointer-events: none !important;
 }
 
+@media (max-width: 992px) {
+	.header-4 .col-full-nav {
+		position: fixed;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		width: min(88vw, 360px);
+		z-index: var(--dm-layer-overlay);
+		pointer-events: none;
+		overflow: hidden;
+		display: none;
+		flex-direction: column;
+	}
+
+	.header-4 .col-full-nav::before {
+		content: "";
+		position: fixed;
+		inset: 0;
+		background: var(--dm-overlay-scrim);
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity var(--dm-transition);
+	}
+
+	body.header-4.mobile-toggled .col-full-nav {
+		display: flex;
+		pointer-events: auto;
+	}
+
+	body.header-4.mobile-toggled .col-full-nav::before {
+		opacity: 1;
+		visibility: visible;
+	}
+
+	.header-4 .col-full-nav>.main-navigation {
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 100dvh;
+		width: min(88vw, 360px);
+		max-width: 100%;
+		margin: 0;
+		padding: 5rem 1rem 1.25rem;
+		background: var(--dm-color-bg-card);
+		box-shadow: var(--dm-elevation-drawer);
+		overflow-y: auto;
+		transform: translateX(-100%) !important;
+		transition: transform var(--dm-transition);
+		pointer-events: none;
+		visibility: hidden;
+		z-index: var(--dm-layer-drawer);
+	}
+
+	body.header-4.mobile-toggled .col-full-nav>.main-navigation {
+		transform: translateX(0) !important;
+		pointer-events: auto;
+		visibility: visible;
+	}
+
+	.header-4 .col-full-nav>.main-navigation #menu-primary-menu {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.2rem;
+	}
+
+	.header-4 .col-full-nav>.main-navigation #menu-primary-menu>li>a.main-menu-link {
+		display: block;
+		white-space: normal;
+		padding: 0.75rem 0.25rem;
+		font-size: 1rem;
+	}
+
+	.header-4 .col-full-nav>.main-navigation .sub-menu-wrapper,
+	.header-4 .col-full-nav>.main-navigation .sub-menu-wrapper>.container>ul.sub-menu {
+		position: static !important;
+		top: auto !important;
+		left: auto !important;
+		right: auto !important;
+		width: 100%;
+		transform: none;
+		box-shadow: none;
+		display: none;
+		max-height: 0;
+		overflow: hidden;
+		opacity: 0;
+		visibility: hidden;
+		transition: max-height 0.3s ease, opacity 0.3s ease;
+	}
+
+	.header-4 .col-full-nav>.main-navigation .menu-item-has-children.expanded .sub-menu-wrapper,
+	.header-4 .col-full-nav>.main-navigation .menu-item-has-children.expanded .sub-menu-wrapper>.container>ul.sub-menu {
+		display: block !important;
+		position: static !important;
+		left: auto !important;
+		top: auto !important;
+		max-height: 500px;
+		opacity: 1;
+		visibility: visible;
+	}
+
+	body.header-4:not(.mobile-toggled) .col-full-nav>.main-navigation .sub-menu-wrapper,
+	body.header-4:not(.mobile-toggled) .col-full-nav>.main-navigation .sub-menu-wrapper>.container>ul.sub-menu {
+		display: none;
+	}
+
+	body.header-4:not(.mobile-toggled) .col-full-nav>.main-navigation a,
+	body.header-4:not(.mobile-toggled) .col-full-nav>.main-navigation button {
+		pointer-events: none;
+	}
+}
+
 body.drawer-open {
 	overflow: auto;
 }
@@ -569,8 +702,8 @@ body.drawer-open {
 .dm-topic-card--gratis::before {
 	content: "Gratis";
 	display: inline-block;
-	background: #e5f5e0;
-	color: #2e7d32;
+	background: var(--dm-color-success-soft);
+	color: var(--dm-color-success);
 	font-size: 0.7rem;
 	font-weight: 700;
 	padding: 0.2rem 0.6rem;
@@ -763,8 +896,8 @@ body.drawer-open {
 	text-transform: uppercase;
 	padding: 0.15rem 0.55rem;
 	border-radius: 999px;
-	background: #e5f5e0;
-	color: #2e7d32;
+	background: var(--dm-color-success-soft);
+	color: var(--dm-color-success);
 }
 
 /* ==========================================================================
@@ -1882,25 +2015,25 @@ body.dm-cart-drawer-open {
 	border: none;
 	font-size: 1.1rem;
 	cursor: pointer;
-	color: var(--dm-color-text-muted, #888);
+	color: var(--dm-color-text-muted);
 	line-height: 1;
 	padding: 0.25rem;
 }
 
 .dm-cart-popup__close:hover {
-	color: var(--dm-color-text, #222);
+	color: var(--dm-color-text);
 }
 
 .dm-cart-popup__icon {
 	font-size: 2.5rem;
-	color: var(--dm-color-primary, #5b4fcf);
+	color: var(--dm-color-primary);
 	margin-bottom: 0.5rem;
 }
 
 .dm-cart-popup__message {
 	font-size: 1rem;
 	font-weight: 600;
-	color: var(--dm-color-text, #222);
+	color: var(--dm-color-text);
 	margin: 0 0 1.5rem;
 	line-height: 1.4;
 }
@@ -2028,11 +2161,11 @@ body.woocommerce-page .site-main {
 :is(.woocommerce, .woocommerce-page) .columns-3 ul.products,
 :is(.woocommerce, .woocommerce-page) ul.products {
 	display: grid !important;
-	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(var(--dm-woo-grid-min-col), 1fr));
 	list-style: none;
 	margin: 0;
 	padding: 0;
-	gap: 1.5rem;
+	gap: var(--dm-woo-grid-gap);
 }
 
 :is(.woocommerce, .woocommerce-page) .columns-3 ul.products::before,
@@ -2336,7 +2469,7 @@ body.woocommerce-account .woocommerce-MyAccount-navigation a:focus-visible {
 	padding: var(--dm-woo-box-pad);
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
+	gap: var(--dm-woo-card-gap);
 	transition: box-shadow var(--dm-transition), transform var(--dm-transition);
 }
 
@@ -2357,7 +2490,7 @@ body.woocommerce-account .woocommerce-MyAccount-navigation a:focus-visible {
 :is(.woocommerce, .woocommerce-page) ul.products li.product .woocommerce-card__header {
 	display: flex;
 	flex-direction: column;
-	gap: 0.65rem;
+	gap: var(--dm-woo-card-header-gap);
 	flex: 1;
 }
 
@@ -2403,27 +2536,14 @@ body.woocommerce-account .woocommerce-MyAccount-navigation a:focus-visible {
 	font-family: var(--dm-font-button-family);
 	font-size: var(--dm-btn-font-size);
 	font-weight: var(--dm-font-button-weight);
-	line-height: 1.2 !important;
+	line-height: var(--dm-woo-btn-line-height) !important;
 	text-decoration: none;
 	text-transform: none;
 	cursor: pointer;
-	transition: background var(--dm-transition), color var(--dm-transition), border-color var(--dm-transition);
+	transition: var(--dm-woo-btn-transition);
 }
 
-:is(.woocommerce, .woocommerce-page) ul.products li.product a.button,
-:is(.woocommerce, .woocommerce-page) ul.products li.product a.button.add_to_cart_button,
-:is(.woocommerce, .woocommerce-page) ul.products li.product a.button.ajax_add_to_cart {
-	width: auto !important;
-	height: auto !important;
-	min-height: 0 !important;
-	padding: var(--dm-btn-padding-y) var(--dm-btn-padding-x) !important;
-	margin-bottom: 0 !important;
-	line-height: 1.2 !important;
-	transform: none !important;
-	transition: background var(--dm-transition), color var(--dm-transition), border-color var(--dm-transition) !important;
-}
-
-/* Shoptimizer oculta CTA del loop con absolute+opacity; en DM deben quedar siempre visibles. */
+/* Loop CTA contract: keep native Woo markup but force stable DM button behavior. */
 :is(.woocommerce, .woocommerce-page) ul.products li.product a.button,
 :is(.woocommerce, .woocommerce-page) ul.products li.product a.button.add_to_cart_button,
 :is(.woocommerce, .woocommerce-page) ul.products li.product a.button.ajax_add_to_cart {
@@ -2433,9 +2553,17 @@ body.woocommerce-account .woocommerce-MyAccount-navigation a:focus-visible {
 	right: auto;
 	bottom: auto;
 	left: auto;
+	display: inline-flex;
+	width: auto !important;
+	height: auto !important;
+	min-height: 0 !important;
+	padding: var(--dm-btn-padding-y) var(--dm-btn-padding-x) !important;
+	margin-bottom: 0 !important;
+	line-height: var(--dm-woo-btn-line-height) !important;
 	opacity: 1 !important;
 	visibility: visible !important;
-	transform: none;
+	transform: none !important;
+	transition: var(--dm-woo-btn-transition) !important;
 }
 
 :is(.woocommerce, .woocommerce-page) ul.products li.product a.button,
@@ -2456,8 +2584,6 @@ body.woocommerce-account .woocommerce-MyAccount-navigation a:focus-visible {
 	box-shadow: none !important;
 }
 
-:is(.woocommerce, .woocommerce-page) ul.products li.product a.button:hover,
-:is(.woocommerce, .woocommerce-page) ul.products li.product a.button:focus-visible,
 :is(.woocommerce, .woocommerce-page) .return-to-shop .button:hover,
 :is(.woocommerce, .woocommerce-page) .return-to-shop .button:focus-visible,
 :is(.woocommerce, .woocommerce-page) .return-to-shop .wc-backward:hover,
@@ -2649,7 +2775,7 @@ body.woocommerce-checkout .dm-newsletter-optin span {
 	align-self: flex-start;
 	padding: 0.35rem 0.8rem;
 	border-radius: var(--dm-radius);
-	background: rgba(255, 255, 255, 0.38);
+	background: var(--dm-necesitas-pill-bg);
 	font-size: 0.78rem;
 	font-weight: 700;
 	letter-spacing: 0.12em;
@@ -2702,7 +2828,7 @@ body.woocommerce-checkout .dm-newsletter-optin span {
 	align-self: flex-start;
 	padding: 0.35rem 0.8rem;
 	border-radius: var(--dm-radius);
-	background: rgba(255, 255, 255, 0.38);
+	background: var(--dm-necesitas-pill-bg);
 	font-size: 0.78rem;
 	font-weight: 700;
 	letter-spacing: 0.12em;
@@ -2757,7 +2883,7 @@ body.woocommerce-checkout .dm-newsletter-optin span {
 	box-sizing: border-box;
 	text-decoration: none;
 	color: inherit;
-	background: var(--dm-slide-bg, #f4f0eb);
+	background: var(--dm-slide-bg, var(--dm-carousel-slide-bg-fallback));
 	position: relative;
 	overflow: hidden;
 	transition: transform var(--dm-necesitas-transition);
@@ -2772,7 +2898,7 @@ body.woocommerce-checkout .dm-newsletter-optin span {
 	overflow: hidden;
 	padding: clamp(10px, 1.4vw, 16px);
 	border-radius: calc(var(--dm-necesitas-radius, 16px) - 6px);
-	background: rgba(255, 255, 255, 0.28);
+	background: var(--dm-carousel-hero-bg);
 }
 
 .dm-carousel__slide-hero-img {
@@ -2805,7 +2931,7 @@ body.woocommerce-checkout .dm-newsletter-optin span {
 .dm-carousel__slide-body {
 	position: relative;
 	z-index: var(--dm-layer-base);
-	color: #fff;
+	color: var(--dm-carousel-slide-fg);
 }
 
 .dm-carousel__slide-kicker {
@@ -2863,10 +2989,10 @@ body.woocommerce-checkout .dm-newsletter-optin span {
 	align-items: center;
 	justify-content: center;
 	border-radius: 999px;
-	border: 1px solid rgba(255, 255, 255, 0.55);
-	background: rgba(0, 0, 0, 0.22);
+	border: 1px solid var(--dm-carousel-btn-border);
+	background: var(--dm-carousel-btn-bg);
 	cursor: pointer;
-	color: #fff;
+	color: var(--dm-carousel-slide-fg);
 	transition: transform var(--dm-necesitas-transition),
 		background var(--dm-necesitas-transition),
 		border-color var(--dm-necesitas-transition);
@@ -2874,8 +3000,8 @@ body.woocommerce-checkout .dm-newsletter-optin span {
 
 .dm-carousel__btn:hover {
 	transform: translateY(-1px);
-	background: rgba(0, 0, 0, 0.3);
-	border-color: rgba(255, 255, 255, 0.75);
+	background: var(--dm-carousel-btn-bg-hover);
+	border-color: var(--dm-carousel-btn-border-hover);
 }
 
 .dm-carousel__btn svg {
@@ -2905,14 +3031,14 @@ body.woocommerce-checkout .dm-newsletter-optin span {
 	border: none;
 	padding: 0;
 	cursor: pointer;
-	background: #fff;
-	opacity: 0.35;
+	background: var(--dm-carousel-dot-bg);
+	opacity: var(--dm-carousel-dot-opacity);
 	transition: opacity var(--dm-necesitas-transition),
 		transform var(--dm-necesitas-transition);
 }
 
 .dm-carousel__dot.is-active {
-	opacity: 0.95;
+	opacity: var(--dm-carousel-dot-opacity-active);
 	transform: scale(1.25);
 }
 
