@@ -41,6 +41,7 @@ require_once __DIR__ . '/inc/sync-tags.php'; // Sincronización Woo product_tag 
 // Email customization (design tokens + WooCommerce email styles/CTA).
 require_once __DIR__ . '/inc/email-tokens.php';
 require_once __DIR__ . '/inc/woocommerce-emails.php';
+require_once __DIR__ . '/inc/email-settings.php';
 
 // Feature modules.
 require_once __DIR__ . '/inc/dm-products.php';

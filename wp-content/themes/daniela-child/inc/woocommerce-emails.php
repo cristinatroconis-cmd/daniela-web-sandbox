@@ -43,6 +43,25 @@ function dm_migrate_legacy_download_email_options(): void
 }
 
 /**
+ * Migra opciones legacy de newsletter en emails.
+ */
+function dm_migrate_legacy_newsletter_email_options(): void
+{
+	$legacy_enabled = get_option('dm_email_newsletter_enabled', null);
+	$new_enabled    = get_option('dm_newsletter_email_enabled', null);
+
+	if (null === $new_enabled && null !== $legacy_enabled) {
+		update_option('dm_newsletter_email_enabled', $legacy_enabled);
+	}
+
+	if (null !== $legacy_enabled) {
+		delete_option('dm_email_newsletter_enabled');
+	}
+}
+
+add_action('init', 'dm_migrate_legacy_newsletter_email_options', 5);
+
+/**
  * Establece valores por defecto para las opciones visuales de los emails de
  * WooCommerce solo si todavía no existen (respeta lo que el admin haya
  * configurado desde WP Admin → WooCommerce → Ajustes → Correos electrónicos).
@@ -57,6 +76,11 @@ function dm_set_woo_email_defaults(): void
 		'woocommerce_email_base_color'             => $tokens['color_primary'],
 		'woocommerce_email_text_color'             => $tokens['color_text'],
 		'woocommerce_email_footer_text'            => 'Daniela Montes Psicóloga · {site_url}',
+		// Newsletter defaults (section 5).
+		'dm_newsletter_email_enabled'              => '1',
+		'dm_newsletter_email_title'                => __('¿Quieres recibir más recursos?', 'daniela-child'),
+		'dm_newsletter_email_description'          => __('Suscríbete a mi newsletter y recibe actualizaciones, tips exclusivos y nuevos recursos directamente en tu inbox.', 'daniela-child'),
+		'dm_newsletter_email_button_text'          => __('Suscribirme', 'daniela-child'),
 	];
 
 	foreach ($defaults as $option => $value) {
@@ -184,6 +208,42 @@ h2 {
 	margin-top: 10px !important;
 	color: {$t['color_text_muted']} !important;
 	font-size: 12px !important;
+}
+
+/* Newsletter block styles */
+.dm-email-newsletter {
+	margin: 24px 0 !important;
+	text-align: center !important;
+	background-color: {$t['color_primary']} !important;
+	border-radius: {$t['radius']} !important;
+	padding: 24px 48px !important;
+}
+.dm-email-newsletter__title {
+	margin: 0 0 12px !important;
+	color: #ffffff !important;
+	font-family: Georgia, 'Times New Roman', serif !important;
+	font-size: 18px !important;
+	font-weight: 400 !important;
+	letter-spacing: 0.01em !important;
+}
+.dm-email-newsletter__description {
+	margin: 0 0 16px !important;
+	color: rgba(255, 255, 255, 0.95) !important;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+	font-size: 14px !important;
+	line-height: 1.5 !important;
+}
+.dm-email-newsletter__link {
+	display: inline-block !important;
+	background-color: {$t['color_accent']} !important;
+	color: #ffffff !important;
+	text-decoration: none !important;
+	padding: 12px 28px !important;
+	border-radius: {$t['radius']} !important;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+	font-size: 14px !important;
+	font-weight: 700 !important;
+	letter-spacing: 0.02em !important;
 }
 /* ─────────────────────────────────────────────────────────────────────────── */
 ";
@@ -462,6 +522,115 @@ function dm_mark_customer_completed_email_source(int $order_id, string $source):
 	}
 
 	set_transient('dm_completed_email_source_' . $order_id, $source, 10 * MINUTE_IN_SECONDS);
+}
+
+// =============================================================================
+// 5) NEWSLETTER BLOCK — INYECTABLE EN CUSTOMER COMPLETED ORDER
+// =============================================================================
+
+/**
+ * Inyecta el bloque de newsletter en TODOS los emails de cliente.
+ * Se renderiza después del contenido principal (priority 21).
+ *
+ * Aparece en:
+ *   - customer-completed-order
+ *   - customer-invoice
+ *   - customer-on-hold-order
+ *   - customer-cancelled-order
+ *   - customer-refunded-order
+ *   - customer-note
+ *
+ * @param  WC_Order $order         Objeto pedido.
+ * @param  bool     $sent_to_admin Si es para admin.
+ * @param  bool     $plain_text    Si es texto plano.
+ * @param  WC_Email $email         Objeto email.
+ */
+add_action(
+	'woocommerce_email_after_order_table',
+	'dm_email_newsletter_block',
+	21,
+	4
+);
+function dm_email_newsletter_block(WC_Order $order, bool $sent_to_admin, bool $plain_text, WC_Email $email): void
+{
+	// No mostrar en emails al admin ni en versión texto plano.
+	if ($sent_to_admin || $plain_text) {
+		return;
+	}
+
+	// Verificar que es un email de cliente (class name empieza con WC_Email_Customer_).
+	$email_class = get_class($email);
+	if (false === strpos($email_class, 'WC_Email_Customer_')) {
+		return;
+	}
+
+	$is_enabled = (bool) get_option('dm_newsletter_email_enabled', true);
+	if (! $is_enabled) {
+		return;
+	}
+
+	dm_render_email_newsletter_block($order);
+}
+
+/**
+ * Renderiza el bloque de newsletter en el email de pedido completado.
+ * Ofrece suscripción con link directo a MailerLite (o formulario embebido).
+ *
+ * @param WC_Order $order Objeto pedido.
+ */
+function dm_render_email_newsletter_block(WC_Order $order): void
+{
+	$t = dm_get_email_tokens();
+
+	$title       = (string) get_option('dm_newsletter_email_title', __('¿Quieres recibir más recursos?', 'daniela-child'));
+	$description = (string) get_option('dm_newsletter_email_description', __('Suscríbete a mi newsletter y recibe actualizaciones, tips exclusivos y nuevos recursos directamente en tu inbox.', 'daniela-child'));
+	$button_text = (string) get_option('dm_newsletter_email_button_text', __('Suscribirme', 'daniela-child'));
+	$link_url    = (string) get_option('dm_newsletter_email_link_url', '');
+
+	// Si no hay URL configurada, usa el formulario de suscripción del tema.
+	if (empty($link_url)) {
+		$link_url = home_url('#dm-newsletter');
+	}
+
+	// Agregar email y nombre como parámetros si está usando MailerLite embed.
+	$customer_email = $order->get_billing_email();
+	$first_name     = $order->get_billing_first_name();
+
+	if (! empty($customer_email) && strpos($link_url, 'mailerlite.com') !== false) {
+		$separator = strpos($link_url, '?') !== false ? '&' : '?';
+		$link_url  = $link_url . $separator . 'email=' . rawurlencode($customer_email);
+
+		if (! empty($first_name)) {
+			$link_url .= '&name=' . rawurlencode($first_name);
+		}
+	}
+
+?>
+	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;margin-top:24px;">
+		<tr>
+			<td style="padding:0;text-align:center;">
+				<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:<?php echo esc_attr($t['color_primary']); ?>;border-radius:<?php echo esc_attr($t['radius']); ?>;overflow:hidden;margin:0 auto;">
+					<tr>
+						<td style="padding:24px 48px;text-align:center;">
+							<h2 style="margin:0 0 12px 0;color:#ffffff;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;letter-spacing:0.01em;">
+								<?php echo wp_kses_post($title); ?>
+							</h2>
+							<p style="margin:0 0 16px 0;color:rgba(255,255,255,0.95);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.5;">
+								<?php echo wp_kses_post($description); ?>
+							</p>
+							<?php if (! empty($link_url)) : ?>
+								<a href="<?php echo esc_url($link_url); ?>"
+									style="display:inline-block;background-color:<?php echo esc_attr($t['color_accent']); ?>;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:<?php echo esc_attr($t['radius']); ?>;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.02em;">
+									<?php echo esc_html($button_text); ?>
+								</a>
+							<?php endif; ?>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+<?php
 }
 
 /**
