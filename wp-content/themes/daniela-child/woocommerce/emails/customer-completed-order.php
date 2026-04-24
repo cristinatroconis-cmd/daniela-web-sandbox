@@ -34,15 +34,16 @@ $first_name = trim((string) $order->get_billing_first_name());
 <p style="margin:0 0 12px;font-family:'Open Sans',Arial,sans-serif;font-size:16px;line-height:1.7;color:#2d2d2d;">
 	<?php echo esc_html($first_name ? sprintf(__('Hola %s,', 'daniela-child'), $first_name) : __('Hola,', 'daniela-child')); ?>
 </p>
-<p style="margin:0;font-family:'Open Sans',Arial,sans-serif;font-size:15px;line-height:1.8;color:#6b6b6b;">
-	<?php esc_html_e('Tu recurso ya esta preparado. Te dejo todo listo para que lo descargues de forma simple y sin pasos de mas.', 'daniela-child'); ?>
-</p>
 
 <?php
 if (! $sent_to_admin && ! $plain_text) {
-	dm_render_cta_block($order);
-	dm_render_completed_order_summary($order);
-	dm_render_newsletter_block($order);
+	dm_render_cta_block($order, $email);
+
+	if (! empty($additional_content)) {
+		echo wp_kses_post(wpautop(wptexturize($additional_content)));
+	}
+
+	dm_render_newsletter_block($order, $email);
 }
 
 /**

@@ -251,46 +251,48 @@ h2 {
 	return $css . $custom;
 }
 
-// =============================================================================
-// 3) SUBJECT + HEADING PERSONALIZADOS
-// =============================================================================
-
 /**
- * Subject del email de pedido completado.
+ * Lee una opción DM desde el email activo y hace fallback a la opción global.
  *
- * @param  string   $subject Asunto original.
- * @param  WC_Order $order   Objeto pedido.
- * @param  WC_Email $email   Objeto email.
+ * @param WC_Email|null $email              Objeto email activo.
+ * @param string        $key                Clave de la opción del email.
+ * @param string        $legacy_option_name Opción global legacy.
+ * @param string        $default            Valor por defecto.
  * @return string
  */
-add_filter(
-	'woocommerce_email_subject_customer_completed_order',
-	'dm_email_subject_completed',
-	20,
-	3
-);
-function dm_email_subject_completed(string $subject, WC_Order $order, WC_Email $email): string
-{ // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	return __('Tu recurso ya esta listo para ti', 'daniela-child');
+function dm_get_email_option_value(?WC_Email $email, string $key, string $legacy_option_name, string $default = ''): string
+{
+	if ($email instanceof WC_Email) {
+		$value = $email->get_option($key, null);
+		if (null !== $value) {
+			return is_scalar($value) ? (string) $value : '';
+		}
+	}
+
+	return (string) get_option($legacy_option_name, $default);
 }
 
 /**
- * Heading del email de pedido completado.
+ * Lee una opción booleana DM desde el email activo y hace fallback a la opción global.
  *
- * @param  string   $heading Encabezado original.
- * @param  WC_Order $order   Objeto pedido.
- * @param  WC_Email $email   Objeto email.
- * @return string
+ * @param WC_Email|null $email              Objeto email activo.
+ * @param string        $key                Clave de la opción del email.
+ * @param string        $legacy_option_name Opción global legacy.
+ * @param bool          $default            Valor por defecto.
+ * @return bool
  */
-add_filter(
-	'woocommerce_email_heading_customer_completed_order',
-	'dm_email_heading_completed',
-	20,
-	3
-);
-function dm_email_heading_completed(string $heading, WC_Order $order, WC_Email $email): string
-{ // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-	return __('Tu recurso ya esta disponible', 'daniela-child');
+function dm_get_email_option_bool(?WC_Email $email, string $key, string $legacy_option_name, bool $default = true): bool
+{
+	if ($email instanceof WC_Email) {
+		$value = $email->get_option($key, '');
+		if ($value !== '') {
+			return 'yes' === $value || '1' === $value;
+		}
+	}
+
+	$legacy_value = get_option($legacy_option_name, $default ? 'yes' : 'no');
+
+	return 'yes' === $legacy_value || '1' === $legacy_value || true === $legacy_value;
 }
 
 // =============================================================================
@@ -306,66 +308,44 @@ function dm_email_heading_completed(string $heading, WC_Order $order, WC_Email $
  *
  * @param  WC_Order $order  Objeto pedido.
  */
-function dm_render_cta_block(WC_Order $order): void
+function dm_render_cta_block(WC_Order $order, ?WC_Email $email = null): void
 {
 	// Recopilar links de descarga asociados al pedido.
 	$download_links = dm_get_order_download_links($order);
+	if (empty($download_links)) {
+		return;
+	}
 
-	$order_view_url = $order->get_view_order_url();
 	$t              = dm_get_email_tokens();
-	$cta_title      = (string) get_option('dm_downloads_email_cta_title', __('⬇️ Accede a tu descarga', 'daniela-child'));
-	$cta_note       = (string) get_option('dm_downloads_email_cta_note', __('Los enlaces de descarga tienen un límite de usos y tiempo de validez.', 'daniela-child'));
-	$button_label   = (string) get_option('dm_downloads_email_button_text', __('Descargar recurso', 'daniela-child'));
+	$cta_note       = dm_get_email_option_value($email, 'dm_downloads_email_cta_note', 'dm_downloads_email_cta_note', __('Los enlaces de descarga tienen un límite de usos y tiempo de validez.', 'daniela-child'));
+	$button_label   = dm_get_email_option_value($email, 'dm_downloads_email_button_text', 'dm_downloads_email_button_text', __('Descargar recurso', 'daniela-child'));
 
 ?>
-	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:24px 0 0;">
+	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:18px 0 0;">
 		<tr>
 			<td style="padding:0;">
-				<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:#f7f2ed;border:1px solid <?php echo esc_attr($t['color_border']); ?>;border-radius:<?php echo esc_attr($t['radius']); ?>;overflow:hidden;">
-					<tr>
-						<td style="padding:28px 32px;text-align:center;">
-							<?php if (! empty($download_links)) : ?>
-								<p style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;color:<?php echo esc_attr($t['color_primary']); ?>;font-weight:400;">
-									<?php echo esc_html($cta_title); ?>
-								</p>
-								<p style="margin:0 0 18px;font-family:'Open Sans',Arial,sans-serif;font-size:14px;line-height:1.6;color:<?php echo esc_attr($t['color_text_muted']); ?>;">
-									<?php esc_html_e('Todo esta listo. Puedes descargar tu recurso desde aqui cuando quieras.', 'daniela-child'); ?>
-								</p>
-								<?php foreach ($download_links as $dl) : ?>
-									<div style="margin-bottom:12px;">
-										<a href="<?php echo esc_url($dl['url']); ?>"
-											style="display:inline-block;background-color:<?php echo esc_attr($t['color_primary']); ?>;border:1.5px solid <?php echo esc_attr($t['color_primary']); ?>;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:0;line-height:1.2;">
-											<?php
-											if (false !== strpos($button_label, '%s')) {
-												/* translators: %s: product name */
-												printf(esc_html($button_label), esc_html($dl['name']));
-											} else {
-												echo esc_html($button_label);
-											}
-											?>
-										</a>
-									</div>
-									<p style="margin:0 0 14px;font-family:'Open Sans',Arial,sans-serif;font-size:13px;line-height:1.5;color:<?php echo esc_attr($t['color_text']); ?>;">
-										<?php echo esc_html($dl['name']); ?>
-									</p>
-								<?php endforeach; ?>
-								<span style="display:block;margin-top:6px;color:<?php echo esc_attr($t['color_text_muted']); ?>;font-family:'Open Sans',Arial,sans-serif;font-size:12px;line-height:1.5;">
-									<?php echo esc_html($cta_note); ?>
-								</span>
-							<?php endif; ?>
-
-							<?php if ($order_view_url) : ?>
-								<p style="margin:<?php echo empty($download_links) ? '0' : '16px'; ?> 0 0;font-family:'Open Sans',Arial,sans-serif;font-size:13px;line-height:1.6;color:<?php echo esc_attr($t['color_text_muted']); ?>;">
-									<?php esc_html_e('¿Necesitas acceder más tarde?', 'daniela-child'); ?>
-									<a href="<?php echo esc_url($order_view_url); ?>"
-										style="color:<?php echo esc_attr($t['color_primary']); ?>;text-decoration:underline;">
-										<?php esc_html_e('Ver detalles del pedido', 'daniela-child'); ?>
-									</a>
-								</p>
-							<?php endif; ?>
-						</td>
-					</tr>
-				</table>
+				<div style="text-align:center;">
+					<?php foreach ($download_links as $dl) : ?>
+						<div style="margin-bottom:10px;">
+							<a href="<?php echo esc_url($dl['url']); ?>"
+								style="display:inline-block;background-color:<?php echo esc_attr($t['color_primary']); ?>;border:1px solid <?php echo esc_attr($t['color_primary']); ?>;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.2;">
+								<?php
+								if (false !== strpos($button_label, '%s')) {
+									/* translators: %s: product name */
+									printf(esc_html($button_label), esc_html($dl['name']));
+								} else {
+									echo esc_html($button_label);
+								}
+								?>
+							</a>
+						</div>
+					<?php endforeach; ?>
+					<?php if ($cta_note !== '') : ?>
+						<p style="margin:8px 0 0;color:<?php echo esc_attr($t['color_text_muted']); ?>;font-family:'Open Sans',Arial,sans-serif;font-size:12px;line-height:1.5;">
+							<?php echo esc_html($cta_note); ?>
+						</p>
+					<?php endif; ?>
+				</div>
 			</td>
 		</tr>
 	</table>
@@ -568,32 +548,21 @@ function dm_mark_customer_completed_email_source(int $order_id, string $source):
  *
  * @param WC_Order $order Objeto pedido.
  */
-function dm_render_newsletter_block(WC_Order $order): void
+function dm_render_newsletter_block(WC_Order $order, ?WC_Email $email = null): void
 {
 	$t = dm_get_email_tokens();
 
-	$title       = (string) get_option('dm_newsletter_email_title', __('¿Quieres recibir más recursos?', 'daniela-child'));
-	$description = (string) get_option('dm_newsletter_email_description', __('Suscríbete a mi newsletter y recibe actualizaciones, tips exclusivos y nuevos recursos directamente en tu inbox.', 'daniela-child'));
-	$button_text = (string) get_option('dm_newsletter_email_button_text', __('Suscribirme', 'daniela-child'));
-	$link_url    = (string) get_option('dm_newsletter_email_link_url', '');
-
-	// Si no hay URL configurada, usa el formulario de suscripción del tema.
-	if (empty($link_url)) {
-		$link_url = home_url('#dm-newsletter');
+	$is_enabled = dm_get_email_option_bool($email, 'dm_newsletter_email_enabled', 'dm_newsletter_email_enabled', true);
+	if (! $is_enabled) {
+		return;
 	}
 
-	// Agregar email y nombre como parámetros si está usando MailerLite embed.
-	$customer_email = $order->get_billing_email();
-	$first_name     = $order->get_billing_first_name();
-
-	if (! empty($customer_email) && strpos($link_url, 'mailerlite.com') !== false) {
-		$separator = strpos($link_url, '?') !== false ? '&' : '?';
-		$link_url  = $link_url . $separator . 'email=' . rawurlencode($customer_email);
-
-		if (! empty($first_name)) {
-			$link_url .= '&name=' . rawurlencode($first_name);
-		}
-	}
+	$title       = dm_get_email_option_value($email, 'dm_newsletter_email_title', 'dm_newsletter_email_title', __('¿Quieres recibir más recursos?', 'daniela-child'));
+	$description = dm_get_email_option_value($email, 'dm_newsletter_email_description', 'dm_newsletter_email_description', __('Suscríbete a mi newsletter y recibe actualizaciones, tips exclusivos y nuevos recursos directamente en tu inbox.', 'daniela-child'));
+	$button_text = dm_get_email_option_value($email, 'dm_newsletter_email_button_text', 'dm_newsletter_email_button_text', __('Suscribirme', 'daniela-child'));
+	$link_url    = function_exists('dm_newsletter_get_email_subscribe_url')
+		? dm_newsletter_get_email_subscribe_url($order)
+		: home_url('#dm-newsletter');
 
 ?>
 	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;margin-top:24px;">

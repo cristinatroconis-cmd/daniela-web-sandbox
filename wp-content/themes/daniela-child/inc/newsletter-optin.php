@@ -89,6 +89,7 @@ function dm_newsletter_save_optin_meta($order)
 
 add_action('woocommerce_order_status_processing', 'dm_newsletter_maybe_subscribe', 10, 2);
 add_action('woocommerce_order_status_completed', 'dm_newsletter_maybe_subscribe', 10, 2);
+add_action('template_redirect', 'dm_newsletter_email_subscribe_endpoint');
 
 /**
  * Trigger the MailerLite subscription when an order is paid.
@@ -113,6 +114,25 @@ function dm_newsletter_maybe_subscribe($order_id, $order)
 		return;
 	}
 
+	dm_newsletter_subscribe_contact($customer_email, $first_name, $last_name, (int) $order_id, $order);
+}
+
+/**
+ * Suscribe un contacto en MailerLite usando la integración disponible.
+ *
+ * @param string   $customer_email Email del cliente.
+ * @param string   $first_name     Nombre.
+ * @param string   $last_name      Apellido.
+ * @param int      $order_id       ID del pedido.
+ * @param WC_Order $order          Pedido.
+ * @return bool
+ */
+function dm_newsletter_subscribe_contact(string $customer_email, string $first_name, string $last_name, int $order_id, WC_Order $order): bool
+{
+	if ($customer_email === '') {
+		return false;
+	}
+
 	// --- Strategy 1: delegate to MailerLite WooCommerce plugin if available ---
 	// The official plugin fires `mailerlite_woocommerce_after_subscribe` and
 	// exposes `mailerlite_woocommerce_optin` filter; but the most reliable hook
@@ -129,7 +149,7 @@ function dm_newsletter_maybe_subscribe($order_id, $order)
 		dm_newsletter_debug_log(
 			sprintf('DM Newsletter: triggered mailerlite_woocommerce_subscribe for order %d (%s)', $order_id, $customer_email)
 		);
-		return;
+		return true;
 	}
 
 	// --- Strategy 2: API fallback (only if enabled in DM settings) ---
@@ -138,7 +158,7 @@ function dm_newsletter_maybe_subscribe($order_id, $order)
 		dm_newsletter_debug_log(
 			sprintf('DM Newsletter: MailerLite plugin hook not found and API fallback disabled. Order %d not subscribed.', $order_id)
 		);
-		return;
+		return false;
 	}
 
 	$api_key  = get_option('dm_mailerlite_api_key', '');
@@ -146,10 +166,10 @@ function dm_newsletter_maybe_subscribe($order_id, $order)
 
 	if (empty($api_key)) {
 		dm_newsletter_debug_log('DM Newsletter: API fallback enabled but no API key configured.');
-		return;
+		return false;
 	}
 
-	dm_newsletter_api_subscribe($customer_email, $first_name, $last_name, $api_key, $group_id, $order);
+	return dm_newsletter_api_subscribe($customer_email, $first_name, $last_name, $api_key, $group_id, $order);
 }
 
 // ---------------------------------------------------------------------------
@@ -170,7 +190,7 @@ function dm_newsletter_api_subscribe($email, $first_name, $last_name, $api_key, 
 {
 	if (empty($group_id)) {
 		dm_newsletter_debug_log('DM Newsletter: No group ID configured; skipping API call.');
-		return;
+		return false;
 	}
 
 	$tags = dm_newsletter_derive_tags($order);
@@ -206,7 +226,7 @@ function dm_newsletter_api_subscribe($email, $first_name, $last_name, $api_key, 
 		dm_newsletter_debug_log(
 			sprintf('DM Newsletter: API error for %s — %s', $email, $response->get_error_message())
 		);
-		return;
+		return false;
 	}
 
 	$code = wp_remote_retrieve_response_code($response);
@@ -214,6 +234,7 @@ function dm_newsletter_api_subscribe($email, $first_name, $last_name, $api_key, 
 		dm_newsletter_debug_log(
 			sprintf('DM Newsletter: subscribed %s to group %s (order %d)', $email, $group_id, $order->get_id())
 		);
+		return true;
 	} else {
 		dm_newsletter_debug_log(
 			sprintf(
@@ -223,7 +244,90 @@ function dm_newsletter_api_subscribe($email, $first_name, $last_name, $api_key, 
 				wp_remote_retrieve_body($response)
 			)
 		);
+		return false;
 	}
+}
+
+/**
+ * Genera token firmado para suscripción one-click desde email.
+ */
+function dm_newsletter_email_subscribe_token(WC_Order $order): string
+{
+	$payload = $order->get_id() . '|' . $order->get_order_key() . '|' . strtolower((string) $order->get_billing_email());
+
+	return hash_hmac('sha256', $payload, wp_salt('auth'));
+}
+
+/**
+ * URL one-click para suscribirse al newsletter desde el email.
+ */
+function dm_newsletter_get_email_subscribe_url(WC_Order $order): string
+{
+	return add_query_arg(
+		array(
+			'dm_nl_subscribe' => '1',
+			'order_id'        => (string) $order->get_id(),
+			'token'           => dm_newsletter_email_subscribe_token($order),
+		),
+		home_url('/')
+	);
+}
+
+/**
+ * Endpoint one-click: suscribe y muestra mensaje de resultado.
+ */
+function dm_newsletter_email_subscribe_endpoint(): void
+{
+	if (! isset($_GET['dm_nl_subscribe']) || '1' !== (string) $_GET['dm_nl_subscribe']) {
+		return;
+	}
+
+	$order_id = isset($_GET['order_id']) ? absint($_GET['order_id']) : 0;
+	$token    = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : '';
+
+	if ($order_id <= 0 || $token === '') {
+		dm_newsletter_render_subscribe_result(false);
+	}
+
+	$order = wc_get_order($order_id);
+	if (! $order instanceof WC_Order) {
+		dm_newsletter_render_subscribe_result(false);
+	}
+
+	$expected = dm_newsletter_email_subscribe_token($order);
+	if (! hash_equals($expected, $token)) {
+		dm_newsletter_render_subscribe_result(false);
+	}
+
+	$email = (string) $order->get_billing_email();
+	$name  = (string) $order->get_billing_first_name();
+	$last  = (string) $order->get_billing_last_name();
+
+	$ok = dm_newsletter_subscribe_contact($email, $name, $last, $order_id, $order);
+	dm_newsletter_render_subscribe_result($ok);
+}
+
+/**
+ * Renderiza respuesta simple para clic de suscripción desde email.
+ */
+function dm_newsletter_render_subscribe_result(bool $success): void
+{
+	$status_text = $success
+		? __('Suscripción realizada correctamente. Ya estás dentro del newsletter.', 'daniela-child')
+		: __('No pudimos procesar tu suscripción en este momento. Intenta nuevamente más tarde.', 'daniela-child');
+
+	$title = $success
+		? __('Suscripción confirmada', 'daniela-child')
+		: __('Error de suscripción', 'daniela-child');
+
+	wp_die(
+		'<div style="max-width:560px;margin:48px auto;padding:24px;font-family:Arial,sans-serif;line-height:1.6;color:#2d2d2d;border:1px solid #ddd;border-radius:10px;text-align:center;">'
+			. '<h1 style="margin:0 0 10px;font-size:24px;">' . esc_html($title) . '</h1>'
+			. '<p style="margin:0;font-size:14px;color:#5c5c5c;">' . esc_html($status_text) . '</p>'
+			. '</div>',
+		esc_html($title),
+		array('response' => $success ? 200 : 400)
+	);
 }
 
 // ---------------------------------------------------------------------------

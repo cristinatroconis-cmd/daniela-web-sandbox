@@ -17,139 +17,132 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-// Hook into WooCommerce email settings to add our custom options.
-add_filter('woocommerce_email_settings', 'dm_add_email_settings', 10, 1);
+/**
+ * IDs de emails cliente donde inyectamos ajustes DM.
+ *
+ * @return array<int, string>
+ */
+function dm_get_customer_email_setting_ids(): array
+{
+    return array(
+        'customer_completed_order',
+        'customer_invoice',
+        'customer_on_hold_order',
+        'customer_cancelled_order',
+        'customer_refunded_order',
+        'customer_note',
+    );
+}
+
+foreach (dm_get_customer_email_setting_ids() as $email_id) {
+    add_filter(
+        'woocommerce_settings_api_form_fields_' . $email_id,
+        'dm_add_email_form_fields_to_customer_email',
+        20,
+        1
+    );
+}
 
 /**
- * Agrega opciones personalizadas de DM al tab de correos de WooCommerce.
+ * Inserta un grupo de campos después de una clave existente.
  *
- * @param array $settings Opciones existentes de WooCommerce.
- * @return array Opciones extendidas.
+ * @param array<string, array<string, mixed>> $fields   Campos actuales.
+ * @param string                              $after    Clave de referencia.
+ * @param array<string, array<string, mixed>> $inserted Campos a insertar.
+ * @return array<string, array<string, mixed>>
  */
-function dm_add_email_settings(array $settings): array
+function dm_insert_email_fields_after(array $fields, string $after, array $inserted): array
 {
-    $custom_settings = array(
+    $result = array();
 
-        // === SECCIÓN: DESCARGAS ===
-        array(
-            'id'    => 'dm_section_downloads',
-            'type'  => 'title',
-            'title' => __('Descargables — Personalización', 'daniela-child'),
-            'desc'  => __('Personaliza el bloque de descargas que aparece en los emails de pedidos completados.', 'daniela-child'),
+    foreach ($fields as $key => $field) {
+        $result[$key] = $field;
+
+        if ($after === $key) {
+            foreach ($inserted as $inserted_key => $inserted_field) {
+                $result[$inserted_key] = $inserted_field;
+            }
+        }
+    }
+
+    if (! isset($fields[$after])) {
+        foreach ($inserted as $inserted_key => $inserted_field) {
+            $result[$inserted_key] = $inserted_field;
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * Agrega ajustes DM dentro de la edición de cada email cliente.
+ *
+ * @param array<string, array<string, mixed>> $fields Campos del email activo.
+ * @return array<string, array<string, mixed>>
+ */
+function dm_add_email_form_fields_to_customer_email(array $fields): array
+{
+    $custom_fields = array(
+        'dm_downloads_section_title' => array(
+            'title'       => __('Descargables — Personalización', 'daniela-child'),
+            'type'        => 'title',
+            'description' => __('Personaliza el bloque de descargas que aparece dentro de este email.', 'daniela-child'),
         ),
-
-        array(
-            'id'       => 'dm_downloads_email_cta_title',
-            'type'     => 'text',
-            'title'    => __('Título del bloque de descarga', 'daniela-child'),
-            'desc'     => __('Ej: "⬇️ Accede a tu descarga"', 'daniela-child'),
-            'default'  => __('⬇️ Accede a tu descarga', 'daniela-child'),
-            'css'      => 'width: 100%;',
-            'desc_tip' => true,
-        ),
-
-        array(
-            'id'       => 'dm_downloads_email_cta_note',
-            'type'     => 'textarea',
-            'title'    => __('Nota bajo los enlaces de descarga', 'daniela-child'),
-            'desc'     => __('Texto pequeño informativo (ej: sobre límite de descargas)', 'daniela-child'),
-            'default'  => __('Los enlaces de descarga tienen un límite de usos y tiempo de validez.', 'daniela-child'),
-            'css'      => 'width: 100%; height: 80px;',
-            'desc_tip' => true,
-        ),
-
-        array(
-            'id'       => 'dm_downloads_email_button_text',
-            'type'     => 'text',
-            'title'    => __('Texto del botón descargar', 'daniela-child'),
-            'desc'     => __('Ej: "Descargar recurso" o "Descargar %s" (usa %s para el nombre del producto)', 'daniela-child'),
-            'default'  => __('Descargar recurso', 'daniela-child'),
-            'css'      => 'width: 100%;',
-            'desc_tip' => true,
-        ),
-
-        array(
-            'id'   => 'dm_section_downloads_end',
-            'type' => 'sectionend',
-        ),
-
-        // === SECCIÓN: NEWSLETTER ===
-        array(
-            'id'    => 'dm_section_newsletter',
-            'type'  => 'title',
-            'title' => __('Newsletter — Bloque en emails completados', 'daniela-child'),
-            'desc'  => __('Configura el bloque de newsletter que aparece en los emails después de las descargas.', 'daniela-child'),
-        ),
-
-        array(
-            'id'       => 'dm_newsletter_email_enabled',
-            'type'     => 'checkbox',
-            'title'    => __('Activar bloque de newsletter', 'daniela-child'),
-            'label'    => __('Mostrar el bloque de suscripción en emails de pedidos completados', 'daniela-child'),
-            'default'  => 'yes',
-            'desc_tip' => false,
-        ),
-
-        array(
-            'id'       => 'dm_newsletter_email_title',
-            'type'     => 'text',
-            'title'    => __('Título del bloque', 'daniela-child'),
-            'desc'     => __('Ej: "¿Quieres recibir más recursos?"', 'daniela-child'),
-            'default'  => __('¿Quieres recibir más recursos?', 'daniela-child'),
-            'css'      => 'width: 100%;',
-            'desc_tip' => true,
-        ),
-
-        array(
-            'id'       => 'dm_newsletter_email_description',
-            'type'     => 'textarea',
-            'title'    => __('Descripción del bloque', 'daniela-child'),
-            'desc'     => __('Texto que aparece bajo el título', 'daniela-child'),
-            'default'  => __('Suscríbete a mi newsletter y recibe actualizaciones, tips exclusivos y nuevos recursos directamente en tu inbox.', 'daniela-child'),
-            'css'      => 'width: 100%; height: 80px;',
-            'desc_tip' => true,
-        ),
-
-        array(
-            'id'       => 'dm_newsletter_email_button_text',
-            'type'     => 'text',
-            'title'    => __('Texto del botón', 'daniela-child'),
-            'desc'     => __('Ej: "Suscribirme"', 'daniela-child'),
-            'default'  => __('Suscribirme', 'daniela-child'),
-            'css'      => 'width: 100%;',
-            'desc_tip' => true,
-        ),
-
-        array(
-            'id'          => 'dm_newsletter_email_link_url',
-            'type'        => 'text',
-            'title'       => __('URL del enlace / formulario', 'daniela-child'),
-            'desc'        => __('URL a MailerLite form, newsletter page, o anchor (#dm-newsletter). Si está vacío, enlaza a #dm-newsletter en la home.', 'daniela-child'),
-            'default'     => '',
-            'css'         => 'width: 100%;',
-            'placeholder' => 'https://... o #anchor',
+        'dm_downloads_email_cta_note' => array(
+            'title'       => __('Nota bajo los enlaces de descarga', 'daniela-child'),
+            'type'        => 'textarea',
+            'description' => __('Texto pequeño informativo, por ejemplo sobre límite de descargas.', 'daniela-child'),
+            'css'         => 'width:400px; height: 75px;',
+            'default'     => (string) get_option('dm_downloads_email_cta_note', __('Los enlaces de descarga tienen un límite de usos y tiempo de validez.', 'daniela-child')),
             'desc_tip'    => true,
         ),
-
-        array(
-            'id'   => 'dm_section_newsletter_end',
+        'dm_downloads_email_button_text' => array(
+            'title'       => __('Texto del botón descargar', 'daniela-child'),
+            'type'        => 'text',
+            'description' => __('Ej: "Descargar recurso" o "Descargar %s".', 'daniela-child'),
+            'default'     => (string) get_option('dm_downloads_email_button_text', __('Descargar recurso', 'daniela-child')),
+            'desc_tip'    => true,
+        ),
+        'dm_downloads_section_end' => array(
+            'type' => 'sectionend',
+        ),
+        'dm_newsletter_section_title' => array(
+            'title'       => __('Newsletter — Bloque dentro de este email', 'daniela-child'),
+            'type'        => 'title',
+            'description' => __('Configura el bloque de newsletter que aparece en este tipo de email.', 'daniela-child'),
+        ),
+        'dm_newsletter_email_enabled' => array(
+            'title'   => __('Activar bloque de newsletter', 'daniela-child'),
+            'type'    => 'checkbox',
+            'label'   => __('Mostrar el bloque de suscripción en este email', 'daniela-child'),
+            'default' => 'yes',
+        ),
+        'dm_newsletter_email_title' => array(
+            'title'       => __('Título del bloque', 'daniela-child'),
+            'type'        => 'text',
+            'description' => __('Ej: "¿Quieres recibir más recursos?"', 'daniela-child'),
+            'default'     => (string) get_option('dm_newsletter_email_title', __('¿Quieres recibir más recursos?', 'daniela-child')),
+            'desc_tip'    => true,
+        ),
+        'dm_newsletter_email_description' => array(
+            'title'       => __('Descripción del bloque', 'daniela-child'),
+            'type'        => 'textarea',
+            'description' => __('Texto que aparece bajo el título.', 'daniela-child'),
+            'css'         => 'width:400px; height: 75px;',
+            'default'     => (string) get_option('dm_newsletter_email_description', __('Suscríbete a mi newsletter y recibe actualizaciones, tips exclusivos y nuevos recursos directamente en tu inbox.', 'daniela-child')),
+            'desc_tip'    => true,
+        ),
+        'dm_newsletter_email_button_text' => array(
+            'title'       => __('Texto del botón', 'daniela-child'),
+            'type'        => 'text',
+            'description' => __('Ej: "Suscribirme"', 'daniela-child'),
+            'default'     => (string) get_option('dm_newsletter_email_button_text', __('Suscribirme', 'daniela-child')),
+            'desc_tip'    => true,
+        ),
+        'dm_newsletter_section_end' => array(
             'type' => 'sectionend',
         ),
     );
 
-    return array_merge($settings, $custom_settings);
+    return dm_insert_email_fields_after($fields, 'additional_content', $custom_fields);
 }
-
-/**
- * Sanitiza y valida las opciones de descargables y newsletter.
- *
- * Hook automático de WooCommerce: sanitize_option_{option_name}
- */
-add_filter('sanitize_option_dm_downloads_email_cta_title', 'wp_kses_post');
-add_filter('sanitize_option_dm_downloads_email_cta_note', 'wp_kses_post');
-add_filter('sanitize_option_dm_downloads_email_button_text', 'sanitize_text_field');
-add_filter('sanitize_option_dm_newsletter_email_enabled', 'wc_bool_to_string');
-add_filter('sanitize_option_dm_newsletter_email_title', 'sanitize_text_field');
-add_filter('sanitize_option_dm_newsletter_email_description', 'wp_kses_post');
-add_filter('sanitize_option_dm_newsletter_email_button_text', 'sanitize_text_field');
-add_filter('sanitize_option_dm_newsletter_email_link_url', 'esc_url_raw');
