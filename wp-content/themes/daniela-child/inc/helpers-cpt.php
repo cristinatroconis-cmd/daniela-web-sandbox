@@ -788,6 +788,14 @@ function dm_force_editorial_metabox_visibility($hidden, $screen)
 	return array_values($hidden);
 }
 
+add_filter('admin_post_thumbnail_html', function ($content, $post_id) {
+	if (get_post_type($post_id) !== 'product') {
+		return $content;
+	}
+	$content .= '<p class="description" style="margin-top:6px;">' . esc_html__('Imagen horizontal 1600x900px o 1280x720px.', 'daniela-child') . '</p>';
+	return $content;
+}, 10, 2);
+
 function dm_customize_product_catalog_metaboxes()
 {
 	add_post_type_support('product', 'excerpt');
@@ -900,31 +908,31 @@ function dm_reorder_product_catalog_metaboxes()
 function dm_cpt_editorial_fields_config()
 {
 	return [
-		'_dm_single_hero_image_url'        => ['label' => __('Imagen hero del single', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona una imagen desde medios. Imagen vertical `1600x900px` o `1280x720px`.', 'daniela-child')],
-		'_dm_editorial_hero_kicker'        => ['label' => __('Texto superior del hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Aprende a regular tu mente y tu cuerpo desde la raíz'],
-		'_dm_editorial_hero_intro'         => ['label' => __('Bajada del hero', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Deja de luchar con...', 'help' => __('Texto breve de 1–3 líneas para explicar el beneficio principal.', 'daniela-child')],
-		'_dm_editorial_hero_button_label'  => ['label' => __('Texto botón hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito'],
-		'_dm_editorial_fit_title'          => ['label' => __('Título sección “Es para ti si...”', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Es para ti si...'],
-		'_dm_editorial_fit_title_image'    => ['label' => __('Imagen título sección “Es para ti si...”', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend. Si la dejas vacía, se usa el título de texto.', 'daniela-child')],
-		'_dm_editorial_fit_items'          => ['label' => __('Items sección “Es para ti si...” (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Sabes que tus pensamientos...\nVives en estado de alerta...", 'help' => __('Escribe un item por línea. Ideal 6–14 palabras por item.', 'daniela-child')],
-		'_dm_editorial_learn_title'        => ['label' => __('Título sección “Qué vas a aprender”', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Qué vas a aprender'],
-		'_dm_editorial_learn_title_image'  => ['label' => __('Imagen título sección aprendizaje', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
-		'_dm_editorial_learn_intro'        => ['label' => __('Texto corto sección aprendizaje', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'No es solo otro curso...', 'help' => __('Texto breve para introducir la lista de aprendizajes (1–2 líneas).', 'daniela-child')],
-		'_dm_editorial_learn_items'        => ['label' => __('Lista aprendizaje (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "A entender qué te pasa...\nA calmar tu cuerpo...", 'help' => __('Un aprendizaje por línea. Empieza con verbos en infinitivo ("Entender…", "Aprender…").', 'daniela-child')],
-		'_dm_editorial_learn_image'        => ['label' => __('Imagen sección aprendizaje', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona la imagen desde la biblioteca de medios.', 'daniela-child')],
-		'_dm_editorial_learn_button_label' => ['label' => __('Texto botón sección aprendizaje', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito'],
-		'_dm_editorial_diff_title'         => ['label' => __('Título sección “Qué hace diferente...”', 'daniela-child'), 'type' => 'text', 'placeholder' => '¿Qué hace diferente a este proceso?'],
-		'_dm_editorial_diff_title_image'   => ['label' => __('Imagen título sección diferenciadores', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
-		'_dm_editorial_diff_items'         => ['label' => __('Lista diferenciadores (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Te explico solo lo necesario...\nDiseñado para pocos minutos...", 'help' => __('Un diferenciador por línea. Enfócate en beneficios claros y concretos.', 'daniela-child')],
-		'_dm_editorial_diff_image'         => ['label' => __('Imagen sección diferenciadores', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona la imagen desde la biblioteca de medios.', 'daniela-child')],
-		'_dm_editorial_diff_button_label'  => ['label' => __('Texto botón sección diferenciadores', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito'],
-		'_dm_editorial_include_title'      => ['label' => __('Título sección “Incluye”', 'daniela-child'), 'type' => 'text', 'placeholder' => '4 módulos'],
-		'_dm_editorial_include_title_image' => ['label' => __('Imagen título sección “Incluye”', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
-		'_dm_editorial_include_items'      => ['label' => __('Lista “Incluye” (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Clases en video...\nRecursos descargables...", 'help' => __('Un item por línea (qué recibe la persona: videos, audios, PDFs, soporte, etc.).', 'daniela-child')],
-		'_dm_editorial_final_title'        => ['label' => __('Título CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Si esto resonó contigo...'],
-		'_dm_editorial_final_title_image'  => ['label' => __('Imagen título CTA final', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
+		'_dm_single_hero_image_url'        => ['label' => __('Imagen hero del single', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona una imagen desde medios. Imagen vertical `1200x500px` o similar.', 'daniela-child')],
+		'_dm_editorial_hero_kicker'        => ['label' => __('Texto superior del hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Aprende a regular tu mente y tu cuerpo desde la raíz', 'help' => __('Escribe texto corto llamando a la acción', 'daniela-child')],
+		'_dm_editorial_hero_intro'         => ['label' => __('Bajada del hero', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Deja de luchar con...', 'help' => __('Texto breve de 1 línea para explicar el beneficio principal.', 'daniela-child')],
+		'_dm_editorial_hero_button_label'  => ['label' => __('Texto botón hero', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito', 'help' => __('Escribe el texto del botón.', 'daniela-child')],
+		'_dm_editorial_fit_title'          => ['label' => __('Título sección 1', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Es para ti si...', 'help' => __('Escribe título descriptivo de los items a colocar', 'daniela-child')],
+		'_dm_editorial_fit_title_image'    => ['label' => __('Imagen título sección 1', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Elige media de título editorial. Imagen tamaños `450x100px` o `900x200px` para pantallas retina.', 'daniela-child')],
+		'_dm_editorial_fit_items'          => ['label' => __('Items sección 1 (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Sabes que tus pensamientos...\nVives en estado de alerta...", 'help' => __('Escribe un item por línea. Ideal 6–14 palabras por item.', 'daniela-child')],
+		'_dm_editorial_learn_title'        => ['label' => __('Título sección 2', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Qué vas a aprender', 'help' => __('Escribe título descriptivo de los items a colocar', 'daniela-child')],
+		'_dm_editorial_learn_title_image'  => ['label' => __('Imagen título sección 2', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Elige media de título editorial. Imagen tamaños `450x100px` o `900x200px` para pantallas retina.', 'daniela-child')],
+		'_dm_editorial_learn_intro'        => ['label' => __('Texto corto sección 2', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'No es solo otro curso...', 'help' => __('Texto breve para introducir la lista de aprendizajes (1–2 líneas).', 'daniela-child')],
+		'_dm_editorial_learn_items'        => ['label' => __('Lista (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "A entender qué te pasa...\nA calmar tu cuerpo...", 'help' => __('Escribe un item por línea. Ideal 6–14 palabras por item.', 'daniela-child')],
+		'_dm_editorial_learn_image'        => ['label' => __('Imagen sección 2', 'daniela-child'), 'type' => 'media', 'help' => __('Imagen vertical `1200x500px` o similar.', 'daniela-child')],
+		'_dm_editorial_learn_button_label' => ['label' => __('Texto botón sección 2', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito', 'help' => __('Escribe el texto del botón.', 'daniela-child')],
+		'_dm_editorial_diff_title'         => ['label' => __('Título sección 3', 'daniela-child'), 'type' => 'text', 'placeholder' => '¿Qué hace diferente a este proceso?', 'help' => __('Escribe título descriptivo de los items a colocar', 'daniela-child')],
+		'_dm_editorial_diff_title_image'   => ['label' => __('Imagen título sección 3', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
+		'_dm_editorial_diff_items'         => ['label' => __('Lista sección 3 (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Te explico solo lo necesario...\nDiseñado para pocos minutos...", 'help' => __('Un diferenciador por línea. Enfócate en beneficios claros y concretos.', 'daniela-child')],
+		'_dm_editorial_diff_image'         => ['label' => __('Imagen sección 3', 'daniela-child'), 'type' => 'media', 'help' => __('Selecciona la imagen desde la biblioteca de medios.', 'daniela-child')],
+		'_dm_editorial_diff_button_label'  => ['label' => __('Texto botón sección 3', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito', 'help' => __('Escribe el texto del botón.', 'daniela-child')],
+		'_dm_editorial_include_title'      => ['label' => __('Título sección 4', 'daniela-child'), 'type' => 'text', 'placeholder' => '4 módulos', 'help' => __('Escribe título descriptivo de los items a colocar', 'daniela-child')],
+		'_dm_editorial_include_title_image' => ['label' => __('Imagen título sección 4', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Si eliges una imagen, reemplaza al título escrito en el frontend.', 'daniela-child')],
+		'_dm_editorial_include_items'      => ['label' => __('Lista sección 4 (uno por línea)', 'daniela-child'), 'type' => 'textarea', 'placeholder' => "Clases en video...\nRecursos descargables...", 'help' => __('Un item por línea (qué recibe la persona: videos, audios, PDFs, soporte, etc.).', 'daniela-child')],
+		'_dm_editorial_final_title'        => ['label' => __('Título CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Si esto resoó contigo...', 'help' => __('Texto corto emotivo', 'daniela-child')],
+		'_dm_editorial_final_title_image'  => ['label' => __('Imagen título CTA final', 'daniela-child'), 'type' => 'media', 'help' => __('Opcional. Imagen tamaños `450x100px` o `900x200px` para pantallas retina.', 'daniela-child')],
 		'_dm_editorial_final_text'         => ['label' => __('Texto CTA final', 'daniela-child'), 'type' => 'textarea', 'placeholder' => 'Estás a un solo paso...', 'help' => __('Texto de 1–3 líneas para cerrar y reforzar el beneficio con claridad.', 'daniela-child')],
-		'_dm_editorial_final_button_label' => ['label' => __('Texto botón CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito'],
+		'_dm_editorial_final_button_label' => ['label' => __('Texto botón CTA final', 'daniela-child'), 'type' => 'text', 'placeholder' => 'Agregar al carrito', 'help' => __('Escribe el texto del botón.', 'daniela-child')],
 	];
 }
 
