@@ -117,6 +117,7 @@ function dm_woo_email_styles(string $css): string
 
 /* Contenedor de contenido */
 #template_container {
+	background-color: {$t['color_bg_card']} !important;
 	border-radius: {$t['radius']} !important;
 	box-shadow: {$t['shadow']} !important;
 	border: 1px solid {$t['color_border']} !important;
@@ -129,8 +130,8 @@ function dm_woo_email_styles(string $css): string
 }
 #template_header h1,
 #template_header h1 a {
-	color: #ffffff !important;
-	font-family: Georgia, 'Times New Roman', serif !important;
+	color: {$t['color_text']} !important;
+	font-family: {$t['font_heading']} !important;
 	font-weight: 400 !important;
 	letter-spacing: 0.01em !important;
 }
@@ -142,20 +143,20 @@ function dm_woo_email_styles(string $css): string
 }
 #body_content table td {
 	color: {$t['color_text']} !important;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+	font-family: {$t['font_body']} !important;
 	font-size: 15px !important;
 	line-height: 1.6 !important;
 }
 
 /* Párrafos de cuerpo */
-#body_content_inner p {
-	color: {$t['color_text']} !important;
+#body_content_inner > p {
+	color: {$t['color_text_muted']} !important;
 }
 
 /* Títulos de sección */
 h2 {
-	color: {$t['color_primary_dark']} !important;
-	font-family: Georgia, 'Times New Roman', serif !important;
+	color: {$t['color_text_muted']} !important;
+	font-family: {$t['font_heading']} !important;
 }
 
 /* Tabla de pedido */
@@ -176,11 +177,11 @@ h2 {
 /* Botones de acción WooCommerce */
 .button,
 .button a {
-	background-color: {$t['color_primary']} !important;
-	border-color: {$t['color_primary_dark']} !important;
+	background-color: {$t['btn_primary']} !important;
+	border-color: {$t['btn_primary']} !important;
 	color: #ffffff !important;
 	border-radius: {$t['radius']} !important;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+	font-family: {$t['font_button']} !important;
 	font-size: 14px !important;
 	font-weight: 600 !important;
 	text-decoration: none !important;
@@ -193,12 +194,13 @@ h2 {
 }
 .dm-email-cta__link {
 	display: inline-block !important;
-	background-color: {$t['color_accent']} !important;
+	background-color: {$t['btn_primary']} !important;
+	border: 1px solid {$t['btn_primary']} !important;
 	color: #ffffff !important;
 	text-decoration: none !important;
 	padding: 14px 28px !important;
 	border-radius: {$t['radius']} !important;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+	font-family: {$t['font_button']} !important;
 	font-size: 15px !important;
 	font-weight: 700 !important;
 	letter-spacing: 0.02em !important;
@@ -214,33 +216,36 @@ h2 {
 .dm-email-newsletter {
 	margin: 24px 0 !important;
 	text-align: center !important;
-	background-color: {$t['color_primary']} !important;
+	background-color: {$t['color_bg_card']} !important;
+	border: 1px solid {$t['color_border']} !important;
+	box-shadow: {$t['shadow']} !important;
 	border-radius: {$t['radius']} !important;
 	padding: 24px 48px !important;
 }
 .dm-email-newsletter__title {
 	margin: 0 0 12px !important;
-	color: #ffffff !important;
-	font-family: Georgia, 'Times New Roman', serif !important;
+	color: {$t['color_text_muted']} !important;
+	font-family: {$t['font_heading']} !important;
 	font-size: 18px !important;
 	font-weight: 400 !important;
 	letter-spacing: 0.01em !important;
 }
 .dm-email-newsletter__description {
 	margin: 0 0 16px !important;
-	color: rgba(255, 255, 255, 0.95) !important;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+	color: {$t['color_text_muted']} !important;
+	font-family: {$t['font_body']} !important;
 	font-size: 14px !important;
 	line-height: 1.5 !important;
 }
 .dm-email-newsletter__link {
 	display: inline-block !important;
-	background-color: {$t['color_accent']} !important;
+	background-color: {$t['btn_primary']} !important;
+	border: 1px solid {$t['btn_primary']} !important;
 	color: #ffffff !important;
 	text-decoration: none !important;
 	padding: 12px 28px !important;
 	border-radius: {$t['radius']} !important;
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+	font-family: {$t['font_button']} !important;
 	font-size: 14px !important;
 	font-weight: 700 !important;
 	letter-spacing: 0.02em !important;
@@ -328,7 +333,7 @@ function dm_render_cta_block(WC_Order $order, ?WC_Email $email = null): void
 					<?php foreach ($download_links as $dl) : ?>
 						<div style="margin-bottom:10px;">
 							<a href="<?php echo esc_url($dl['url']); ?>"
-								style="display:inline-block;background-color:<?php echo esc_attr($t['color_primary']); ?>;border:1px solid <?php echo esc_attr($t['color_primary']); ?>;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-family:'Open Sans',Arial,sans-serif;font-size:14px;font-weight:600;line-height:1.2;">
+								style="display:inline-block;background-color:<?php echo esc_attr($t['btn_primary']); ?>;border:1px solid <?php echo esc_attr($t['btn_primary']); ?>;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:999px;font-family:<?php echo esc_attr($t['font_button']); ?>;font-size:14px;font-weight:600;line-height:1.2;">
 								<?php
 								if (false !== strpos($button_label, '%s')) {
 									/* translators: %s: product name */
@@ -341,7 +346,7 @@ function dm_render_cta_block(WC_Order $order, ?WC_Email $email = null): void
 						</div>
 					<?php endforeach; ?>
 					<?php if ($cta_note !== '') : ?>
-						<p style="margin:8px 0 0;color:<?php echo esc_attr($t['color_text_muted']); ?>;font-family:'Open Sans',Arial,sans-serif;font-size:12px;line-height:1.5;">
+						<p style="margin:8px 0 0;color:<?php echo esc_attr($t['color_text_muted']); ?>;font-family:<?php echo esc_attr($t['font_body']); ?>;font-size:12px;line-height:1.5;">
 							<?php echo esc_html($cta_note); ?>
 						</p>
 					<?php endif; ?>
@@ -568,18 +573,18 @@ function dm_render_newsletter_block(WC_Order $order, ?WC_Email $email = null): v
 	<table cellspacing="0" cellpadding="0" border="0" style="width:100%;margin-top:24px;">
 		<tr>
 			<td style="padding:0;text-align:center;">
-				<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background-color:<?php echo esc_attr($t['color_primary']); ?>;border-radius:<?php echo esc_attr($t['radius']); ?>;overflow:hidden;margin:0 auto;">
+				<table cellspacing="0" cellpadding="0" border="0" style="width:100%;background:<?php echo esc_attr($t['color_bg_card']); ?>;border:1px solid <?php echo esc_attr($t['color_border']); ?>;border-radius:<?php echo esc_attr($t['radius']); ?>;box-shadow:<?php echo esc_attr($t['shadow']); ?>;overflow:hidden;margin:0 auto;">
 					<tr>
 						<td style="padding:24px 48px;text-align:center;">
-							<h2 style="margin:0 0 12px 0;color:#ffffff;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;letter-spacing:0.01em;">
+							<h2 style="margin:0 0 12px 0;color:<?php echo esc_attr($t['color_text_muted']); ?>;font-family:<?php echo esc_attr($t['font_heading']); ?>;font-size:18px;font-weight:400;letter-spacing:0.01em;">
 								<?php echo wp_kses_post($title); ?>
 							</h2>
-							<p style="margin:0 0 16px 0;color:rgba(255,255,255,0.95);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.5;">
+							<p style="margin:0 0 16px 0;color:<?php echo esc_attr($t['color_text_muted']); ?>;font-family:<?php echo esc_attr($t['font_body']); ?>;font-size:14px;line-height:1.5;">
 								<?php echo wp_kses_post($description); ?>
 							</p>
 							<?php if (! empty($link_url)) : ?>
 								<a href="<?php echo esc_url($link_url); ?>"
-									style="display:inline-block;background-color:<?php echo esc_attr($t['color_accent']); ?>;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:<?php echo esc_attr($t['radius']); ?>;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.02em;">
+									style="display:inline-block;background-color:<?php echo esc_attr($t['btn_primary']); ?>;border:1px solid <?php echo esc_attr($t['btn_primary']); ?>;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:<?php echo esc_attr($t['radius']); ?>;font-family:<?php echo esc_attr($t['font_button']); ?>;font-size:14px;font-weight:700;letter-spacing:0.02em;">
 									<?php echo esc_html($button_text); ?>
 								</a>
 							<?php endif; ?>

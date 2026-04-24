@@ -112,13 +112,25 @@ Todos en `wp-content/themes/daniela-child/`:
 - **Referencia:** `ARCHITECTURE.md` § 18 + `docs/ARCHITECTURE_NOTES.md` § 3c.
 
 ### 3.8 Email customization (`inc/email-tokens.php` + `inc/woocommerce-emails.php`)
-- ✅ **`dm_get_email_tokens()`** — tokens de diseño cacheados (transient `dm_email_tokens_v1`, 12 h), derivados de `style.css` `:root {}`.
+- ✅ **`dm_get_email_tokens()`** — tokens de diseño cacheados (transient `dm_email_tokens_v2`, 12 h), derivados de `style.css` `:root {}`.
+- ✅ Resolver de tokens `var(--dm-...)` para emails: evita que lleguen valores CSS no resueltos al markup email-safe.
+- ✅ Validación de cache de tokens: si faltan llaves requeridas o se detectan valores `var(...)` sin resolver, el cache se descarta y se regenera.
 - ✅ **`dm_woo_email_styles()`** — CSS email-safe aplicado vía filtro `woocommerce_email_styles` (priority 20).
+- ✅ Estilos de email alineados al sistema de tokens global (`style.css`):
+  - contenedor tipo card (`bg-card + border + radius + shadow`),
+  - heading con `Abril Fatface`,
+  - textos secundarios con `color_text_muted`,
+  - botones con token primario (`btn_primary`).
 - ✅ Asunto y heading personalizados para el email `customer_completed_order`.
 - ✅ **`dm_email_cta_block()`** — bloque CTA de descarga directa (guest-friendly) solo en `customer_completed_order`.
 - ✅ Defaults de opciones WooCommerce email no destructivos (respeta configuración admin existente).
 - ✅ Consolidación: productos descargables gratis y de pago usan el mismo flujo WooCommerce de carrito + checkout + `customer_completed_order`.
 - ✅ Limpieza legacy: `inc/freebie-download.php` y el naming operativo `dm_freebie_*` fueron retirados del flujo activo del child theme.
+- ✅ En staging se validaron y ajustaron valores editables de `WooCommerce > Settings > Emails > Email template`:
+  - `woocommerce_email_background_color`: `#ffffff`
+  - `woocommerce_email_body_background_color`: `#ffffff`
+  - `woocommerce_email_base_color`: `#7c6b8e`
+  - `woocommerce_email_text_color`: `#2d2d2d`
 
 ### 3.9 WooCommerce front-end / checkout polish (2026-04-10)
 - ✅ `style.css` ya centraliza el sistema visual WooCommerce del child theme (tipografía, botones, formularios, notices, cards de producto y drawer).

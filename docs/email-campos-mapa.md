@@ -69,7 +69,7 @@ El boton de newsletter usa un endpoint one-click del sitio que intenta suscribir
 
 - Template que arma el email completed:
   - `wp-content/themes/daniela-child/woocommerce/emails/customer-completed-order.php`
-  - Tambien imprime `additional_content` entre Descargables y Newsletter.
+  - Imprime `additional_content` arriba del bloque de Descargables.
 
 - Render de Descarga:
   - `wp-content/themes/daniela-child/inc/woocommerce-emails.php`
@@ -83,7 +83,33 @@ El boton de newsletter usa un endpoint one-click del sitio que intenta suscribir
   - `wp-content/themes/daniela-child/inc/newsletter-optin.php`
   - Funciones: `dm_newsletter_get_email_subscribe_url()`, `dm_newsletter_email_subscribe_endpoint()`
 
-## 5) IDs de email donde se inyectan estos campos
+## 5) Estilos del email (tokens de root)
+
+Fuente principal de estilos email-safe:
+- `wp-content/themes/daniela-child/inc/woocommerce-emails.php`
+- Filtro: `woocommerce_email_styles`
+
+Fuente de tokens (extraidos de `:root` en `style.css`):
+- `wp-content/themes/daniela-child/inc/email-tokens.php`
+- Funcion: `dm_get_email_tokens()`
+
+Reglas activas:
+- Contenedor principal del email usa estilo card:
+  - `background: var(--dm-color-bg-card)`
+  - `border: 1px solid var(--dm-color-border)`
+  - `border-radius: var(--dm-radius)`
+  - `box-shadow: var(--dm-shadow)`
+- Header usa color primario de marca (`--dm-brand-primary`).
+- Fuente de titulo del header y headings de bloque: `--dm-brand-font-heading-family` (Abril Fatface).
+- Texto de `additional_content`, `dm_downloads_email_cta_note` y textos secundarios: `--dm-brand-text-muted`.
+- Botones (CTA descarga/newsletter y `.button` de Woo): token de boton primario (`--dm-btn-primary-bg`).
+
+Nota tecnica importante:
+- Se corrigio cache de tokens para evitar valores `var(--dm-...)` sin resolver en email.
+- Cache key actual: `dm_email_tokens_v2`.
+- Validacion de cache: si faltan llaves requeridas o hay `var(...)` sin resolver, se regenera.
+
+## 6) IDs de email donde se inyectan estos campos
 
 Fuente:
 - `wp-content/themes/daniela-child/inc/email-settings.php`

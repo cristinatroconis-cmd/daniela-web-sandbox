@@ -28,20 +28,12 @@ defined('ABSPATH') || exit;
  */
 do_action('woocommerce_email_header', $email_heading, $email);
 
-$first_name = trim((string) $order->get_billing_first_name());
-?>
-
-<p style="margin:0 0 12px;font-family:'Open Sans',Arial,sans-serif;font-size:16px;line-height:1.7;color:#2d2d2d;">
-	<?php echo esc_html($first_name ? sprintf(__('Hola %s,', 'daniela-child'), $first_name) : __('Hola,', 'daniela-child')); ?>
-</p>
-
-<?php
 if (! $sent_to_admin && ! $plain_text) {
-	dm_render_cta_block($order, $email);
-
 	if (! empty($additional_content)) {
 		echo wp_kses_post(wpautop(wptexturize($additional_content)));
 	}
+
+	dm_render_cta_block($order, $email);
 
 	dm_render_newsletter_block($order, $email);
 }
